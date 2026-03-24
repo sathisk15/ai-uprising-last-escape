@@ -3,6 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber'
 import Road from '../components/environment/Road'
 import PlayerVehicle from '../components/player/PlayerVehicle'
 import GameLoop from './GameLoop'
+import ObstaclePool from '../components/obstacles/ObstaclePool'
 import useGameStore from '../store/gameStore'
 import { ZONES } from './zones'
 
@@ -64,6 +65,7 @@ export default function GameCanvas() {
       <GameLoop />
       <Road />
       <PlayerVehicle />
+      <ObstaclePool />
     </Canvas>
   )
 }
