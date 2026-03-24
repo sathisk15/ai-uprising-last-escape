@@ -1,21 +1,36 @@
 import React, { useEffect } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { useThree } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import Road from '../components/environment/Road'
 import PlayerVehicle from '../components/player/PlayerVehicle'
+import GameLoop from './GameLoop'
 import useGameStore from '../store/gameStore'
 import { ZONES } from './zones'
 
-// Sets the camera to look forward down the road on mount
 function CameraSetup() {
   const { camera } = useThree()
   useEffect(() => {
     camera.position.set(0, 3, 9)
-    camera.lookAt(0, 0.5, -6)   // looking ahead down the road, not straight down
+    camera.lookAt(0, 0.5, -6)
     camera.fov = 65
     camera.updateProjectionMatrix()
   }, [camera])
   return null
+}
+
+// Updates Three.js fog color when zone changes (must live inside Canvas)
+function ZoneFog() {
+  const { scene } = useThree()
+  const zone = useGameStore((s) => s.zone)
+  const zoneData = ZONES[zone]
+
+  useEffect(() => {
+    if (scene.fog) {
+      scene.fog.color.set(zoneData.fogColor)
+    }
+    scene.background?.set?.(zoneData.bgColor)
+  }, [zone, scene, zoneData])
+
+  return <fog attach="fog" args={[zoneData.fogColor, 25, 100]} />
 }
 
 export default function GameCanvas() {
@@ -30,36 +45,24 @@ export default function GameCanvas() {
       camera={{ position: [0, 3, 9], fov: 65, near: 0.1, far: 150 }}
     >
       <CameraSetup />
+      <ZoneFog />
 
-      {/* Depth fog */}
-      <fog attach="fog" args={[zoneData.fogColor, 25, 100]} />
-
-      {/* ── Lighting ── */}
-      {/* Bright ambient so car body is always visible */}
+      {/* Lighting */}
       <ambientLight intensity={1.2} color="#ffffff" />
-      {/* Main sun from upper-front-left */}
-      <directionalLight
-        castShadow
-        position={[5, 14, 8]}
-        intensity={2.5}
-        color="#ffffff"
-        shadow-mapSize={[1024, 1024]}
-      />
-      {/* Fill light from front (illuminates the car grille / front) */}
+      <directionalLight castShadow position={[5, 14, 8]} intensity={2.5} color="#ffffff"
+        shadow-mapSize={[1024, 1024]} />
       <directionalLight position={[0, 4, 12]} intensity={1.5} color="#cce0ff" />
-      {/* Colored zone fill from below */}
       <pointLight position={[0, 1, 3]} intensity={1.2} color={zoneData.ambientColor} distance={20} />
 
-      {/* Ground plane */}
+      {/* Ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, -20]} receiveShadow>
         <planeGeometry args={[60, 120]} />
         <meshStandardMaterial color="#111111" roughness={1} />
       </mesh>
 
-      {/* Road */}
+      {/* Game systems */}
+      <GameLoop />
       <Road />
-
-      {/* Player */}
       <PlayerVehicle />
     </Canvas>
   )
