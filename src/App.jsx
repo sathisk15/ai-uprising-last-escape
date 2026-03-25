@@ -24,15 +24,17 @@ export default function App() {
   }, [phase, pauseGame, resumeGame])
 
   return (
-    <div className="w-full h-full">
-      {/* Zone transition overlays the game */}
+    <div className="w-full h-full relative">
+      {/* Game stays mounted during transition so the 3D world keeps rendering */}
+      {(phase === 'playing' || phase === 'paused' || phase === 'transition') && <GameScreen />}
+
+      {/* Zone transition overlays the live game */}
       {phase === 'transition' && <ZoneTransition />}
 
-      {/* Main phase routing */}
-      {phase === 'menu' && <MainMenu />}
-      {(phase === 'playing' || phase === 'paused') && <GameScreen />}
+      {/* Other phases */}
+      {phase === 'menu'     && <MainMenu />}
       {phase === 'gameover' && <GameOver />}
-      {phase === 'victory' && <Victory />}
+      {phase === 'victory'  && <Victory />}
     </div>
   )
 }
