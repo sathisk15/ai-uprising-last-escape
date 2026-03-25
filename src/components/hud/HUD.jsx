@@ -49,6 +49,30 @@ function HealthBar() {
   )
 }
 
+// ── Energy bar ────────────────────────────────────────────────────────────────
+function EnergyBar() {
+  const energy = useGameStore((s) => s.energy)
+  const pct    = Math.max(0, energy)
+  const color  = pct > 40 ? '#00aaff' : pct > 20 ? '#ffaa00' : '#ff4400'
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] tracking-[0.2em] text-white/50 font-mono">ENERGY</span>
+        <span className="text-[10px] tracking-widest font-mono" style={{ color }}>
+          {Math.ceil(pct)}%
+        </span>
+      </div>
+      <div className="w-48 h-2 bg-white/10 rounded-sm overflow-hidden">
+        <div
+          className="h-full rounded-sm transition-all duration-300"
+          style={{ width: `${pct}%`, background: color, boxShadow: `0 0 6px ${color}` }}
+        />
+      </div>
+    </div>
+  )
+}
+
 // ── Zone badge ────────────────────────────────────────────────────────────────
 function ZoneBadge() {
   const zone     = useGameStore((s) => s.zone)
@@ -172,9 +196,10 @@ export default function HUD() {
       className="absolute inset-0 pointer-events-none z-10"
       style={{ opacity: 0 }}
     >
-      {/* Top-left — health */}
-      <div className="absolute top-4 left-4">
+      {/* Top-left — health + energy stacked */}
+      <div className="absolute top-4 left-4 flex flex-col gap-2">
         <HealthBar />
+        <EnergyBar />
       </div>
 
       {/* Top-center — zone */}

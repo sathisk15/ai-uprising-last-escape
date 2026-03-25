@@ -20,6 +20,7 @@ const sessionDefaults = {
   score: 0,
   distance: 0,
   health: 100,
+  energy: 100,
   kills: 0,
   playerLane: 1,   // 0=left, 1=center, 2=right
   speed: BASE_SPEED,
@@ -72,6 +73,14 @@ const useGameStore = create(
         set({ kills, score })
       },
 
+      refillEnergy: (amount) => {
+        set((s) => ({ energy: Math.min(100, s.energy + amount) }))
+      },
+
+      repairHealth: (amount) => {
+        set((s) => ({ health: Math.min(100, s.health + amount) }))
+      },
+
       setPlayerLane: (lane) => {
         set({ playerLane: Math.max(0, Math.min(2, lane)) })
       },
@@ -99,7 +108,17 @@ const useGameStore = create(
         const newDistance = state.distance + speed * delta
         const scoreFromDistance = Math.floor(newDistance)
 
-        set({ distance: newDistance, speed, score: scoreFromDistance + state.kills * 100 })
+        // Energy drains at 7 pts/s, slightly faster in higher zones
+        const drainRate = 7 + (state.zone - 1) * 1.5
+        const newEnergy = Math.max(0, state.energy - drainRate * delta)
+
+        set({ distance: newDistance, speed, score: scoreFromDistance + state.kills * 100, energy: newEnergy })
+
+        // Energy depletion = game over
+        if (newEnergy <= 0) {
+          get().endGame()
+          return
+        }
 
         // Check zone transition
         if (state.zone < 3 && newDistance >= zone.distanceThreshold) {
