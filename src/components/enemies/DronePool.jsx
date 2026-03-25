@@ -1,8 +1,9 @@
-import React, { useRef } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import useGameStore from '../../store/gameStore'
 import { LANES, ZONES } from '../../game/zones'
 import { aabbXZ, HALF } from '../../game/physics'
+import { droneSharedData } from './droneData'
 import Drone from './Drone'
 
 const MAX_DRONES = 6
@@ -21,6 +22,7 @@ const SWEEP_AMP   = 1.2   // max X deviation from lane centre
 export default function DronePool({ hitCooldown }) {
   const data = useRef(
     Array.from({ length: MAX_DRONES }, (_, i) => ({
+
       id: i,
       active: false,
       lane: 1,
@@ -33,6 +35,12 @@ export default function DronePool({ hitCooldown }) {
   )
   const refs      = useRef(Array.from({ length: MAX_DRONES }, () => null))
   const spawnTimer = useRef(5.0)
+
+  // Register slot array so BulletPool can check collisions
+  useEffect(() => {
+    droneSharedData.slots = data.current
+    return () => { droneSharedData.slots = null }
+  }, [])
 
   useFrame((_, delta) => {
     const { phase, speed, zone, playerLane } = useGameStore.getState()
@@ -115,7 +123,11 @@ export default function DronePool({ hitCooldown }) {
       {Array.from({ length: MAX_DRONES }).map((_, i) => (
         <group
           key={i}
-          ref={el => { refs.current[i] = el }}
+          ref={el => {
+            refs.current[i] = el
+            // Also store on the slot so BulletPool can deactivate via groupRef
+            if (data.current[i]) data.current[i].groupRef = el
+          }}
           position={[LANES[1], 1.6, PARK_Z]}
         >
           <Drone />

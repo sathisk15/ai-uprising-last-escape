@@ -5,6 +5,8 @@ import PlayerVehicle from '../components/player/PlayerVehicle'
 import GameLoop from './GameLoop'
 import ObstaclePool from '../components/obstacles/ObstaclePool'
 import DronePool from '../components/enemies/DronePool'
+import BulletPool from '../components/combat/BulletPool'
+import ExplosionPool from '../components/combat/ExplosionPool'
 import useGameStore from '../store/gameStore'
 import { ZONES } from './zones'
 
@@ -16,6 +18,8 @@ function EnemySystems() {
     <>
       <ObstaclePool hitCooldown={hitCooldown} />
       <DronePool hitCooldown={hitCooldown} />
+      <BulletPool />
+      <ExplosionPool />
     </>
   )
 }

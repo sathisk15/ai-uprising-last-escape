@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import useGameStore from '../../store/gameStore'
+import { inputState } from '../../game/inputState'
 
 // Reads from store directly in the event handler to avoid stale closures.
-// A separate shoot flag is written to the store for Feature 10 (combat).
+// Shoot flag is written to inputState (plain object) — read by BulletPool in useFrame.
 export default function usePlayerInput() {
   useEffect(() => {
     const onKeyDown = (e) => {
@@ -18,7 +19,10 @@ export default function usePlayerInput() {
         case 'KeyD':
           setPlayerLane(playerLane + 1)
           break
-        // Space / shoot wired in Feature 10
+        case 'Space':
+          e.preventDefault()
+          inputState.shootPressed = true
+          break
         default:
           break
       }
@@ -26,5 +30,5 @@ export default function usePlayerInput() {
 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, []) // empty — reads live state from store, no stale closures
+  }, [])
 }
