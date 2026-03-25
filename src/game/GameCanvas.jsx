@@ -8,6 +8,7 @@ import DronePool from '../components/enemies/DronePool'
 import BulletPool from '../components/combat/BulletPool'
 import ExplosionPool from '../components/combat/ExplosionPool'
 import DroneProjectilePool from '../components/combat/DroneProjectilePool'
+import CollectiblePool from '../components/collectibles/CollectiblePool'
 import useGameStore from '../store/gameStore'
 import { ZONES } from './zones'
 
@@ -85,6 +86,7 @@ export default function GameCanvas() {
       <Road />
       <PlayerVehicle />
       <EnemySystems />
+      <CollectiblePool />
     </Canvas>
   )
 }
