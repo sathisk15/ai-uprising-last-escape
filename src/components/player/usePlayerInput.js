@@ -19,7 +19,19 @@ export default function usePlayerInput() {
         case 'KeyD':
           setPlayerLane(playerLane + 1)
           break
+        case 'ArrowUp':
+        case 'KeyW':
         case 'Space':
+          e.preventDefault()
+          useGameStore.getState().startJump()
+          break
+        case 'ArrowDown':
+        case 'KeyS':
+          e.preventDefault()
+          useGameStore.getState().startSlide()
+          break
+        case 'KeyZ':
+        case 'KeyF':
           e.preventDefault()
           inputState.shootPressed = true
           break

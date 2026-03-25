@@ -110,7 +110,7 @@ export default function MainMenu() {
 
         {/* Controls hint */}
         <p className="text-[#444] text-xs mt-6 tracking-widest font-mono">
-          ← → LANE &nbsp;|&nbsp; SPACE SHOOT &nbsp;|&nbsp; P PAUSE
+          ← → LANE &nbsp;|&nbsp; ↑ JUMP &nbsp;|&nbsp; ↓ SLIDE &nbsp;|&nbsp; Z SHOOT &nbsp;|&nbsp; P PAUSE
         </p>
 
         {/* High score */}

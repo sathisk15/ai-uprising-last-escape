@@ -42,9 +42,9 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
         return
       }
 
-      // Collision
+      // Collision — jump clears barricades
       if (hitCooldown.current > 0) return
-      if (aabbXZ(
+      if (!useGameStore.getState().isJumping && aabbXZ(
         LANES[slot.lane], slot.z, HALF.barricade.x, HALF.barricade.z,
         playerX, 2, HALF.player.x, HALF.player.z
       )) {
@@ -119,8 +119,9 @@ function EnergyWallPool({ spawnTimer, hitCooldown }) {
         return
       }
 
+      // Collision — slide ducks under energy walls
       if (hitCooldown.current > 0) return
-      if (aabbXZ(
+      if (!useGameStore.getState().isSliding && aabbXZ(
         LANES[slot.lane], slot.z, HALF.energyWall.x, HALF.energyWall.z,
         playerX, 2, HALF.player.x, HALF.player.z
       )) {

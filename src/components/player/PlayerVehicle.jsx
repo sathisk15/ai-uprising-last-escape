@@ -28,24 +28,58 @@ function LightOrb({ position, color, intensity = 2 }) {
   )
 }
 
+const BASE_Y         = 0.5
+const JUMP_HEIGHT    = 2.8
+const JUMP_DURATION  = 0.75
+const SLIDE_DURATION = 0.6
+
 export default function PlayerVehicle() {
-  const groupRef = useRef()
+  const groupRef  = useRef()
+  const jumpT     = useRef(0)
+  const slideT    = useRef(0)
 
   usePlayerInput()
 
-  // Only lane lerp — no wheel spinning (static car)
   useFrame((_, delta) => {
     if (!groupRef.current) return
-    const { phase, playerLane } = useGameStore.getState()
+    const { phase, playerLane, isJumping, isSliding, endJump, endSlide } = useGameStore.getState()
     if (phase !== 'playing' && phase !== 'paused') return
 
+    // ── Lane lerp ──────────────────────────────────────────────────────────
     const targetX = LANES[playerLane]
-    const curX = groupRef.current.position.x
+    const curX    = groupRef.current.position.x
     groupRef.current.position.x += (targetX - curX) * Math.min(delta * 9, 1)
+    groupRef.current.rotation.z = -(targetX - curX) * 0.15
 
-    // Subtle tilt while changing lanes
-    const diff = targetX - curX
-    groupRef.current.rotation.z = -diff * 0.15
+    // ── Jump arc ───────────────────────────────────────────────────────────
+    if (isJumping) {
+      jumpT.current = Math.min(jumpT.current + delta / JUMP_DURATION, 1)
+      groupRef.current.position.y = BASE_Y + Math.sin(jumpT.current * Math.PI) * JUMP_HEIGHT
+      groupRef.current.scale.y    = 1
+      if (jumpT.current >= 1) {
+        jumpT.current = 0
+        groupRef.current.position.y = BASE_Y
+        endJump()
+      }
+    // ── Slide squish ────────────────────────────────────────────────────────
+    } else if (isSliding) {
+      slideT.current = Math.min(slideT.current + delta / SLIDE_DURATION, 1)
+      const squish = 1 - Math.sin(slideT.current * Math.PI) * 0.55
+      groupRef.current.scale.y    = squish
+      groupRef.current.position.y = BASE_Y - (1 - squish) * 0.35
+      if (slideT.current >= 1) {
+        slideT.current = 0
+        groupRef.current.scale.y    = 1
+        groupRef.current.position.y = BASE_Y
+        endSlide()
+      }
+    } else {
+      // Ensure reset when neither active
+      groupRef.current.position.y = BASE_Y
+      groupRef.current.scale.y    = 1
+      jumpT.current  = 0
+      slideT.current = 0
+    }
   })
 
   // group y=0.5 → wheels sit just above road surface (road top = 0.1 world)
