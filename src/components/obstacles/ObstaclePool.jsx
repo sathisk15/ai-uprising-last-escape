@@ -166,17 +166,9 @@ function EnergyWallPool({ spawnTimer, hitCooldown }) {
   )
 }
 
-// ─── Main export — composes both pools with shared timers ─────────────────────
-export default function ObstaclePool() {
-  // Shared spawn timers (plain object ref — not React state)
+// ─── Main export — accepts shared hitCooldown from EnemySystems ───────────────
+export default function ObstaclePool({ hitCooldown }) {
   const spawnTimer = useRef({ barricade: 2.0, energyWall: 4.0 })
-  // Shared invincibility timer after any hit
-  const hitCooldown = useRef(0)
-
-  // Tick down hitCooldown centrally
-  useFrame((_, delta) => {
-    if (hitCooldown.current > 0) hitCooldown.current -= delta
-  })
 
   return (
     <>

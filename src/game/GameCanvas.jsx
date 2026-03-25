@@ -1,11 +1,24 @@
-import React, { useEffect } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
+import React, { useEffect, useRef } from 'react'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import Road from '../components/environment/Road'
 import PlayerVehicle from '../components/player/PlayerVehicle'
 import GameLoop from './GameLoop'
 import ObstaclePool from '../components/obstacles/ObstaclePool'
+import DronePool from '../components/enemies/DronePool'
 import useGameStore from '../store/gameStore'
 import { ZONES } from './zones'
+
+// Owns the shared hit-cooldown so obstacles AND drones can't double-damage
+function EnemySystems() {
+  const hitCooldown = useRef(0)
+  useFrame((_, delta) => { if (hitCooldown.current > 0) hitCooldown.current -= delta })
+  return (
+    <>
+      <ObstaclePool hitCooldown={hitCooldown} />
+      <DronePool hitCooldown={hitCooldown} />
+    </>
+  )
+}
 
 function CameraSetup() {
   const { camera } = useThree()
@@ -65,7 +78,7 @@ export default function GameCanvas() {
       <GameLoop />
       <Road />
       <PlayerVehicle />
-      <ObstaclePool />
+      <EnemySystems />
     </Canvas>
   )
 }
