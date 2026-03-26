@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing'
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
 import Road from '../components/environment/Road'
 import BuildingPool from '../components/environment/BuildingPool'
@@ -93,7 +93,7 @@ export default function GameCanvas() {
     <Canvas
       shadows
       style={{ width: '100%', height: '100%', background: zoneData.bgColor }}
-      gl={{ antialias: true, toneMappingExposure: 1.4 }}
+      gl={{ antialias: true, toneMappingExposure: 0.9 }}
       camera={{ position: [0, 3, 9], fov: 65, near: 0.1, far: 160 }}
     >
       <CameraSetup />
@@ -101,32 +101,29 @@ export default function GameCanvas() {
       <ZoneFog />
 
       {/* ── Lighting ──────────────────────────────────────────────────────── */}
-      {/* Hemisphere: sky vs ground bounce */}
-      <hemisphereLight skyColor="#223366" groundColor="#110800" intensity={0.6} />
+      {/* Ambient — single, moderate */}
+      <ambientLight intensity={0.7} color="#ffffff" />
 
-      {/* Main key light */}
-      <ambientLight intensity={0.9} color="#ffffff" />
+      {/* Single shadow-casting directional — 1024 map is enough */}
       <directionalLight
         castShadow
         position={[5, 14, 8]}
-        intensity={2.2}
+        intensity={1.6}
         color="#ffffff"
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[1024, 1024]}
         shadow-camera-near={0.5}
-        shadow-camera-far={80}
-        shadow-camera-left={-20}
-        shadow-camera-right={20}
-        shadow-camera-top={20}
-        shadow-camera-bottom={-20}
+        shadow-camera-far={60}
+        shadow-camera-left={-18}
+        shadow-camera-right={18}
+        shadow-camera-top={18}
+        shadow-camera-bottom={-18}
         shadow-bias={-0.0005}
       />
-      {/* Fill / rim */}
-      <directionalLight position={[0, 5, 14]} intensity={1.2} color="#aaccff" />
-      <directionalLight position={[-8, 3, 0]} intensity={0.5} color={zoneData.ambientColor} />
+      {/* One fill light — no shadows */}
+      <directionalLight position={[0, 5, 12]} intensity={0.7} color="#aaccff" />
 
-      {/* Zone-tinted road-level point light */}
-      <pointLight position={[0, 1.2, 3]} intensity={2.0} color={zoneData.ambientColor} distance={22} decay={2} />
-      <pointLight position={[0, 1.2, -10]} intensity={1.0} color={zoneData.ambientColor} distance={18} decay={2} />
+      {/* Single zone-tinted point light — just one, no shadow */}
+      <pointLight position={[0, 1.5, 0]} intensity={1.2} color={zoneData.ambientColor} distance={20} decay={2} />
 
       {/* ── Ground plane (extends beyond road for shadow reception) ──────── */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, -20]} receiveShadow>
@@ -143,16 +140,12 @@ export default function GameCanvas() {
       <CollectiblePool />
 
       {/* ── Post-processing ───────────────────────────────────────────────── */}
-      <EffectComposer>
+      <EffectComposer multisampling={0}>
         <Bloom
-          luminanceThreshold={0.18}
-          luminanceSmoothing={0.85}
-          intensity={1.6}
+          luminanceThreshold={0.35}
+          luminanceSmoothing={0.7}
+          intensity={0.7}
           blendFunction={BlendFunction.ADD}
-        />
-        <ChromaticAberration
-          blendFunction={BlendFunction.NORMAL}
-          offset={[0.0008, 0.0008]}
         />
       </EffectComposer>
     </Canvas>

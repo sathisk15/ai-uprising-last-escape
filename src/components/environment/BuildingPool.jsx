@@ -115,24 +115,12 @@ function Building({ def, bIdx, style }) {
           <meshStandardMaterial
             color={win.lit ? style.windowOn : '#0a0a0a'}
             emissive={win.lit ? style.windowOn : '#000000'}
-            emissiveIntensity={win.lit ? style.windowOnIntensity : 0}
+            emissiveIntensity={win.lit ? style.windowOnIntensity * 0.65 : 0}
             toneMapped={false}
           />
         </mesh>
       ))}
 
-      {/* Windows on back face for depth */}
-      {windows.map(win => (
-        <mesh key={`b-${win.key}`} position={[win.wx, win.wy, -(d / 2 + 0.02)]} rotation={[0, Math.PI, 0]}>
-          <planeGeometry args={[0.35, 0.45]} />
-          <meshStandardMaterial
-            color={win.lit ? style.windowOn : '#0a0a0a'}
-            emissive={win.lit ? style.windowOn : '#000000'}
-            emissiveIntensity={win.lit ? style.windowOnIntensity * 0.5 : 0}
-            toneMapped={false}
-          />
-        </mesh>
-      ))}
 
       {/* Rooftop detail: chimney */}
       {detail === 'chimney' && (

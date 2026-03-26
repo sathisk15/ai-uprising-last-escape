@@ -82,11 +82,11 @@ export default function PlayerVehicle() {
       {/* Side neon stripes */}
       <mesh position={[-0.61, 0.08, 0]}>
         <boxGeometry args={[0.01, 0.06, 2.2]} />
-        <meshStandardMaterial color="#00f5ff" emissive="#00f5ff" emissiveIntensity={4} toneMapped={false} />
+        <meshStandardMaterial color="#00f5ff" emissive="#00f5ff" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
       <mesh position={[0.61, 0.08, 0]}>
         <boxGeometry args={[0.01, 0.06, 2.2]} />
-        <meshStandardMaterial color="#00f5ff" emissive="#00f5ff" emissiveIntensity={4} toneMapped={false} />
+        <meshStandardMaterial color="#00f5ff" emissive="#00f5ff" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
 
       {/* ── Cabin ──────────────────────────────────────────────────────────── */}
@@ -142,27 +142,24 @@ export default function PlayerVehicle() {
       {/* ── Headlights ──────────────────────────────────────────────────────── */}
       <mesh position={[-0.35, 0.1, 1.27]}>
         <boxGeometry args={[0.22, 0.1, 0.03]} />
-        <meshStandardMaterial color="#ddeeff" emissive="#aaddff" emissiveIntensity={4} toneMapped={false} />
+        <meshStandardMaterial color="#ddeeff" emissive="#aaddff" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
       <mesh position={[ 0.35, 0.1, 1.27]}>
         <boxGeometry args={[0.22, 0.1, 0.03]} />
-        <meshStandardMaterial color="#ddeeff" emissive="#aaddff" emissiveIntensity={4} toneMapped={false} />
+        <meshStandardMaterial color="#ddeeff" emissive="#aaddff" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
-      <pointLight position={[-0.35, 0.1, 2.2]} intensity={4} color="#ffffff" distance={14} decay={2} />
-      <pointLight position={[ 0.35, 0.1, 2.2]} intensity={4} color="#ffffff" distance={14} decay={2} />
+      <pointLight position={[0, 0.1, 2.4]} intensity={2.5} color="#cce8ff" distance={12} decay={2} />
 
       {/* ── Tail lights ─────────────────────────────────────────────────────── */}
       <mesh position={[-0.42, 0.1, -1.27]}>
         <boxGeometry args={[0.18, 0.08, 0.03]} />
-        <meshStandardMaterial color="#ff1a1a" emissive="#ff0000" emissiveIntensity={4} toneMapped={false} />
+        <meshStandardMaterial color="#ff1a1a" emissive="#ff0000" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
       <mesh position={[ 0.42, 0.1, -1.27]}>
         <boxGeometry args={[0.18, 0.08, 0.03]} />
-        <meshStandardMaterial color="#ff1a1a" emissive="#ff0000" emissiveIntensity={4} toneMapped={false} />
+        <meshStandardMaterial color="#ff1a1a" emissive="#ff0000" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
 
-      {/* ── Underbody glow ──────────────────────────────────────────────────── */}
-      <pointLight position={[0, -0.25, 0]} intensity={1.5} color="#00aaff" distance={3} decay={2} />
     </group>
   )
 }

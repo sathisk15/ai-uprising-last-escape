@@ -133,10 +133,9 @@ export default function BulletPool() {
       {Array.from({ length: MAX_BULLETS }).map((_, i) => (
         <group key={i} ref={el => { refs.current[i] = el }} position={[0, 0.85, PARK_Z]}>
           <mesh>
-            <boxGeometry args={[0.08, 0.08, 0.5]} />
-            <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={4} toneMapped={false} />
+            <boxGeometry args={[0.1, 0.1, 0.55]} />
+            <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={3} toneMapped={false} />
           </mesh>
-          <pointLight intensity={0.8} color="#00ffff" distance={2.5} />
         </group>
       ))}
     </>

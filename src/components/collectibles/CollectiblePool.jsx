@@ -37,14 +37,13 @@ function EnergyCell() {
   return (
     <group>
       <mesh castShadow>
-        <sphereGeometry args={[0.28, 14, 14]} />
-        <meshStandardMaterial color="#0088ff" emissive="#0066ff" emissiveIntensity={3} toneMapped={false} />
+        <sphereGeometry args={[0.28, 10, 10]} />
+        <meshStandardMaterial color="#0088ff" emissive="#0066ff" emissiveIntensity={2} toneMapped={false} />
       </mesh>
       <mesh>
-        <torusGeometry args={[0.42, 0.045, 8, 28]} />
-        <meshStandardMaterial color="#44bbff" emissive="#2277ff" emissiveIntensity={2} toneMapped={false} />
+        <torusGeometry args={[0.42, 0.045, 6, 20]} />
+        <meshStandardMaterial color="#44bbff" emissive="#2277ff" emissiveIntensity={1.5} toneMapped={false} />
       </mesh>
-      <pointLight intensity={1.2} color="#0088ff" distance={4} />
     </group>
   )
 }
@@ -54,17 +53,16 @@ function RepairPack() {
     <group>
       <mesh castShadow>
         <boxGeometry args={[0.5, 0.14, 0.14]} />
-        <meshStandardMaterial color="#00dd44" emissive="#008822" emissiveIntensity={2.5} toneMapped={false} />
+        <meshStandardMaterial color="#00dd44" emissive="#008822" emissiveIntensity={1.8} toneMapped={false} />
       </mesh>
       <mesh castShadow>
         <boxGeometry args={[0.14, 0.5, 0.14]} />
-        <meshStandardMaterial color="#00dd44" emissive="#008822" emissiveIntensity={2.5} toneMapped={false} />
+        <meshStandardMaterial color="#00dd44" emissive="#008822" emissiveIntensity={1.8} toneMapped={false} />
       </mesh>
       <mesh>
         <boxGeometry args={[0.42, 0.42, 0.12]} />
         <meshStandardMaterial color="#003a18" metalness={0.6} roughness={0.3} />
       </mesh>
-      <pointLight intensity={1.2} color="#00dd44" distance={4} />
     </group>
   )
 }
@@ -74,17 +72,16 @@ function DataChip() {
     <group>
       <mesh castShadow>
         <boxGeometry args={[0.38, 0.09, 0.38]} />
-        <meshStandardMaterial color="#00ffee" emissive="#009988" emissiveIntensity={3} toneMapped={false} metalness={0.8} roughness={0.15} />
+        <meshStandardMaterial color="#00ffee" emissive="#009988" emissiveIntensity={2} toneMapped={false} metalness={0.8} roughness={0.15} />
       </mesh>
       <mesh position={[0, 0.06, 0]}>
         <boxGeometry args={[0.3, 0.01, 0.04]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1.5} toneMapped={false} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1} toneMapped={false} />
       </mesh>
       <mesh position={[0, 0.06, 0.1]}>
         <boxGeometry args={[0.16, 0.01, 0.04]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1.5} toneMapped={false} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1} toneMapped={false} />
       </mesh>
-      <pointLight intensity={1.2} color="#00ffee" distance={4} />
     </group>
   )
 }
@@ -114,7 +111,6 @@ function AmmoCrate() {
           <meshStandardMaterial color="#ffcc44" emissive="#ff9900" emissiveIntensity={1} toneMapped={false} metalness={0.9} />
         </mesh>
       ))}
-      <pointLight intensity={1.0} color="#ffcc00" distance={4} />
     </group>
   )
 }
