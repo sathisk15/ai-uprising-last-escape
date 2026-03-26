@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import Road from '../components/environment/Road'
+import BuildingPool from '../components/environment/BuildingPool'
 import PlayerVehicle from '../components/player/PlayerVehicle'
 import GameLoop from './GameLoop'
 import ObstaclePool from '../components/obstacles/ObstaclePool'
@@ -84,6 +85,7 @@ export default function GameCanvas() {
       {/* Game systems */}
       <GameLoop />
       <Road />
+      <BuildingPool />
       <PlayerVehicle />
       <EnemySystems />
       <CollectiblePool />
