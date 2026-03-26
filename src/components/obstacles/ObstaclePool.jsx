@@ -5,6 +5,7 @@ import { LANES, ZONES } from '../../game/zones'
 import { aabbXZ, HALF } from '../../game/physics'
 import Barricade from './Barricade'
 import EnergyWall from './EnergyWall'
+import AudioManager from '../../audio/AudioManager'
 
 const MAX_BARRICADES = 7
 const MAX_ENERGYWALLS = 4
@@ -51,6 +52,7 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
         slot.active = false
         ref.position.z = PARK_Z
         useGameStore.getState().takeDamage('obstacle')
+        AudioManager.playSFX('hit')
         hitCooldown.current = 1.5
       }
     })
@@ -128,6 +130,7 @@ function EnergyWallPool({ spawnTimer, hitCooldown }) {
         slot.active = false
         ref.position.z = PARK_Z
         useGameStore.getState().takeDamage('obstacle')
+        AudioManager.playSFX('hit')
         hitCooldown.current = 1.5
       }
     })

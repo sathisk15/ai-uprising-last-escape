@@ -6,6 +6,7 @@ import { aabbXZ, HALF } from '../../game/physics'
 import { inputState } from '../../game/inputState'
 import { droneSharedData } from '../enemies/droneData'
 import { spawnExplosion } from './ExplosionPool'
+import AudioManager from '../../audio/AudioManager'
 
 const MAX_BULLETS  = 12
 const BULLET_SPEED = 48   // units/s — travels toward negative Z
@@ -43,6 +44,7 @@ export default function BulletPool() {
           slot.z = 1.5   // just ahead of the car
           const ref = refs.current[slot.id]
           if (ref) ref.position.set(slot.x, 0.85, slot.z)
+          AudioManager.playSFX('shoot')
         }
       }
     }
@@ -75,6 +77,7 @@ export default function BulletPool() {
           // Kill drone
           const droneRef = drone.groupRef ?? null
           spawnExplosion(drone.x, 1.6, drone.z)
+          AudioManager.playSFX('explosion')
           drone.active = false
           if (droneRef) droneRef.position.z = PARK_Z
 

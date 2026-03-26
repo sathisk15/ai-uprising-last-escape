@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { ZONES, BASE_SPEED, DAMAGE } from '../game/zones'
+import { shakeSignal } from '../game/shakeSignal'
 
 // Persistent slice — survives page reload
 const persistedSlice = (set) => ({
@@ -56,6 +57,7 @@ const useGameStore = create(
       takeDamage: (type = 'obstacle') => {
         const amount = DAMAGE[type] ?? DAMAGE.obstacle
         const health = Math.max(0, get().health - amount)
+        shakeSignal.pending = true
         if (health <= 0) {
           get().endGame()
         } else {

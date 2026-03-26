@@ -12,6 +12,7 @@ import DroneProjectilePool from '../components/combat/DroneProjectilePool'
 import CollectiblePool from '../components/collectibles/CollectiblePool'
 import useGameStore from '../store/gameStore'
 import { ZONES } from './zones'
+import { shakeSignal } from './shakeSignal'
 
 // Owns the shared hit-cooldown so obstacles AND drones can't double-damage
 function EnemySystems() {
@@ -36,6 +37,36 @@ function CameraSetup() {
     camera.fov = 65
     camera.updateProjectionMatrix()
   }, [camera])
+  return null
+}
+
+// Screen shake — triggered by shakeSignal.pending flag set from takeDamage
+const BASE_CAM = { x: 0, y: 3, z: 9 }
+const SHAKE_MAG = 0.22
+const SHAKE_DUR = 0.32
+
+function CameraShake() {
+  const { camera } = useThree()
+  const shakeTimer = useRef(0)
+
+  useFrame((_, delta) => {
+    if (shakeSignal.pending) {
+      shakeSignal.pending = false
+      shakeTimer.current = SHAKE_DUR
+    }
+    if (shakeTimer.current > 0) {
+      shakeTimer.current -= delta
+      const t = shakeTimer.current / SHAKE_DUR  // 1→0
+      const mag = SHAKE_MAG * t
+      camera.position.x = BASE_CAM.x + (Math.random() * 2 - 1) * mag
+      camera.position.y = BASE_CAM.y + (Math.random() * 2 - 1) * mag * 0.5
+      camera.position.z = BASE_CAM.z + (Math.random() * 2 - 1) * mag * 0.3
+    } else {
+      camera.position.x = BASE_CAM.x
+      camera.position.y = BASE_CAM.y
+      camera.position.z = BASE_CAM.z
+    }
+  })
   return null
 }
 
@@ -67,6 +98,7 @@ export default function GameCanvas() {
       camera={{ position: [0, 3, 9], fov: 65, near: 0.1, far: 150 }}
     >
       <CameraSetup />
+      <CameraShake />
       <ZoneFog />
 
       {/* Lighting */}

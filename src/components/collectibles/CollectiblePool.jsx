@@ -2,6 +2,7 @@ import React, { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { gsap } from 'gsap'
 import useGameStore from '../../store/gameStore'
+import AudioManager from '../../audio/AudioManager'
 import { LANES } from '../../game/zones'
 import { aabbXZ } from '../../game/physics'
 
@@ -137,6 +138,7 @@ export default function CollectiblePool() {
       if (aabbXZ(LANES[slot.lane], slot.z, C.x, C.z, playerX, 2, P.x, P.z)) {
         slot.active = false
         REWARDS[slot.type]()
+        AudioManager.playSFX('pickup')
 
         gsap.to(outer.scale, {
           x: 2.5, y: 2.5, z: 2.5,

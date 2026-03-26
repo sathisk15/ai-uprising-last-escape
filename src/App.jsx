@@ -5,11 +5,28 @@ import GameScreen from './screens/GameScreen'
 import GameOver from './screens/GameOver'
 import Victory from './screens/Victory'
 import ZoneTransition from './screens/ZoneTransition'
+import AudioManager from './audio/AudioManager'
 
 export default function App() {
   const phase = useGameStore((s) => s.phase)
+  const zone  = useGameStore((s) => s.zone)
   const pauseGame = useGameStore((s) => s.pauseGame)
   const resumeGame = useGameStore((s) => s.resumeGame)
+
+  // BGM — start/stop based on phase + zone
+  useEffect(() => {
+    if (phase === 'playing' || phase === 'paused' || phase === 'transition') {
+      AudioManager.playBGM(zone)
+    } else if (phase === 'gameover') {
+      AudioManager.stopBGM()
+      AudioManager.playSFX('game_over')
+    } else if (phase === 'victory') {
+      AudioManager.stopBGM()
+      AudioManager.playSFX('victory')
+    } else {
+      AudioManager.stopBGM()
+    }
+  }, [phase, zone])
 
   // Global keyboard: P / Escape to pause-resume
   useEffect(() => {
