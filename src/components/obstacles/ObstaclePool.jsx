@@ -6,21 +6,24 @@ import { aabbXZ, HALF } from '../../game/physics'
 import Barricade from './Barricade'
 import EnergyWall from './EnergyWall'
 import AudioManager from '../../audio/AudioManager'
+import { obstacleSharedData } from './obstacleData'
 
-const MAX_BARRICADES = 7
+const MAX_BARRICADES  = 7
 const MAX_ENERGYWALLS = 4
-const SPAWN_Z = -68
-const PARK_Z = -500          // where inactive obstacles sit (off screen)
-const DESPAWN_Z = 18         // past camera → recycle
+const SPAWN_Z   = -68
+const PARK_Z    = -500
+const DESPAWN_Z = 18
 
 // ─── Barricade pool ───────────────────────────────────────────────────────────
 function BarricadePool({ spawnTimer, hitCooldown }) {
   const data = useRef(
     Array.from({ length: MAX_BARRICADES }, (_, i) => ({
-      id: i, active: false, lane: 1, z: PARK_Z,
+      id: i, active: false, lane: 1, z: PARK_Z, hp: 2, ref: null, type: 'barricade',
     }))
   )
-  const refs = useRef(Array.from({ length: MAX_BARRICADES }, () => null))
+
+  // Register once — BulletPool reads this array
+  obstacleSharedData.barricadeSlots = data.current
 
   useFrame((_, delta) => {
     const { phase, speed, zone, playerLane } = useGameStore.getState()
@@ -30,13 +33,12 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
 
     data.current.forEach((slot) => {
       if (!slot.active) return
-      const ref = refs.current[slot.id]
+      const ref = slot.ref
       if (!ref) return
 
       slot.z += speed * delta
       ref.position.z = slot.z
 
-      // Despawn
       if (slot.z > DESPAWN_Z) {
         slot.active = false
         ref.position.z = PARK_Z
@@ -66,12 +68,13 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
       const slot = data.current.find(s => !s.active)
       if (slot) {
         slot.active = true
-        slot.lane = Math.floor(Math.random() * 3)
-        slot.z = SPAWN_Z
-        const ref = refs.current[slot.id]
-        if (ref) {
-          ref.position.x = LANES[slot.lane]
-          ref.position.z = SPAWN_Z
+        slot.lane   = Math.floor(Math.random() * 3)
+        slot.z      = SPAWN_Z
+        slot.hp     = 2
+        if (slot.ref) {
+          slot.ref.position.x = LANES[slot.lane]
+          slot.ref.position.z = SPAWN_Z
+          slot.ref.scale.set(1, 1, 1)
         }
       }
     }
@@ -82,7 +85,7 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
       {Array.from({ length: MAX_BARRICADES }).map((_, i) => (
         <group
           key={i}
-          ref={el => { refs.current[i] = el }}
+          ref={el => { data.current[i].ref = el }}
           position={[LANES[1], 0, PARK_Z]}
         >
           <Barricade />
@@ -96,10 +99,11 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
 function EnergyWallPool({ spawnTimer, hitCooldown }) {
   const data = useRef(
     Array.from({ length: MAX_ENERGYWALLS }, (_, i) => ({
-      id: i, active: false, lane: 1, z: PARK_Z,
+      id: i + MAX_BARRICADES, active: false, lane: 1, z: PARK_Z, hp: 1, ref: null, type: 'energyWall',
     }))
   )
-  const refs = useRef(Array.from({ length: MAX_ENERGYWALLS }, () => null))
+
+  obstacleSharedData.energyWallSlots = data.current
 
   useFrame((_, delta) => {
     const { phase, speed, zone, playerLane } = useGameStore.getState()
@@ -109,7 +113,7 @@ function EnergyWallPool({ spawnTimer, hitCooldown }) {
 
     data.current.forEach((slot) => {
       if (!slot.active) return
-      const ref = refs.current[slot.id]
+      const ref = slot.ref
       if (!ref) return
 
       slot.z += speed * delta
@@ -135,7 +139,6 @@ function EnergyWallPool({ spawnTimer, hitCooldown }) {
       }
     })
 
-    // Energy walls spawn less often than barricades, mixed in with barricade timer
     spawnTimer.energyWall -= delta
     if (spawnTimer.energyWall <= 0) {
       const zoneData = ZONES[zone]
@@ -144,12 +147,13 @@ function EnergyWallPool({ spawnTimer, hitCooldown }) {
       const slot = data.current.find(s => !s.active)
       if (slot) {
         slot.active = true
-        slot.lane = Math.floor(Math.random() * 3)
-        slot.z = SPAWN_Z
-        const ref = refs.current[slot.id]
-        if (ref) {
-          ref.position.x = LANES[slot.lane]
-          ref.position.z = SPAWN_Z
+        slot.lane   = Math.floor(Math.random() * 3)
+        slot.z      = SPAWN_Z
+        slot.hp     = 1
+        if (slot.ref) {
+          slot.ref.position.x = LANES[slot.lane]
+          slot.ref.position.z = SPAWN_Z
+          slot.ref.scale.set(1, 1, 1)
         }
       }
     }
@@ -160,7 +164,7 @@ function EnergyWallPool({ spawnTimer, hitCooldown }) {
       {Array.from({ length: MAX_ENERGYWALLS }).map((_, i) => (
         <group
           key={i}
-          ref={el => { refs.current[i] = el }}
+          ref={el => { data.current[i].ref = el }}
           position={[LANES[1], 0, PARK_Z]}
         >
           <EnergyWall />
@@ -170,7 +174,7 @@ function EnergyWallPool({ spawnTimer, hitCooldown }) {
   )
 }
 
-// ─── Main export — accepts shared hitCooldown from EnemySystems ───────────────
+// ─── Main export ───────────────────────────────────────────────────────────────
 export default function ObstaclePool({ hitCooldown }) {
   const spawnTimer = useRef({ barricade: 2.0, energyWall: 4.0 })
 

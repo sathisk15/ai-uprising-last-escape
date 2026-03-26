@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
+import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing'
+import { BlendFunction } from 'postprocessing'
 import Road from '../components/environment/Road'
 import BuildingPool from '../components/environment/BuildingPool'
 import PlayerVehicle from '../components/player/PlayerVehicle'
@@ -41,9 +43,9 @@ function CameraSetup() {
 }
 
 // Screen shake — triggered by shakeSignal.pending flag set from takeDamage
-const BASE_CAM = { x: 0, y: 3, z: 9 }
-const SHAKE_MAG = 0.22
-const SHAKE_DUR = 0.32
+const BASE_CAM   = { x: 0, y: 3, z: 9 }
+const SHAKE_MAG  = 0.22
+const SHAKE_DUR  = 0.32
 
 function CameraShake() {
   const { camera } = useThree()
@@ -52,12 +54,11 @@ function CameraShake() {
   useFrame((_, delta) => {
     if (shakeSignal.pending) {
       shakeSignal.pending = false
-      shakeTimer.current = SHAKE_DUR
+      shakeTimer.current  = SHAKE_DUR
     }
     if (shakeTimer.current > 0) {
       shakeTimer.current -= delta
-      const t = shakeTimer.current / SHAKE_DUR  // 1→0
-      const mag = SHAKE_MAG * t
+      const mag = SHAKE_MAG * (shakeTimer.current / SHAKE_DUR)
       camera.position.x = BASE_CAM.x + (Math.random() * 2 - 1) * mag
       camera.position.y = BASE_CAM.y + (Math.random() * 2 - 1) * mag * 0.5
       camera.position.z = BASE_CAM.z + (Math.random() * 2 - 1) * mag * 0.3
@@ -70,57 +71,90 @@ function CameraShake() {
   return null
 }
 
-// Updates Three.js fog color when zone changes (must live inside Canvas)
+// Updates fog + background when zone changes
 function ZoneFog() {
   const { scene } = useThree()
-  const zone = useGameStore((s) => s.zone)
+  const zone     = useGameStore((s) => s.zone)
   const zoneData = ZONES[zone]
 
   useEffect(() => {
-    if (scene.fog) {
-      scene.fog.color.set(zoneData.fogColor)
-    }
+    if (scene.fog) scene.fog.color.set(zoneData.fogColor)
     scene.background?.set?.(zoneData.bgColor)
   }, [zone, scene, zoneData])
 
-  return <fog attach="fog" args={[zoneData.fogColor, 25, 100]} />
+  return <fog attach="fog" args={[zoneData.fogColor, 30, 110]} />
 }
 
 export default function GameCanvas() {
-  const zone = useGameStore((s) => s.zone)
+  const zone     = useGameStore((s) => s.zone)
   const zoneData = ZONES[zone]
 
   return (
     <Canvas
       shadows
       style={{ width: '100%', height: '100%', background: zoneData.bgColor }}
-      gl={{ antialias: true }}
-      camera={{ position: [0, 3, 9], fov: 65, near: 0.1, far: 150 }}
+      gl={{ antialias: true, toneMappingExposure: 1.4 }}
+      camera={{ position: [0, 3, 9], fov: 65, near: 0.1, far: 160 }}
     >
       <CameraSetup />
       <CameraShake />
       <ZoneFog />
 
-      {/* Lighting */}
-      <ambientLight intensity={1.2} color="#ffffff" />
-      <directionalLight castShadow position={[5, 14, 8]} intensity={2.5} color="#ffffff"
-        shadow-mapSize={[1024, 1024]} />
-      <directionalLight position={[0, 4, 12]} intensity={1.5} color="#cce0ff" />
-      <pointLight position={[0, 1, 3]} intensity={1.2} color={zoneData.ambientColor} distance={20} />
+      {/* ── Lighting ──────────────────────────────────────────────────────── */}
+      {/* Hemisphere: sky vs ground bounce */}
+      <hemisphereLight skyColor="#223366" groundColor="#110800" intensity={0.6} />
 
-      {/* Ground */}
+      {/* Main key light */}
+      <ambientLight intensity={0.9} color="#ffffff" />
+      <directionalLight
+        castShadow
+        position={[5, 14, 8]}
+        intensity={2.2}
+        color="#ffffff"
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-near={0.5}
+        shadow-camera-far={80}
+        shadow-camera-left={-20}
+        shadow-camera-right={20}
+        shadow-camera-top={20}
+        shadow-camera-bottom={-20}
+        shadow-bias={-0.0005}
+      />
+      {/* Fill / rim */}
+      <directionalLight position={[0, 5, 14]} intensity={1.2} color="#aaccff" />
+      <directionalLight position={[-8, 3, 0]} intensity={0.5} color={zoneData.ambientColor} />
+
+      {/* Zone-tinted road-level point light */}
+      <pointLight position={[0, 1.2, 3]} intensity={2.0} color={zoneData.ambientColor} distance={22} decay={2} />
+      <pointLight position={[0, 1.2, -10]} intensity={1.0} color={zoneData.ambientColor} distance={18} decay={2} />
+
+      {/* ── Ground plane (extends beyond road for shadow reception) ──────── */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, -20]} receiveShadow>
-        <planeGeometry args={[60, 120]} />
-        <meshStandardMaterial color="#111111" roughness={1} />
+        <planeGeometry args={[80, 140]} />
+        <meshStandardMaterial color="#0a0a0a" roughness={0.95} metalness={0.05} />
       </mesh>
 
-      {/* Game systems */}
+      {/* ── Game systems ──────────────────────────────────────────────────── */}
       <GameLoop />
       <Road />
       <BuildingPool />
       <PlayerVehicle />
       <EnemySystems />
       <CollectiblePool />
+
+      {/* ── Post-processing ───────────────────────────────────────────────── */}
+      <EffectComposer>
+        <Bloom
+          luminanceThreshold={0.18}
+          luminanceSmoothing={0.85}
+          intensity={1.6}
+          blendFunction={BlendFunction.ADD}
+        />
+        <ChromaticAberration
+          blendFunction={BlendFunction.NORMAL}
+          offset={[0.0008, 0.0008]}
+        />
+      </EffectComposer>
     </Canvas>
   )
 }

@@ -73,6 +73,39 @@ function EnergyBar() {
   )
 }
 
+// ── Ammo display ──────────────────────────────────────────────────────────────
+function AmmoDisplay() {
+  const ammo = useGameStore((s) => s.ammo)
+  const color = ammo > 8 ? '#ffdd00' : ammo > 3 ? '#ff8800' : '#ff2222'
+
+  // Render up to 15 pip dots (cap visual at 15 even if ammo > 15)
+  const MAX_PIPS = 15
+  const pips = Math.min(ammo, MAX_PIPS)
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] tracking-[0.2em] text-white/50 font-mono">AMMO</span>
+        <span className="text-[10px] tracking-widest font-mono" style={{ color }}>
+          {ammo}{ammo > MAX_PIPS ? '+' : ''}
+        </span>
+      </div>
+      <div className="flex gap-[3px] w-48 flex-wrap">
+        {Array.from({ length: MAX_PIPS }).map((_, i) => (
+          <div
+            key={i}
+            className="w-[10px] h-[10px] rounded-sm transition-all duration-150"
+            style={{
+              background: i < pips ? color : 'rgba(255,255,255,0.07)',
+              boxShadow: i < pips ? `0 0 4px ${color}` : 'none',
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ── Zone badge ────────────────────────────────────────────────────────────────
 function ZoneBadge() {
   const zone     = useGameStore((s) => s.zone)
@@ -196,10 +229,11 @@ export default function HUD() {
       className="absolute inset-0 pointer-events-none z-10"
       style={{ opacity: 0 }}
     >
-      {/* Top-left — health + energy stacked */}
+      {/* Top-left — health + energy + ammo stacked */}
       <div className="absolute top-4 left-4 flex flex-col gap-2">
         <HealthBar />
         <EnergyBar />
+        <AmmoDisplay />
       </div>
 
       {/* Top-center — zone */}

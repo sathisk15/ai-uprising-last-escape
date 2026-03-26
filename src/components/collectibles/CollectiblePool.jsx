@@ -2,15 +2,15 @@ import React, { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { gsap } from 'gsap'
 import useGameStore from '../../store/gameStore'
-import AudioManager from '../../audio/AudioManager'
 import { LANES } from '../../game/zones'
 import { aabbXZ } from '../../game/physics'
+import AudioManager from '../../audio/AudioManager'
 
-const MAX        = 10
+const MAX        = 12
 const SPAWN_Z    = -65
 const PARK_Z     = -800
 const DESPAWN_Z  = 18
-const SPAWN_RATE = 4.5
+const SPAWN_RATE = 3.8
 const BOB_AMP    = 0.18
 const BOB_FREQ   = 2.0
 
@@ -19,15 +19,17 @@ const C = { x: 0.5,  z: 0.5 }
 
 function randomType() {
   const r = Math.random()
-  if (r < 0.4) return 'energy'
-  if (r < 0.7) return 'repair'
-  return 'chip'
+  if (r < 0.35) return 'energy'
+  if (r < 0.60) return 'repair'
+  if (r < 0.80) return 'chip'
+  return 'ammo'
 }
 
 const REWARDS = {
   energy: () => useGameStore.getState().refillEnergy(30),
   repair: () => useGameStore.getState().repairHealth(25),
   chip:   () => useGameStore.getState().addScore(150),
+  ammo:   () => useGameStore.getState().refillAmmo(8),
 }
 
 // ── Visuals ───────────────────────────────────────────────────────────────────
@@ -35,14 +37,14 @@ function EnergyCell() {
   return (
     <group>
       <mesh castShadow>
-        <sphereGeometry args={[0.28, 12, 12]} />
-        <meshStandardMaterial color="#0088ff" emissive="#0044ff" emissiveIntensity={2} toneMapped={false} />
+        <sphereGeometry args={[0.28, 14, 14]} />
+        <meshStandardMaterial color="#0088ff" emissive="#0066ff" emissiveIntensity={3} toneMapped={false} />
       </mesh>
       <mesh>
-        <torusGeometry args={[0.38, 0.04, 8, 24]} />
-        <meshStandardMaterial color="#44aaff" emissive="#2266ff" emissiveIntensity={1.5} toneMapped={false} />
+        <torusGeometry args={[0.42, 0.045, 8, 28]} />
+        <meshStandardMaterial color="#44bbff" emissive="#2277ff" emissiveIntensity={2} toneMapped={false} />
       </mesh>
-      <pointLight intensity={0.8} color="#0088ff" distance={3} />
+      <pointLight intensity={1.2} color="#0088ff" distance={4} />
     </group>
   )
 }
@@ -52,17 +54,17 @@ function RepairPack() {
     <group>
       <mesh castShadow>
         <boxGeometry args={[0.5, 0.14, 0.14]} />
-        <meshStandardMaterial color="#00cc44" emissive="#007722" emissiveIntensity={1.8} toneMapped={false} />
+        <meshStandardMaterial color="#00dd44" emissive="#008822" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
       <mesh castShadow>
         <boxGeometry args={[0.14, 0.5, 0.14]} />
-        <meshStandardMaterial color="#00cc44" emissive="#007722" emissiveIntensity={1.8} toneMapped={false} />
+        <meshStandardMaterial color="#00dd44" emissive="#008822" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
       <mesh>
-        <boxGeometry args={[0.38, 0.38, 0.1]} />
-        <meshStandardMaterial color="#004422" metalness={0.5} roughness={0.4} />
+        <boxGeometry args={[0.42, 0.42, 0.12]} />
+        <meshStandardMaterial color="#003a18" metalness={0.6} roughness={0.3} />
       </mesh>
-      <pointLight intensity={0.8} color="#00cc44" distance={3} />
+      <pointLight intensity={1.2} color="#00dd44" distance={4} />
     </group>
   )
 }
@@ -71,18 +73,48 @@ function DataChip() {
   return (
     <group>
       <mesh castShadow>
-        <boxGeometry args={[0.38, 0.08, 0.38]} />
-        <meshStandardMaterial color="#00ffee" emissive="#009988" emissiveIntensity={2} toneMapped={false} metalness={0.7} roughness={0.2} />
+        <boxGeometry args={[0.38, 0.09, 0.38]} />
+        <meshStandardMaterial color="#00ffee" emissive="#009988" emissiveIntensity={3} toneMapped={false} metalness={0.8} roughness={0.15} />
       </mesh>
-      <mesh position={[0, 0.05, 0]}>
+      <mesh position={[0, 0.06, 0]}>
         <boxGeometry args={[0.3, 0.01, 0.04]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1} toneMapped={false} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1.5} toneMapped={false} />
       </mesh>
-      <mesh position={[0, 0.05, 0.1]}>
+      <mesh position={[0, 0.06, 0.1]}>
         <boxGeometry args={[0.16, 0.01, 0.04]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1} toneMapped={false} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1.5} toneMapped={false} />
       </mesh>
-      <pointLight intensity={0.8} color="#00ffee" distance={3} />
+      <pointLight intensity={1.2} color="#00ffee" distance={4} />
+    </group>
+  )
+}
+
+function AmmoCrate() {
+  return (
+    <group>
+      {/* Crate body */}
+      <mesh castShadow>
+        <boxGeometry args={[0.44, 0.3, 0.34]} />
+        <meshStandardMaterial color="#886600" emissive="#553300" emissiveIntensity={0.8} metalness={0.5} roughness={0.5} />
+      </mesh>
+      {/* Cross strap H */}
+      <mesh position={[0, 0.16, 0.18]}>
+        <boxGeometry args={[0.42, 0.04, 0.01]} />
+        <meshStandardMaterial color="#ffdd00" emissive="#cc8800" emissiveIntensity={1.5} toneMapped={false} />
+      </mesh>
+      {/* Cross strap V */}
+      <mesh position={[0, 0.16, 0.18]}>
+        <boxGeometry args={[0.04, 0.3, 0.01]} />
+        <meshStandardMaterial color="#ffdd00" emissive="#cc8800" emissiveIntensity={1.5} toneMapped={false} />
+      </mesh>
+      {/* Bullet silhouettes (decorative) */}
+      {[-0.12, 0, 0.12].map((bx, i) => (
+        <mesh key={i} position={[bx, 0.28, 0]}>
+          <cylinderGeometry args={[0.03, 0.035, 0.18, 6]} />
+          <meshStandardMaterial color="#ffcc44" emissive="#ff9900" emissiveIntensity={1} toneMapped={false} metalness={0.9} />
+        </mesh>
+      ))}
+      <pointLight intensity={1.0} color="#ffcc00" distance={4} />
     </group>
   )
 }
@@ -96,14 +128,15 @@ export default function CollectiblePool() {
       type: 'energy',
       lane: 1,
       z: PARK_Z,
-      outerRef:  null,  // position / scale
-      innerRef:  null,  // bob + spin
-      energyRef: null,  // visibility toggle
+      outerRef:  null,
+      innerRef:  null,
+      energyRef: null,
       repairRef: null,
       chipRef:   null,
+      ammoRef:   null,
     }))
   )
-  const spawnTimer = useRef(2.0)
+  const spawnTimer = useRef(1.5)
 
   useFrame((_, delta) => {
     const { phase, speed, playerLane } = useGameStore.getState()
@@ -121,20 +154,17 @@ export default function CollectiblePool() {
       slot.z += speed * delta
       outer.position.z = slot.z
 
-      // Bob + spin
       if (inner) {
         inner.position.y = Math.sin(t * BOB_FREQ + slot.id) * BOB_AMP
         inner.rotation.y += delta * 1.8
       }
 
-      // Despawn
       if (slot.z > DESPAWN_Z) {
         slot.active = false
         outer.position.z = PARK_Z
         return
       }
 
-      // Pickup
       if (aabbXZ(LANES[slot.lane], slot.z, C.x, C.z, playerX, 2, P.x, P.z)) {
         slot.active = false
         REWARDS[slot.type]()
@@ -155,7 +185,7 @@ export default function CollectiblePool() {
     // Spawn
     spawnTimer.current -= delta
     if (spawnTimer.current <= 0) {
-      spawnTimer.current = SPAWN_RATE + (Math.random() - 0.5) * 2.0
+      spawnTimer.current = SPAWN_RATE + (Math.random() - 0.5) * 1.6
 
       const slot = slots.current.find(s => !s.active)
       if (slot) {
@@ -164,10 +194,10 @@ export default function CollectiblePool() {
         slot.lane   = Math.floor(Math.random() * 3)
         slot.z      = SPAWN_Z
 
-        // Toggle visibility for the correct type
         if (slot.energyRef) slot.energyRef.visible = slot.type === 'energy'
         if (slot.repairRef) slot.repairRef.visible = slot.type === 'repair'
         if (slot.chipRef)   slot.chipRef.visible   = slot.type === 'chip'
+        if (slot.ammoRef)   slot.ammoRef.visible   = slot.type === 'ammo'
 
         if (slot.outerRef) {
           slot.outerRef.position.set(LANES[slot.lane], 0.85, SPAWN_Z)
@@ -180,22 +210,12 @@ export default function CollectiblePool() {
   return (
     <>
       {slots.current.map((slot) => (
-        <group
-          key={slot.id}
-          ref={el => { slot.outerRef = el }}
-          position={[LANES[1], 0.85, PARK_Z]}
-        >
+        <group key={slot.id} ref={el => { slot.outerRef = el }} position={[LANES[1], 0.85, PARK_Z]}>
           <group ref={el => { slot.innerRef = el }}>
-            {/* All 3 types always mounted — visibility toggled via refs */}
-            <group ref={el => { slot.energyRef = el }} visible={false}>
-              <EnergyCell />
-            </group>
-            <group ref={el => { slot.repairRef = el }} visible={false}>
-              <RepairPack />
-            </group>
-            <group ref={el => { slot.chipRef = el }} visible={false}>
-              <DataChip />
-            </group>
+            <group ref={el => { slot.energyRef = el }} visible={false}><EnergyCell /></group>
+            <group ref={el => { slot.repairRef = el }} visible={false}><RepairPack /></group>
+            <group ref={el => { slot.chipRef   = el }} visible={false}><DataChip /></group>
+            <group ref={el => { slot.ammoRef   = el }} visible={false}><AmmoCrate /></group>
           </group>
         </group>
       ))}

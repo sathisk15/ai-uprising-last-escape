@@ -3,25 +3,53 @@ import { useFrame } from '@react-three/fiber'
 import useGameStore from '../../store/gameStore'
 
 const TILE_LENGTH = 64
-const ROAD_WIDTH = 8
-// Recycle when the tile's back edge (center - TILE_LENGTH/2) clears the camera.
-// Camera is at z≈9, so threshold = 9 + 32 = 41. Use 50 for a safe margin.
-const RECYCLE_Z = 50
+const ROAD_WIDTH  = 8
+const RECYCLE_Z   = 50
 
+// Dashed lane divider (yellow)
 function LaneDivider({ x }) {
-  const segLen = 2.2
-  const gap = 2.8
-  const step = segLen + gap
-  const count = Math.ceil(TILE_LENGTH / step) + 1
+  const segLen = 2.4
+  const gap    = 2.6
+  const step   = segLen + gap
+  const count  = Math.ceil(TILE_LENGTH / step) + 1
 
   return (
     <group position={[x, 0.12, -TILE_LENGTH / 2 + segLen / 2]}>
       {Array.from({ length: count }).map((_, i) => (
         <mesh key={i} position={[0, 0, i * step]}>
-          <boxGeometry args={[0.07, 0.01, segLen]} />
-          <meshStandardMaterial color="#dddd00" emissive="#777700" emissiveIntensity={0.6} />
+          <boxGeometry args={[0.07, 0.015, segLen]} />
+          <meshStandardMaterial color="#ddcc00" emissive="#998800" emissiveIntensity={1.0} toneMapped={false} />
         </mesh>
       ))}
+    </group>
+  )
+}
+
+// Solid center line (white)
+function CenterLine() {
+  return (
+    <mesh position={[0, 0.115, 0]}>
+      <boxGeometry args={[0.06, 0.01, TILE_LENGTH + 2]} />
+      <meshStandardMaterial color="#ffffff" emissive="#888888" emissiveIntensity={0.4} />
+    </mesh>
+  )
+}
+
+// Kerb edge with emissive strip
+function Kerb({ x }) {
+  const sign = x > 0 ? 1 : -1
+  return (
+    <group position={[x, 0.07, 0]}>
+      {/* Kerb block */}
+      <mesh>
+        <boxGeometry args={[0.4, 0.34, TILE_LENGTH + 2]} />
+        <meshStandardMaterial color="#252525" roughness={0.9} metalness={0.1} />
+      </mesh>
+      {/* Top emissive strip */}
+      <mesh position={[0, 0.18, 0]}>
+        <boxGeometry args={[0.38, 0.02, TILE_LENGTH + 2]} />
+        <meshStandardMaterial color="#ff6600" emissive="#ff4400" emissiveIntensity={1.2} toneMapped={false} />
+      </mesh>
     </group>
   )
 }
@@ -29,24 +57,21 @@ function LaneDivider({ x }) {
 function RoadGeometry() {
   return (
     <>
-      {/* Surface — 1 unit extra on each end to hide seam */}
+      {/* Surface — slightly reflective for wet-road look */}
       <mesh receiveShadow>
         <boxGeometry args={[ROAD_WIDTH, 0.2, TILE_LENGTH + 2]} />
-        <meshStandardMaterial color="#1e1e1e" roughness={0.95} metalness={0.0} />
+        <meshStandardMaterial color="#141414" roughness={0.55} metalness={0.3} />
       </mesh>
-      {/* Left kerb */}
-      <mesh position={[-(ROAD_WIDTH / 2 + 0.2), 0.07, 0]}>
-        <boxGeometry args={[0.4, 0.34, TILE_LENGTH + 2]} />
-        <meshStandardMaterial color="#2a2a2a" />
+      {/* Subtle wet sheen overlay */}
+      <mesh position={[0, 0.102, 0]}>
+        <boxGeometry args={[ROAD_WIDTH - 0.2, 0.001, TILE_LENGTH + 2]} />
+        <meshStandardMaterial color="#223355" metalness={0.9} roughness={0.05} opacity={0.18} transparent />
       </mesh>
-      {/* Right kerb */}
-      <mesh position={[ROAD_WIDTH / 2 + 0.2, 0.07, 0]}>
-        <boxGeometry args={[0.4, 0.34, TILE_LENGTH + 2]} />
-        <meshStandardMaterial color="#2a2a2a" />
-      </mesh>
-      {/* Lane dividers */}
+      <CenterLine />
       <LaneDivider x={-2.5} />
-      <LaneDivider x={2.5} />
+      <LaneDivider x={ 2.5} />
+      <Kerb x={-(ROAD_WIDTH / 2 + 0.2)} />
+      <Kerb x={ ROAD_WIDTH / 2 + 0.2} />
     </>
   )
 }
@@ -66,7 +91,6 @@ export default function Road() {
     t1.position.z += move
     t2.position.z += move
 
-    // Recycle whichever tile fully passed the camera
     if (t1.position.z > RECYCLE_Z) t1.position.z = t2.position.z - TILE_LENGTH
     if (t2.position.z > RECYCLE_Z) t2.position.z = t1.position.z - TILE_LENGTH
   })

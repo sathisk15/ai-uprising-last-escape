@@ -4,27 +4,25 @@ import useGameStore from '../../store/gameStore'
 import usePlayerInput from './usePlayerInput'
 import { LANES } from '../../game/zones'
 
-// Wheel — cylinder lying on its side
 function Wheel({ position }) {
   return (
-    <mesh position={position} rotation={[0, 0, Math.PI / 2]} castShadow>
-      <cylinderGeometry args={[0.28, 0.28, 0.25, 14]} />
-      <meshStandardMaterial color="#222222" roughness={0.9} metalness={0.1} />
-    </mesh>
-  )
-}
-
-function LightOrb({ position, color, intensity = 2 }) {
-  return (
-    <mesh position={position}>
-      <sphereGeometry args={[0.09, 8, 8]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={intensity}
-        toneMapped={false}
-      />
-    </mesh>
+    <group position={position}>
+      {/* Tyre */}
+      <mesh rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.28, 0.28, 0.26, 16]} />
+        <meshStandardMaterial color="#1a1a1a" roughness={0.95} metalness={0.05} />
+      </mesh>
+      {/* Rim */}
+      <mesh rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.16, 0.16, 0.28, 8]} />
+        <meshStandardMaterial color="#555566" metalness={0.85} roughness={0.2} />
+      </mesh>
+      {/* Hub glow */}
+      <mesh rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.06, 0.06, 0.29, 6]} />
+        <meshStandardMaterial color="#00ccff" emissive="#00ccff" emissiveIntensity={2} toneMapped={false} />
+      </mesh>
+    </group>
   )
 }
 
@@ -34,9 +32,9 @@ const JUMP_DURATION  = 0.75
 const SLIDE_DURATION = 0.6
 
 export default function PlayerVehicle() {
-  const groupRef  = useRef()
-  const jumpT     = useRef(0)
-  const slideT    = useRef(0)
+  const groupRef = useRef()
+  const jumpT    = useRef(0)
+  const slideT   = useRef(0)
 
   usePlayerInput()
 
@@ -45,92 +43,126 @@ export default function PlayerVehicle() {
     const { phase, playerLane, isJumping, isSliding, endJump, endSlide } = useGameStore.getState()
     if (phase !== 'playing' && phase !== 'paused') return
 
-    // ── Lane lerp ──────────────────────────────────────────────────────────
+    // Lane lerp + tilt
     const targetX = LANES[playerLane]
     const curX    = groupRef.current.position.x
     groupRef.current.position.x += (targetX - curX) * Math.min(delta * 9, 1)
-    groupRef.current.rotation.z = -(targetX - curX) * 0.15
+    groupRef.current.rotation.z  = -(targetX - curX) * 0.15
 
-    // ── Jump arc ───────────────────────────────────────────────────────────
+    // Jump arc
     if (isJumping) {
       jumpT.current = Math.min(jumpT.current + delta / JUMP_DURATION, 1)
       groupRef.current.position.y = BASE_Y + Math.sin(jumpT.current * Math.PI) * JUMP_HEIGHT
       groupRef.current.scale.y    = 1
-      if (jumpT.current >= 1) {
-        jumpT.current = 0
-        groupRef.current.position.y = BASE_Y
-        endJump()
-      }
-    // ── Slide squish ────────────────────────────────────────────────────────
+      if (jumpT.current >= 1) { jumpT.current = 0; groupRef.current.position.y = BASE_Y; endJump() }
+    // Slide squish
     } else if (isSliding) {
       slideT.current = Math.min(slideT.current + delta / SLIDE_DURATION, 1)
       const squish = 1 - Math.sin(slideT.current * Math.PI) * 0.55
       groupRef.current.scale.y    = squish
       groupRef.current.position.y = BASE_Y - (1 - squish) * 0.35
-      if (slideT.current >= 1) {
-        slideT.current = 0
-        groupRef.current.scale.y    = 1
-        groupRef.current.position.y = BASE_Y
-        endSlide()
-      }
+      if (slideT.current >= 1) { slideT.current = 0; groupRef.current.scale.y = 1; groupRef.current.position.y = BASE_Y; endSlide() }
     } else {
-      // Ensure reset when neither active
       groupRef.current.position.y = BASE_Y
       groupRef.current.scale.y    = 1
-      jumpT.current  = 0
+      jumpT.current = 0
       slideT.current = 0
     }
   })
 
-  // group y=0.5 → wheels sit just above road surface (road top = 0.1 world)
   return (
     <group ref={groupRef} position={[0, 0.5, 2]}>
 
-      {/* Body */}
+      {/* ── Main body ──────────────────────────────────────────────────────── */}
       <mesh castShadow position={[0, 0.1, 0]}>
         <boxGeometry args={[1.2, 0.5, 2.5]} />
-        <meshStandardMaterial color="#2e6ea6" metalness={0.5} roughness={0.35} />
+        <meshStandardMaterial color="#1a3d6e" metalness={0.75} roughness={0.25} />
       </mesh>
 
-      {/* Cabin */}
+      {/* Side neon stripes */}
+      <mesh position={[-0.61, 0.08, 0]}>
+        <boxGeometry args={[0.01, 0.06, 2.2]} />
+        <meshStandardMaterial color="#00f5ff" emissive="#00f5ff" emissiveIntensity={4} toneMapped={false} />
+      </mesh>
+      <mesh position={[0.61, 0.08, 0]}>
+        <boxGeometry args={[0.01, 0.06, 2.2]} />
+        <meshStandardMaterial color="#00f5ff" emissive="#00f5ff" emissiveIntensity={4} toneMapped={false} />
+      </mesh>
+
+      {/* ── Cabin ──────────────────────────────────────────────────────────── */}
       <mesh castShadow position={[0, 0.52, -0.15]}>
         <boxGeometry args={[0.88, 0.38, 1.2]} />
-        <meshStandardMaterial color="#1a4a70" metalness={0.4} roughness={0.5} />
+        <meshStandardMaterial color="#0f2a4a" metalness={0.6} roughness={0.35} />
+      </mesh>
+      {/* Windshield tint */}
+      <mesh position={[0, 0.54, 0.46]}>
+        <boxGeometry args={[0.82, 0.3, 0.04]} />
+        <meshStandardMaterial color="#001a33" metalness={0.1} roughness={0.1} opacity={0.85} transparent />
       </mesh>
 
-      {/* Hood */}
+      {/* ── Hood ───────────────────────────────────────────────────────────── */}
       <mesh castShadow position={[0, 0.24, 0.9]}>
         <boxGeometry args={[1.1, 0.12, 0.6]} />
-        <meshStandardMaterial color="#255a8a" metalness={0.5} roughness={0.4} />
+        <meshStandardMaterial color="#1a3d6e" metalness={0.7} roughness={0.3} />
       </mesh>
 
-      {/* Front bumper */}
+      {/* ── Front bumper ───────────────────────────────────────────────────── */}
       <mesh position={[0, -0.06, 1.3]}>
         <boxGeometry args={[1.15, 0.2, 0.16]} />
-        <meshStandardMaterial color="#1a2a3a" metalness={0.7} roughness={0.3} />
+        <meshStandardMaterial color="#0a1520" metalness={0.8} roughness={0.2} />
+      </mesh>
+      {/* Bumper accent bar */}
+      <mesh position={[0, 0.02, 1.39]}>
+        <boxGeometry args={[0.9, 0.04, 0.02]} />
+        <meshStandardMaterial color="#00f5ff" emissive="#00f5ff" emissiveIntensity={3} toneMapped={false} />
       </mesh>
 
-      {/* Rear spoiler */}
-      <mesh position={[0, 0.44, -1.2]}>
-        <boxGeometry args={[1.0, 0.08, 0.1]} />
-        <meshStandardMaterial color="#1a2a3a" metalness={0.6} roughness={0.4} />
+      {/* ── Rear spoiler ───────────────────────────────────────────────────── */}
+      <mesh position={[0, 0.52, -1.18]}>
+        <boxGeometry args={[1.05, 0.07, 0.08]} />
+        <meshStandardMaterial color="#0a1520" metalness={0.8} roughness={0.25} />
       </mesh>
 
-      {/* ── Wheels — y=-0.15 so bottom sits at 0.5-0.15-0.28=0.07 ≈ road level ── */}
+      {/* ── Exhaust pipes ──────────────────────────────────────────────────── */}
+      <mesh position={[-0.3, -0.12, -1.3]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.055, 0.065, 0.18, 8]} />
+        <meshStandardMaterial color="#333344" metalness={0.9} roughness={0.15} />
+      </mesh>
+      <mesh position={[0.3, -0.12, -1.3]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.055, 0.065, 0.18, 8]} />
+        <meshStandardMaterial color="#333344" metalness={0.9} roughness={0.15} />
+      </mesh>
+
+      {/* ── Wheels ──────────────────────────────────────────────────────────── */}
       <Wheel position={[-0.66, -0.15,  0.85]} />
       <Wheel position={[ 0.66, -0.15,  0.85]} />
       <Wheel position={[-0.66, -0.15, -0.85]} />
       <Wheel position={[ 0.66, -0.15, -0.85]} />
 
-      {/* Headlights */}
-      <LightOrb position={[-0.35, 0.08, 1.26]} color="#ddeeff" intensity={2.5} />
-      <LightOrb position={[ 0.35, 0.08, 1.26]} color="#ddeeff" intensity={2.5} />
-      <pointLight position={[-0.35, 0.08, 2]} intensity={3} color="#ffffff" distance={12} decay={2} />
-      <pointLight position={[ 0.35, 0.08, 2]} intensity={3} color="#ffffff" distance={12} decay={2} />
+      {/* ── Headlights ──────────────────────────────────────────────────────── */}
+      <mesh position={[-0.35, 0.1, 1.27]}>
+        <boxGeometry args={[0.22, 0.1, 0.03]} />
+        <meshStandardMaterial color="#ddeeff" emissive="#aaddff" emissiveIntensity={4} toneMapped={false} />
+      </mesh>
+      <mesh position={[ 0.35, 0.1, 1.27]}>
+        <boxGeometry args={[0.22, 0.1, 0.03]} />
+        <meshStandardMaterial color="#ddeeff" emissive="#aaddff" emissiveIntensity={4} toneMapped={false} />
+      </mesh>
+      <pointLight position={[-0.35, 0.1, 2.2]} intensity={4} color="#ffffff" distance={14} decay={2} />
+      <pointLight position={[ 0.35, 0.1, 2.2]} intensity={4} color="#ffffff" distance={14} decay={2} />
 
-      {/* Tail lights */}
-      <LightOrb position={[-0.42, 0.08, -1.26]} color="#ff1a1a" />
-      <LightOrb position={[ 0.42, 0.08, -1.26]} color="#ff1a1a" />
+      {/* ── Tail lights ─────────────────────────────────────────────────────── */}
+      <mesh position={[-0.42, 0.1, -1.27]}>
+        <boxGeometry args={[0.18, 0.08, 0.03]} />
+        <meshStandardMaterial color="#ff1a1a" emissive="#ff0000" emissiveIntensity={4} toneMapped={false} />
+      </mesh>
+      <mesh position={[ 0.42, 0.1, -1.27]}>
+        <boxGeometry args={[0.18, 0.08, 0.03]} />
+        <meshStandardMaterial color="#ff1a1a" emissive="#ff0000" emissiveIntensity={4} toneMapped={false} />
+      </mesh>
+
+      {/* ── Underbody glow ──────────────────────────────────────────────────── */}
+      <pointLight position={[0, -0.25, 0]} intensity={1.5} color="#00aaff" distance={3} decay={2} />
     </group>
   )
 }

@@ -22,6 +22,7 @@ const sessionDefaults = {
   distance: 0,
   health: 100,
   energy: 100,
+  ammo: 15,        // starting ammo
   kills: 0,
   playerLane: 1,   // 0=left, 1=center, 2=right
   speed: BASE_SPEED,
@@ -83,6 +84,17 @@ const useGameStore = create(
         set((s) => ({ health: Math.min(100, s.health + amount) }))
       },
 
+      refillAmmo: (amount) => {
+        set((s) => ({ ammo: Math.min(30, s.ammo + amount) }))
+      },
+
+      useAmmo: () => {
+        const { ammo } = get()
+        if (ammo <= 0) return false
+        set({ ammo: ammo - 1 })
+        return true
+      },
+
       setPlayerLane: (lane) => {
         set({ playerLane: Math.max(0, Math.min(2, lane)) })
       },
@@ -110,8 +122,8 @@ const useGameStore = create(
         const newDistance = state.distance + speed * delta
         const scoreFromDistance = Math.floor(newDistance)
 
-        // Energy drains at 7 pts/s, slightly faster in higher zones
-        const drainRate = 7 + (state.zone - 1) * 1.5
+        // Energy drains at 2 pts/s in zone 1, slightly faster in higher zones
+        const drainRate = 2.0 + (state.zone - 1) * 0.6
         const newEnergy = Math.max(0, state.energy - drainRate * delta)
 
         set({ distance: newDistance, speed, score: scoreFromDistance + state.kills * 100, energy: newEnergy })
