@@ -24,6 +24,8 @@ const sessionDefaults = {
   energy: 100,
   ammo: 15,        // starting ammo
   shieldActive: false,
+  speedBoostActive: false,
+  speedBoostTimer: 0,
   kills: 0,
   playerLane: 1,   // 0=left, 1=center, 2=right
   speed: BASE_SPEED,
@@ -75,6 +77,10 @@ const useGameStore = create(
 
       activateShield: () => {
         set({ shieldActive: true })
+      },
+
+      activateSpeedBoost: (duration = 6) => {
+        set({ speedBoostActive: true, speedBoostTimer: duration })
       },
 
       addScore: (points) => {
@@ -129,7 +135,17 @@ const useGameStore = create(
         if (state.phase !== 'playing') return
 
         const zone = ZONES[state.zone]
-        const speed = BASE_SPEED * zone.speedMultiplier
+        const boostMult = state.speedBoostActive ? 1.6 : 1.0
+        const speed = BASE_SPEED * zone.speedMultiplier * boostMult
+
+        // Tick boost timer
+        let speedBoostActive = state.speedBoostActive
+        let speedBoostTimer  = state.speedBoostTimer
+        if (speedBoostActive) {
+          speedBoostTimer = Math.max(0, speedBoostTimer - delta)
+          if (speedBoostTimer <= 0) speedBoostActive = false
+        }
+
         const newDistance = state.distance + speed * delta
         const scoreFromDistance = Math.floor(newDistance)
 
@@ -137,7 +153,7 @@ const useGameStore = create(
         const drainRate = 2.0 + (state.zone - 1) * 0.6
         const newEnergy = Math.max(0, state.energy - drainRate * delta)
 
-        set({ distance: newDistance, speed, score: scoreFromDistance + state.kills * 100, energy: newEnergy })
+        set({ distance: newDistance, speed, score: scoreFromDistance + state.kills * 100, energy: newEnergy, speedBoostActive, speedBoostTimer })
 
         // Energy depletion = game over
         if (newEnergy <= 0) {

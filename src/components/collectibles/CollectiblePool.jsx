@@ -19,11 +19,12 @@ const C = { x: 0.5,  z: 0.5 }
 
 function randomType() {
   const r = Math.random()
-  if (r < 0.30) return 'energy'
-  if (r < 0.52) return 'repair'
-  if (r < 0.68) return 'chip'
-  if (r < 0.84) return 'ammo'
-  return 'shield'
+  if (r < 0.27) return 'energy'
+  if (r < 0.47) return 'repair'
+  if (r < 0.61) return 'chip'
+  if (r < 0.75) return 'ammo'
+  if (r < 0.88) return 'shield'
+  return 'boost'
 }
 
 const REWARDS = {
@@ -32,6 +33,7 @@ const REWARDS = {
   chip:   () => useGameStore.getState().addScore(150),
   ammo:   () => useGameStore.getState().refillAmmo(8),
   shield: () => useGameStore.getState().activateShield(),
+  boost:  () => useGameStore.getState().activateSpeedBoost(6),
 }
 
 // ── Visuals ───────────────────────────────────────────────────────────────────
@@ -117,6 +119,35 @@ function AmmoCrate() {
   )
 }
 
+function BoostPack() {
+  // Two stacked forward-pointing chevrons (>> shape) = speed
+  const chevron = (zOff, scale) => (
+    <group position={[0, 0, zOff]} scale={scale}>
+      {/* Left arm */}
+      <mesh rotation={[0, 0, Math.PI * 0.22]} position={[-0.13, 0.1, 0]}>
+        <boxGeometry args={[0.08, 0.28, 0.1]} />
+        <meshStandardMaterial color="#ffaa00" emissive="#ff6600" emissiveIntensity={2.5} toneMapped={false} />
+      </mesh>
+      {/* Right arm */}
+      <mesh rotation={[0, 0, -Math.PI * 0.22]} position={[0.13, 0.1, 0]}>
+        <boxGeometry args={[0.08, 0.28, 0.1]} />
+        <meshStandardMaterial color="#ffaa00" emissive="#ff6600" emissiveIntensity={2.5} toneMapped={false} />
+      </mesh>
+    </group>
+  )
+  return (
+    <group>
+      {chevron(-0.14, 0.9)}
+      {chevron( 0.14, 1.0)}
+      {/* Glow core */}
+      <mesh>
+        <sphereGeometry args={[0.18, 8, 8]} />
+        <meshStandardMaterial color="#ffcc00" emissive="#ff8800" emissiveIntensity={2} transparent opacity={0.5} toneMapped={false} />
+      </mesh>
+    </group>
+  )
+}
+
 function ShieldOrb() {
   return (
     <group>
@@ -160,6 +191,7 @@ export default function CollectiblePool() {
       chipRef:   null,
       ammoRef:   null,
       shieldRef: null,
+      boostRef:  null,
     }))
   )
   const spawnTimer = useRef(1.5)
@@ -225,6 +257,7 @@ export default function CollectiblePool() {
         if (slot.chipRef)    slot.chipRef.visible    = slot.type === 'chip'
         if (slot.ammoRef)    slot.ammoRef.visible    = slot.type === 'ammo'
         if (slot.shieldRef)  slot.shieldRef.visible  = slot.type === 'shield'
+        if (slot.boostRef)   slot.boostRef.visible   = slot.type === 'boost'
 
         if (slot.outerRef) {
           slot.outerRef.position.set(LANES[slot.lane], 0.85, SPAWN_Z)
@@ -244,6 +277,7 @@ export default function CollectiblePool() {
             <group ref={el => { slot.chipRef   = el }} visible={false}><DataChip /></group>
             <group ref={el => { slot.ammoRef   = el }} visible={false}><AmmoCrate /></group>
             <group ref={el => { slot.shieldRef = el }} visible={false}><ShieldOrb /></group>
+            <group ref={el => { slot.boostRef  = el }} visible={false}><BoostPack /></group>
           </group>
         </group>
       ))}

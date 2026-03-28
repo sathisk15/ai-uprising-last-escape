@@ -32,16 +32,17 @@ const JUMP_DURATION  = 0.75
 const SLIDE_DURATION = 0.6
 
 export default function PlayerVehicle() {
-  const groupRef  = useRef()
-  const jumpT     = useRef(0)
-  const slideT    = useRef(0)
-  const shieldRef = useRef()
+  const groupRef    = useRef()
+  const jumpT       = useRef(0)
+  const slideT      = useRef(0)
+  const shieldRef   = useRef()
+  const exhaustRef  = useRef()
 
   usePlayerInput()
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
-    const { phase, playerLane, isJumping, isSliding, endJump, endSlide, shieldActive } = useGameStore.getState()
+    const { phase, playerLane, isJumping, isSliding, endJump, endSlide, shieldActive, speedBoostActive } = useGameStore.getState()
     if (phase !== 'playing' && phase !== 'paused') return
 
     // Lane lerp + tilt
@@ -68,6 +69,15 @@ export default function PlayerVehicle() {
       groupRef.current.scale.y    = 1
       jumpT.current = 0
       slideT.current = 0
+    }
+
+    // Boost exhaust flame visibility + flicker
+    if (exhaustRef.current) {
+      exhaustRef.current.visible = speedBoostActive
+      if (speedBoostActive) {
+        const flicker = 0.7 + Math.random() * 0.6
+        exhaustRef.current.scale.z = flicker
+      }
     }
 
     // Shield bubble visibility + pulse
@@ -169,6 +179,29 @@ export default function PlayerVehicle() {
         <boxGeometry args={[0.18, 0.08, 0.03]} />
         <meshStandardMaterial color="#ff1a1a" emissive="#ff0000" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
+
+      {/* ── Boost exhaust flames (visible only when speedBoostActive) ───────── */}
+      <group ref={exhaustRef} visible={false}>
+        {/* Left exhaust flame */}
+        <mesh position={[-0.3, -0.12, -1.62]} rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.07, 0.55, 6]} />
+          <meshStandardMaterial color="#ff8800" emissive="#ff4400" emissiveIntensity={4} transparent opacity={0.85} toneMapped={false} />
+        </mesh>
+        {/* Right exhaust flame */}
+        <mesh position={[0.3, -0.12, -1.62]} rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.07, 0.55, 6]} />
+          <meshStandardMaterial color="#ff8800" emissive="#ff4400" emissiveIntensity={4} transparent opacity={0.85} toneMapped={false} />
+        </mesh>
+        {/* Inner white-hot core */}
+        <mesh position={[-0.3, -0.12, -1.52]}>
+          <sphereGeometry args={[0.055, 6, 6]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffcc44" emissiveIntensity={5} toneMapped={false} />
+        </mesh>
+        <mesh position={[0.3, -0.12, -1.52]}>
+          <sphereGeometry args={[0.055, 6, 6]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffcc44" emissiveIntensity={5} toneMapped={false} />
+        </mesh>
+      </group>
 
       {/* ── Shield bubble (visible only when shieldActive) ────────────────── */}
       <group ref={shieldRef} visible={false} position={[0, 0.15, 0]}>

@@ -106,6 +106,35 @@ function AmmoDisplay() {
   )
 }
 
+// ── Boost indicator ───────────────────────────────────────────────────────────
+function BoostIndicator() {
+  const speedBoostActive = useGameStore((s) => s.speedBoostActive)
+  const speedBoostTimer  = useGameStore((s) => s.speedBoostTimer)
+  if (!speedBoostActive) return null
+  const pct = Math.min(100, (speedBoostTimer / 6) * 100)
+  return (
+    <div
+      className="flex flex-col gap-1 px-3 py-1 border font-mono"
+      style={{
+        borderColor: '#ff8800',
+        boxShadow: '0 0 10px #ff660066',
+        background: 'rgba(255,100,0,0.08)',
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] tracking-[0.2em]" style={{ color: '#ff8800' }}>▶▶ BOOST</span>
+        <span className="text-[10px] tracking-widest" style={{ color: '#ffcc00' }}>{speedBoostTimer.toFixed(1)}s</span>
+      </div>
+      <div className="w-full h-1.5 bg-white/10 rounded-sm overflow-hidden">
+        <div
+          className="h-full rounded-sm transition-all duration-100"
+          style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #ff4400, #ffcc00)', boxShadow: '0 0 6px #ff8800' }}
+        />
+      </div>
+    </div>
+  )
+}
+
 // ── Shield indicator ──────────────────────────────────────────────────────────
 function ShieldIndicator() {
   const shieldActive = useGameStore((s) => s.shieldActive)
@@ -254,6 +283,7 @@ export default function HUD() {
         <HealthBar />
         <EnergyBar />
         <AmmoDisplay />
+        <BoostIndicator />
         <ShieldIndicator />
       </div>
 
