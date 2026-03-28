@@ -32,15 +32,16 @@ const JUMP_DURATION  = 0.75
 const SLIDE_DURATION = 0.6
 
 export default function PlayerVehicle() {
-  const groupRef = useRef()
-  const jumpT    = useRef(0)
-  const slideT   = useRef(0)
+  const groupRef  = useRef()
+  const jumpT     = useRef(0)
+  const slideT    = useRef(0)
+  const shieldRef = useRef()
 
   usePlayerInput()
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
-    const { phase, playerLane, isJumping, isSliding, endJump, endSlide } = useGameStore.getState()
+    const { phase, playerLane, isJumping, isSliding, endJump, endSlide, shieldActive } = useGameStore.getState()
     if (phase !== 'playing' && phase !== 'paused') return
 
     // Lane lerp + tilt
@@ -67,6 +68,15 @@ export default function PlayerVehicle() {
       groupRef.current.scale.y    = 1
       jumpT.current = 0
       slideT.current = 0
+    }
+
+    // Shield bubble visibility + pulse
+    if (shieldRef.current) {
+      shieldRef.current.visible = shieldActive
+      if (shieldActive) {
+        const pulse = 1 + Math.sin(performance.now() * 0.004) * 0.06
+        shieldRef.current.scale.setScalar(pulse)
+      }
     }
   })
 
@@ -159,6 +169,30 @@ export default function PlayerVehicle() {
         <boxGeometry args={[0.18, 0.08, 0.03]} />
         <meshStandardMaterial color="#ff1a1a" emissive="#ff0000" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
+
+      {/* ── Shield bubble (visible only when shieldActive) ────────────────── */}
+      <group ref={shieldRef} visible={false} position={[0, 0.15, 0]}>
+        <mesh>
+          <sphereGeometry args={[1.6, 16, 16]} />
+          <meshStandardMaterial
+            color="#cc44ff"
+            emissive="#aa00ff"
+            emissiveIntensity={1.2}
+            transparent
+            opacity={0.18}
+            toneMapped={false}
+            side={2}
+          />
+        </mesh>
+        <mesh>
+          <torusGeometry args={[1.6, 0.035, 8, 40]} />
+          <meshStandardMaterial color="#ee88ff" emissive="#cc00ff" emissiveIntensity={3} toneMapped={false} />
+        </mesh>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[1.6, 0.035, 8, 40]} />
+          <meshStandardMaterial color="#ee88ff" emissive="#cc00ff" emissiveIntensity={3} toneMapped={false} />
+        </mesh>
+      </group>
 
     </group>
   )

@@ -19,10 +19,11 @@ const C = { x: 0.5,  z: 0.5 }
 
 function randomType() {
   const r = Math.random()
-  if (r < 0.35) return 'energy'
-  if (r < 0.60) return 'repair'
-  if (r < 0.80) return 'chip'
-  return 'ammo'
+  if (r < 0.30) return 'energy'
+  if (r < 0.52) return 'repair'
+  if (r < 0.68) return 'chip'
+  if (r < 0.84) return 'ammo'
+  return 'shield'
 }
 
 const REWARDS = {
@@ -30,6 +31,7 @@ const REWARDS = {
   repair: () => useGameStore.getState().repairHealth(25),
   chip:   () => useGameStore.getState().addScore(150),
   ammo:   () => useGameStore.getState().refillAmmo(8),
+  shield: () => useGameStore.getState().activateShield(),
 }
 
 // ── Visuals ───────────────────────────────────────────────────────────────────
@@ -115,6 +117,33 @@ function AmmoCrate() {
   )
 }
 
+function ShieldOrb() {
+  return (
+    <group>
+      {/* Core gem — octahedron */}
+      <mesh castShadow>
+        <octahedronGeometry args={[0.22, 0]} />
+        <meshStandardMaterial color="#cc44ff" emissive="#aa00ff" emissiveIntensity={2.5} toneMapped={false} metalness={0.8} roughness={0.1} />
+      </mesh>
+      {/* Outer shield ring — horizontal */}
+      <mesh>
+        <torusGeometry args={[0.44, 0.04, 6, 22]} />
+        <meshStandardMaterial color="#dd88ff" emissive="#cc00ff" emissiveIntensity={2} toneMapped={false} />
+      </mesh>
+      {/* Outer shield ring — vertical */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[0.44, 0.04, 6, 22]} />
+        <meshStandardMaterial color="#dd88ff" emissive="#cc00ff" emissiveIntensity={2} toneMapped={false} />
+      </mesh>
+      {/* Outer translucent bubble */}
+      <mesh>
+        <sphereGeometry args={[0.5, 10, 10]} />
+        <meshStandardMaterial color="#cc44ff" emissive="#aa00ff" emissiveIntensity={0.5} transparent opacity={0.12} toneMapped={false} />
+      </mesh>
+    </group>
+  )
+}
+
 // ── Pool ──────────────────────────────────────────────────────────────────────
 export default function CollectiblePool() {
   const slots = useRef(
@@ -130,6 +159,7 @@ export default function CollectiblePool() {
       repairRef: null,
       chipRef:   null,
       ammoRef:   null,
+      shieldRef: null,
     }))
   )
   const spawnTimer = useRef(1.5)
@@ -190,10 +220,11 @@ export default function CollectiblePool() {
         slot.lane   = Math.floor(Math.random() * 3)
         slot.z      = SPAWN_Z
 
-        if (slot.energyRef) slot.energyRef.visible = slot.type === 'energy'
-        if (slot.repairRef) slot.repairRef.visible = slot.type === 'repair'
-        if (slot.chipRef)   slot.chipRef.visible   = slot.type === 'chip'
-        if (slot.ammoRef)   slot.ammoRef.visible   = slot.type === 'ammo'
+        if (slot.energyRef)  slot.energyRef.visible  = slot.type === 'energy'
+        if (slot.repairRef)  slot.repairRef.visible  = slot.type === 'repair'
+        if (slot.chipRef)    slot.chipRef.visible    = slot.type === 'chip'
+        if (slot.ammoRef)    slot.ammoRef.visible    = slot.type === 'ammo'
+        if (slot.shieldRef)  slot.shieldRef.visible  = slot.type === 'shield'
 
         if (slot.outerRef) {
           slot.outerRef.position.set(LANES[slot.lane], 0.85, SPAWN_Z)
@@ -212,6 +243,7 @@ export default function CollectiblePool() {
             <group ref={el => { slot.repairRef = el }} visible={false}><RepairPack /></group>
             <group ref={el => { slot.chipRef   = el }} visible={false}><DataChip /></group>
             <group ref={el => { slot.ammoRef   = el }} visible={false}><AmmoCrate /></group>
+            <group ref={el => { slot.shieldRef = el }} visible={false}><ShieldOrb /></group>
           </group>
         </group>
       ))}

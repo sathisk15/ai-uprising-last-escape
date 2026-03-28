@@ -23,6 +23,7 @@ const sessionDefaults = {
   health: 100,
   energy: 100,
   ammo: 15,        // starting ammo
+  shieldActive: false,
   kills: 0,
   playerLane: 1,   // 0=left, 1=center, 2=right
   speed: BASE_SPEED,
@@ -56,6 +57,12 @@ const useGameStore = create(
       },
 
       takeDamage: (type = 'obstacle') => {
+        // Shield absorbs one hit then shatters
+        if (get().shieldActive) {
+          set({ shieldActive: false })
+          shakeSignal.pending = true
+          return
+        }
         const amount = DAMAGE[type] ?? DAMAGE.obstacle
         const health = Math.max(0, get().health - amount)
         shakeSignal.pending = true
@@ -64,6 +71,10 @@ const useGameStore = create(
         } else {
           set({ health })
         }
+      },
+
+      activateShield: () => {
+        set({ shieldActive: true })
       },
 
       addScore: (points) => {

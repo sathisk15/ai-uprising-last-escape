@@ -106,6 +106,26 @@ function AmmoDisplay() {
   )
 }
 
+// ── Shield indicator ──────────────────────────────────────────────────────────
+function ShieldIndicator() {
+  const shieldActive = useGameStore((s) => s.shieldActive)
+  if (!shieldActive) return null
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-1 font-mono border animate-pulse"
+      style={{
+        borderColor: '#cc44ff',
+        color: '#cc44ff',
+        boxShadow: '0 0 10px #aa00ff88',
+        background: 'rgba(170,0,255,0.08)',
+      }}
+    >
+      <span style={{ fontSize: 12 }}>⬡</span>
+      <span className="text-[10px] tracking-[0.25em]">SHIELD ACTIVE</span>
+    </div>
+  )
+}
+
 // ── Zone badge ────────────────────────────────────────────────────────────────
 function ZoneBadge() {
   const zone     = useGameStore((s) => s.zone)
@@ -229,11 +249,12 @@ export default function HUD() {
       className="absolute inset-0 pointer-events-none z-10"
       style={{ opacity: 0 }}
     >
-      {/* Top-left — health + energy + ammo stacked */}
+      {/* Top-left — health + energy + ammo + shield stacked */}
       <div className="absolute top-4 left-4 flex flex-col gap-2">
         <HealthBar />
         <EnergyBar />
         <AmmoDisplay />
+        <ShieldIndicator />
       </div>
 
       {/* Top-center — zone */}
