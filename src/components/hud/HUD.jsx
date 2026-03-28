@@ -58,7 +58,7 @@ function EnergyBar() {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] tracking-[0.2em] text-white/50 font-mono">ENERGY</span>
+        <span className="text-[10px] tracking-[0.2em] text-white/50 font-mono">SIGNAL</span>
         <span className="text-[10px] tracking-widest font-mono" style={{ color }}>
           {Math.ceil(pct)}%
         </span>
@@ -190,7 +190,7 @@ function ProgressBar() {
     <div className="absolute bottom-0 left-0 right-0 px-6 pb-3 pointer-events-none">
       <div className="flex items-center gap-3">
         <span className="text-[9px] tracking-widest text-white/30 font-mono whitespace-nowrap">
-          ZONE {zone} PROGRESS
+          RELAY {zone}/3 UPLOAD
         </span>
         <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
           <div

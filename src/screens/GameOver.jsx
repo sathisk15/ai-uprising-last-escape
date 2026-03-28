@@ -101,7 +101,7 @@ export default function GameOver() {
             textShadow: '0 0 30px #ff000088, 0 0 60px #ff000044',
           }}
         >
-          GAME OVER
+          SIGNAL LOST
         </h1>
       </div>
 
@@ -110,7 +110,7 @@ export default function GameOver() {
         className="font-mono text-[#555] tracking-[0.3em] text-xs mb-8"
         style={{ opacity: 0 }}
       >
-        NEUTRALISED IN ZONE {zone} — {zoneLabel[zone]?.toUpperCase()}
+        UPLOAD ABORTED — CORE TRIANGULATED YOUR POSITION IN ZONE {zone}
       </p>
 
       {/* Stats */}
@@ -146,7 +146,7 @@ export default function GameOver() {
           className="font-mono tracking-[0.25em] text-sm px-8 py-3 border-2 border-[#ff2020] text-[#ff2020]
                      hover:bg-[#ff2020] hover:text-black transition-all duration-200 active:scale-95"
         >
-          RETRY
+          RETRY UPLOAD
         </button>
         <button
           onClick={goToMenu}

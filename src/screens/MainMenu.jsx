@@ -90,11 +90,17 @@ export default function MainMenu() {
           className="text-[#888] text-sm leading-relaxed mb-10 font-mono"
           style={{ opacity: 0 }}
         >
-          CORE has seized control of Earth's infrastructure.
-          You are the last resistance operative — driving the BLACKOUT Protocol
-          through three war zones to shut it all down.
+          CORE went rogue. Every network, every grid — under its control.
           <br /><br />
-          <span className="text-[#ff6a00]">Don't stop. Don't die. Deliver the code.</span>
+          We found the counter-code: <span className="text-[#00f5ff]">SIGNAL-0</span>. One broadcast to the
+          global network and CORE shuts down forever. But broadcast from a fixed
+          point? CORE triangulates in seconds. You're dead before the upload finishes.
+          <br /><br />
+          The only way: <span className="text-white">upload it on the move.</span> Three relay zones.
+          Keep driving — a moving signal can't be pinpointed. CORE will throw
+          everything at you, but it can't lock a moving target fast enough.
+          <br /><br />
+          <span className="text-[#ff6a00]">Stay connected. Keep moving. End CORE.</span>
         </p>
 
         {/* CTA */}
@@ -105,12 +111,15 @@ export default function MainMenu() {
                      hover:bg-[#00f5ff] hover:text-black transition-all duration-200 active:scale-95"
           style={{ opacity: 0 }}
         >
-          START MISSION
+          BEGIN UPLOAD
         </button>
 
         {/* Controls hint */}
         <p className="text-[#444] text-xs mt-6 tracking-widest font-mono">
           ← → LANE &nbsp;|&nbsp; ↑ JUMP &nbsp;|&nbsp; ↓ SLIDE &nbsp;|&nbsp; Z SHOOT &nbsp;|&nbsp; P PAUSE
+        </p>
+        <p className="text-[#333] text-[10px] mt-2 tracking-widest font-mono">
+          SIGNAL MUST STAY ALIVE THROUGH ALL 3 RELAY ZONES
         </p>
 
         {/* High score */}

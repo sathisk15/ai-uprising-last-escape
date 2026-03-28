@@ -90,8 +90,9 @@ export default function ZoneTransition() {
   }, [zone]) // re-run if zone changes (shouldn't, but safe)
 
   const taglines = {
-    2: 'CORE defences intensify. Watch the skies.',
-    3: 'Final approach. Deliver the BLACKOUT Protocol.',
+    1: 'Signal broadcasting. Keep moving — CORE is scanning.',
+    2: 'CORE has your frequency. Drones inbound. Stay on the road.',
+    3: 'Final relay. Upload at 66%. Do not stop under any condition.',
   }
 
   return (
@@ -147,7 +148,7 @@ export default function ZoneTransition() {
           className="font-mono tracking-[0.5em] text-xs mb-3"
           style={{ color: zoneData.ambientColor, opacity: 0 }}
         >
-          — ENTERING ZONE —
+          — ROUTING SIGNAL —
         </p>
 
         <div
@@ -193,7 +194,7 @@ export default function ZoneTransition() {
           />
         </div>
         <p className="text-center text-[9px] tracking-widest text-white/30 font-mono mt-2">
-          PREPARING ROUTE
+          SIGNAL-0 RELAY {zone}/3
         </p>
       </div>
     </div>

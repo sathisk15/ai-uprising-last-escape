@@ -49,16 +49,17 @@ export default function Victory() {
       />
 
       <div ref={headingRef} className="relative z-10 text-center mb-8" style={{ opacity: 0 }}>
-        <p className="text-[#00ff88] tracking-[0.4em] text-xs mb-3 uppercase font-mono">Mission Complete</p>
+        <p className="text-[#00ff88] tracking-[0.4em] text-xs mb-3 uppercase font-mono">Upload Complete</p>
         <h1 className="text-white font-mono tracking-widest leading-tight"
           style={{ fontSize: 'clamp(1.4rem, 4vw, 2.4rem)' }}>
-          BLACKOUT
+          SIGNAL-0
         </h1>
         <h2 className="text-[#00f5ff] font-mono tracking-[0.3em]"
           style={{ fontSize: 'clamp(1rem, 3vw, 1.8rem)' }}>
-          DELIVERED
+          BROADCAST
         </h2>
-        <p className="text-[#666] text-sm mt-2 font-mono tracking-widest">CORE HAS BEEN SHUT DOWN</p>
+        <p className="text-[#666] text-sm mt-2 font-mono tracking-widest">CORE HAS BEEN NEUTRALIZED</p>
+        <p className="text-[#444] text-xs mt-1 font-mono tracking-widest">HUMANITY IS FREE</p>
         {isNewRecord && (
           <p className="text-[#ff6a00] text-xs mt-3 tracking-[0.3em] font-mono animate-pulse">
             ★ NEW RECORD ★
