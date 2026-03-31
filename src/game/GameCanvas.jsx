@@ -2,6 +2,9 @@ import React, { useEffect, useRef } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
+
+const isMobile = typeof window !== 'undefined' &&
+  (/Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768)
 import Road from '../components/environment/Road'
 import BuildingPool from '../components/environment/BuildingPool'
 import PlayerVehicle from '../components/player/PlayerVehicle'
@@ -82,7 +85,7 @@ function ZoneFog() {
     scene.background?.set?.(zoneData.bgColor)
   }, [zone, scene, zoneData])
 
-  return <fog attach="fog" args={[zoneData.fogColor, 30, 110]} />
+  return <fog attach="fog" args={[zoneData.fogColor, isMobile ? 25 : 30, isMobile ? 80 : 110]} />
 }
 
 export default function GameCanvas() {
@@ -91,10 +94,11 @@ export default function GameCanvas() {
 
   return (
     <Canvas
-      shadows
+      shadows={!isMobile}
+      dpr={[1, isMobile ? 1.5 : 2]}
       style={{ width: '100%', height: '100%', background: zoneData.bgColor }}
-      gl={{ antialias: true, toneMappingExposure: 0.9 }}
-      camera={{ position: [0, 3, 9], fov: 65, near: 0.1, far: 160 }}
+      gl={{ antialias: !isMobile, toneMappingExposure: 0.9, powerPreference: 'high-performance' }}
+      camera={{ position: [0, 3, 9], fov: 65, near: 0.5, far: 120 }}
     >
       <CameraSetup />
       <CameraShake />
@@ -110,7 +114,7 @@ export default function GameCanvas() {
         position={[5, 14, 8]}
         intensity={1.6}
         color="#ffffff"
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={[512, 512]}
         shadow-camera-near={0.5}
         shadow-camera-far={60}
         shadow-camera-left={-18}
@@ -139,15 +143,17 @@ export default function GameCanvas() {
       <EnemySystems />
       <CollectiblePool />
 
-      {/* ── Post-processing ───────────────────────────────────────────────── */}
-      <EffectComposer multisampling={0}>
-        <Bloom
-          luminanceThreshold={0.35}
-          luminanceSmoothing={0.7}
-          intensity={0.7}
-          blendFunction={BlendFunction.ADD}
-        />
-      </EffectComposer>
+      {/* ── Post-processing (desktop only — too expensive on mobile) ─────── */}
+      {!isMobile && (
+        <EffectComposer multisampling={0}>
+          <Bloom
+            luminanceThreshold={0.35}
+            luminanceSmoothing={0.7}
+            intensity={0.7}
+            blendFunction={BlendFunction.ADD}
+          />
+        </EffectComposer>
+      )}
     </Canvas>
   )
 }

@@ -2,6 +2,9 @@ import React, { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import useGameStore from '../../store/gameStore'
 
+const isMobile = typeof window !== 'undefined' &&
+  (/Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768)
+
 // Match road tile dimensions exactly
 const TILE_LENGTH = 64
 const RECYCLE_Z = 50
@@ -76,13 +79,15 @@ function Building({ def, bIdx, style }) {
   const { x, w, h, d, wr, wc, detail, dh } = def
   const yBase = h / 2  // pivot at ground level
 
-  // Pre-compute window grid
+  // Pre-compute window grid — reduce count on mobile
   const windows = useMemo(() => {
+    const maxWr = isMobile ? Math.min(wr, 2) : wr
+    const maxWc = isMobile ? 1 : wc
     const out = []
-    const xStep = w / (wc + 1)
-    const yStep = (h - 2.0) / (wr + 0.5)
-    for (let r = 0; r < wr; r++) {
-      for (let c = 0; c < wc; c++) {
+    const xStep = w / (maxWc + 1)
+    const yStep = (h - 2.0) / (maxWr + 0.5)
+    for (let r = 0; r < maxWr; r++) {
+      for (let c = 0; c < maxWc; c++) {
         out.push({
           key: `${r}-${c}`,
           wx: -w / 2 + xStep * (c + 1),
@@ -122,8 +127,8 @@ function Building({ def, bIdx, style }) {
       ))}
 
 
-      {/* Rooftop detail: chimney */}
-      {detail === 'chimney' && (
+      {/* Rooftop detail: chimney (skip on mobile) */}
+      {!isMobile && detail === 'chimney' && (
         <>
           <mesh position={[w * 0.25, h / 2 + dh / 2, 0]}>
             <cylinderGeometry args={[0.22, 0.28, dh, 6]} />
@@ -147,8 +152,8 @@ function Building({ def, bIdx, style }) {
         </>
       )}
 
-      {/* Rooftop detail: antenna */}
-      {detail === 'antenna' && (
+      {/* Rooftop detail: antenna (skip on mobile) */}
+      {!isMobile && detail === 'antenna' && (
         <>
           <mesh position={[0, h / 2 + dh / 2, 0]}>
             <cylinderGeometry args={[0.04, 0.06, dh, 5]} />
@@ -172,8 +177,8 @@ function Building({ def, bIdx, style }) {
         </>
       )}
 
-      {/* Rooftop detail: tower (taller secondary structure) */}
-      {detail === 'tower' && (
+      {/* Rooftop detail: tower (skip on mobile) */}
+      {!isMobile && detail === 'tower' && (
         <>
           <mesh position={[-w * 0.2, h / 2 + dh / 2, 0]}>
             <boxGeometry args={[w * 0.35, dh, d * 0.5]} />
@@ -198,8 +203,8 @@ function Building({ def, bIdx, style }) {
         </>
       )}
 
-      {/* Base accent stripe (ground-level glow band) */}
-      <mesh position={[0, -h / 2 + 0.08, d / 2 + 0.02]}>
+      {/* Base accent stripe (ground-level glow band — desktop only) */}
+      {!isMobile && <mesh position={[0, -h / 2 + 0.08, d / 2 + 0.02]}>
         <planeGeometry args={[w - 0.1, 0.14]} />
         <meshStandardMaterial
           color={style.accentEmissive}
@@ -207,7 +212,7 @@ function Building({ def, bIdx, style }) {
           emissiveIntensity={style.accentEmissiveIntensity * 0.7}
           toneMapped={false}
         />
-      </mesh>
+      </mesh>}
     </group>
   )
 }
