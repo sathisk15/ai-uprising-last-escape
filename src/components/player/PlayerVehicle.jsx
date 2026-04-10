@@ -34,7 +34,7 @@ const SLIDE_DURATION  = 0.6
 const START_ANIM_DUR  = 1.2   // seconds car takes to zoom in from behind camera
 const START_Z_FROM    = 22    // z position behind camera (camera sits at z≈9)
 const START_Z_TO      = 2     // final play position z
-const DEATH_ANIM_DUR  = 1.6   // seconds before gameover screen appears
+const DEATH_ANIM_DUR  = 2.4   // seconds before gameover screen appears (longer for full crash sequence)
 const DAMAGE_FLASH_DUR = 0.35  // seconds the red damage overlay stays lit
 
 export default function PlayerVehicle() {
@@ -48,6 +48,10 @@ export default function PlayerVehicle() {
   const dyingT        = useRef(0)  // 0→DEATH_ANIM_DUR during crash
   const startT        = useRef(-1) // -1 = not animating; 0→START_ANIM_DUR = driving in
   const prevPhase     = useRef('menu')
+  // Crash blast — array of 6 sphere refs
+  const blastRefs     = useRef([null, null, null, null, null, null])
+  const blastData     = useRef([])  // [{dx,dy,speed,scale} per sphere]
+  const smokeRef      = useRef()    // dark smoke billow
 
   usePlayerInput()
 
@@ -87,33 +91,84 @@ export default function PlayerVehicle() {
 
     // ── Death / crash animation ───────────────────────────────────────────
     if (phase === 'dying') {
+      const prevT = dyingT.current
       dyingT.current += delta
-      const t = Math.min(dyingT.current / DEATH_ANIM_DUR, 1)
+      const raw = dyingT.current
 
-      // Phase 1 (0–0.4s): violent shake
-      if (t < 0.4 / DEATH_ANIM_DUR * DEATH_ANIM_DUR) {
-        const shake = 0.35 * (1 - t * 2)
+      // ── Phase 1 (0–0.35s): impact shake + skid to stop ─────────────────
+      if (raw < 0.35) {
+        const shake = 0.4 * (1 - raw / 0.35)
         groupRef.current.position.x = (Math.random() * 2 - 1) * shake
-        groupRef.current.position.z = 2 + (Math.random() * 2 - 1) * shake * 0.5
+        groupRef.current.position.z = START_Z_TO + (Math.random() * 2 - 1) * shake * 0.4
+        groupRef.current.rotation.z = (Math.random() * 2 - 1) * shake * 0.5
       }
 
-      // Phase 2 (0–1s): tilt and roll over
-      const tiltProgress = Math.min(t / 0.8, 1)
-      groupRef.current.rotation.z = tiltProgress * 1.4          // roll sideways
-      groupRef.current.rotation.x = tiltProgress * -0.4          // nose dip
-
-      // Phase 3 (0.5s–end): sink below road
-      if (t > 0.4) {
-        const sinkT = (t - 0.4) / 0.6
-        groupRef.current.position.y = BASE_Y - sinkT * 2.5
+      // ── Trigger blast at 0.3s (first frame crossing it) ─────────────────
+      if (prevT < 0.3 && raw >= 0.3) {
+        blastData.current = Array.from({ length: 6 }, (_, i) => ({
+          angle: (i / 6) * Math.PI * 2,
+          speed: 1.8 + Math.random() * 2.2,
+          rise:  0.8 + Math.random() * 1.4,
+          size:  0.25 + Math.random() * 0.35,
+        }))
+        if (blastRefs.current[0]) {
+          blastRefs.current.forEach((m) => { if (m) m.visible = true })
+        }
+        if (smokeRef.current) smokeRef.current.visible = true
       }
 
-      // Call completeGameOver once at end of animation
+      // ── Animate blast spheres (0.3s → 1.4s) ────────────────────────────
+      if (raw >= 0.3 && raw < 1.4 && blastData.current.length) {
+        const bt = (raw - 0.3) / 1.1   // 0→1 within blast window
+        const fade = Math.max(0, 1 - bt)
+        blastRefs.current.forEach((m, i) => {
+          if (!m) return
+          const d = blastData.current[i]
+          if (!d) return
+          const dist = d.speed * bt
+          m.position.x = Math.cos(d.angle) * dist
+          m.position.y = BASE_Y + d.rise * bt * (1 - bt * 0.4)
+          m.position.z = Math.sin(d.angle) * dist
+          const s = d.size * (0.3 + bt * 1.6)
+          m.scale.setScalar(s)
+          m.material.opacity = fade * 0.92
+          m.visible = fade > 0.01
+        })
+        // Smoke billow
+        if (smokeRef.current) {
+          const ss = 0.3 + bt * 2.8
+          smokeRef.current.scale.setScalar(ss)
+          smokeRef.current.material.opacity = Math.max(0, 0.55 * (1 - bt * 0.7))
+          smokeRef.current.position.y = BASE_Y + bt * 1.8
+        }
+      } else if (raw >= 1.4) {
+        blastRefs.current.forEach((m) => { if (m) m.visible = false })
+        if (smokeRef.current) smokeRef.current.visible = false
+      }
+
+      // ── Phase 2 (0.3s–1.0s): car rolls and tilts ────────────────────────
+      if (raw >= 0.3 && raw < 1.0) {
+        const rollT = (raw - 0.3) / 0.7
+        const ease  = 1 - Math.pow(1 - rollT, 2)
+        groupRef.current.rotation.z = ease * 1.2
+        groupRef.current.rotation.x = ease * -0.35
+        groupRef.current.position.x = Math.cos(rollT * Math.PI * 0.5) * 0.4 - 0.4
+      }
+
+      // ── Phase 3 (1.0s–end): world scrolls past — car drifts behind ──────
+      if (raw >= 1.0) {
+        // Car stays put; we push its z backward so it looks like
+        // the camera flies forward past the wreck
+        const driftT = (raw - 1.0) / (DEATH_ANIM_DUR - 1.0)
+        const ease   = driftT * driftT                          // accelerate away
+        groupRef.current.position.z = START_Z_TO + ease * 18   // slides back toward z≈20
+        groupRef.current.position.y = BASE_Y - driftT * 0.3    // slight sink
+      }
+
       if (dyingT.current >= DEATH_ANIM_DUR) {
         dyingT.current = 0
         completeGameOver()
       }
-      // Still process shield + exhaust visuals during death
       if (shieldRef.current)  shieldRef.current.visible  = false
       if (exhaustRef.current) exhaustRef.current.visible = false
       return
@@ -315,6 +370,32 @@ export default function PlayerVehicle() {
           <meshStandardMaterial color="#ee88ff" emissive="#cc00ff" emissiveIntensity={3} toneMapped={false} />
         </mesh>
       </group>
+
+      {/* ── Crash blast spheres (6 fireballs) ───────────────────────────── */}
+      {[0,1,2,3,4,5].map((i) => (
+        <mesh key={i} ref={(el) => { blastRefs.current[i] = el }} visible={false} position={[0, BASE_Y, 0]}>
+          <sphereGeometry args={[1, 7, 7]} />
+          <meshStandardMaterial
+            color={i % 2 === 0 ? '#ff4400' : '#ffaa00'}
+            emissive={i % 2 === 0 ? '#ff2200' : '#ff8800'}
+            emissiveIntensity={5}
+            transparent opacity={0}
+            toneMapped={false}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+
+      {/* ── Crash smoke billow ───────────────────────────────────────────── */}
+      <mesh ref={smokeRef} visible={false} position={[0, BASE_Y, 0]}>
+        <sphereGeometry args={[1, 7, 7]} />
+        <meshStandardMaterial
+          color="#1a1a1a"
+          transparent opacity={0}
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
 
     </group>
   )
