@@ -42,7 +42,7 @@ export const ZONES = {
 export const ZONE_THRESHOLDS = [1500, 3500]
 
 // Base game speed (units per second)
-export const BASE_SPEED = 12
+export const BASE_SPEED = 22
 
 // Lane X positions (left, center, right)
 export const LANES = [-2.5, 0, 2.5]

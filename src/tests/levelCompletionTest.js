@@ -13,7 +13,7 @@
  */
 
 // ── Mirror of game constants ─────────────────────────────────────────────────
-const BASE_SPEED    = 18
+const BASE_SPEED    = 22
 const ZONES = {
   1: { speedMultiplier: 1.0,  obstacleRate: 3.0, droneRate: 5.5, distanceThreshold: 1500, droneShoots: false },
   2: { speedMultiplier: 1.35, obstacleRate: 2.2, droneRate: 3.5, distanceThreshold: 3500, droneShoots: true  },
