@@ -2,7 +2,7 @@ import React, { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { gsap } from 'gsap'
 import useGameStore from '../../store/gameStore'
-import { LANES } from '../../game/zones'
+import { LANES, ZONES } from '../../game/zones'
 import { aabbXZ } from '../../game/physics'
 import AudioManager from '../../audio/AudioManager'
 
@@ -197,7 +197,7 @@ export default function CollectiblePool() {
   const spawnTimer = useRef(1.5)
 
   useFrame((_, delta) => {
-    const { phase, speed, playerLane } = useGameStore.getState()
+    const { phase, speed, zone, distance, playerLane } = useGameStore.getState()
     if (phase !== 'playing') return
 
     const playerX = LANES[playerLane]
@@ -240,9 +240,10 @@ export default function CollectiblePool() {
       }
     })
 
-    // Spawn
+    // Spawn — stop 120 units before zone end so road clears before zoneout
+    const nearEnd = ZONES[zone].distanceThreshold - distance < 120
     spawnTimer.current -= delta
-    if (spawnTimer.current <= 0) {
+    if (spawnTimer.current <= 0 && !nearEnd) {
       spawnTimer.current = SPAWN_RATE + (Math.random() - 0.5) * 1.6
 
       const slot = slots.current.find(s => !s.active)

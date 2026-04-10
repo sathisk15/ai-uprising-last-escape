@@ -26,7 +26,7 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
   obstacleSharedData.barricadeSlots = data.current
 
   useFrame((_, delta) => {
-    const { phase, speed, zone, playerLane } = useGameStore.getState()
+    const { phase, speed, zone, distance, playerLane } = useGameStore.getState()
     if (phase !== 'playing') {
       // Clear all barricades when zoneout starts
       if (phase === 'zoneout') {
@@ -71,9 +71,10 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
       }
     })
 
-    // Spawn
+    // Spawn — stop 120 units before zone end so the road clears before zoneout
     spawnTimer.barricade -= delta
-    if (spawnTimer.barricade <= 0) {
+    const nearEnd = ZONES[zone].distanceThreshold - distance < 120
+    if (spawnTimer.barricade <= 0 && !nearEnd) {
       const zoneData = ZONES[zone]
       spawnTimer.barricade = zoneData.obstacleRate + (Math.random() - 0.5) * 0.8
 
@@ -118,7 +119,7 @@ function EnergyWallPool({ spawnTimer, hitCooldown }) {
   obstacleSharedData.energyWallSlots = data.current
 
   useFrame((_, delta) => {
-    const { phase, speed, zone, playerLane } = useGameStore.getState()
+    const { phase, speed, zone, distance, playerLane } = useGameStore.getState()
     if (phase !== 'playing' || zone < 2) {
       if (phase === 'zoneout') {
         data.current.forEach((slot) => {
@@ -163,7 +164,8 @@ function EnergyWallPool({ spawnTimer, hitCooldown }) {
     })
 
     spawnTimer.energyWall -= delta
-    if (spawnTimer.energyWall <= 0) {
+    const nearEnd = ZONES[zone].distanceThreshold - distance < 120
+    if (spawnTimer.energyWall <= 0 && !nearEnd) {
       const zoneData = ZONES[zone]
       spawnTimer.energyWall = zoneData.obstacleRate * 1.8 + Math.random()
 
