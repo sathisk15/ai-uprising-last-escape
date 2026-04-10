@@ -31,7 +31,9 @@ const BASE_Y          = 0.5
 const JUMP_HEIGHT     = 2.8
 const JUMP_DURATION   = 0.75
 const SLIDE_DURATION  = 0.6
-const START_ANIM_DUR  = 0.9   // seconds car takes to drive in on game start
+const START_ANIM_DUR  = 1.2   // seconds car takes to zoom in from behind camera
+const START_Z_FROM    = 22    // z position behind camera (camera sits at z≈9)
+const START_Z_TO      = 2     // final play position z
 const DEATH_ANIM_DUR  = 1.6   // seconds before gameover screen appears
 const DAMAGE_FLASH_DUR = 0.35  // seconds the red damage overlay stays lit
 
@@ -55,25 +57,29 @@ export default function PlayerVehicle() {
             endJump, endSlide, shieldActive, speedBoostActive,
             completeGameOver } = useGameStore.getState()
 
-    // ── Detect game-start transition → trigger drive-in animation ─────────
+    // ── Detect game-start transition → trigger zoom-in from behind camera ──
     if (phase === 'playing' && prevPhase.current !== 'playing') {
       startT.current = 0
       dyingT.current = 0
-      groupRef.current.position.y  = -1.5
+      groupRef.current.position.y  = BASE_Y
+      groupRef.current.position.z  = START_Z_FROM
       groupRef.current.rotation.x  = 0
       groupRef.current.rotation.z  = 0
     }
     prevPhase.current = phase
 
-    // ── Start drive-in animation ──────────────────────────────────────────
+    // ── Start zoom-in animation (z-axis: behind camera → play position) ───
     if (startT.current >= 0 && startT.current < START_ANIM_DUR) {
       startT.current += delta
       const t    = Math.min(startT.current / START_ANIM_DUR, 1)
-      const ease = 1 - Math.pow(1 - t, 3)   // cubic ease-out
-      groupRef.current.position.y = -1.5 + (BASE_Y + 1.5) * ease
-      // snap to base Y when done
+      const ease = 1 - Math.pow(1 - t, 2)   // quadratic ease-out: fast entry, smooth stop
+      groupRef.current.position.z = START_Z_FROM + (START_Z_TO - START_Z_FROM) * ease
+      groupRef.current.position.y = BASE_Y
+      // nose dips forward while speeding in, straightens on arrival
+      groupRef.current.rotation.x = -(1 - ease) * 0.3
       if (startT.current >= START_ANIM_DUR) {
-        groupRef.current.position.y = BASE_Y
+        groupRef.current.position.z = START_Z_TO
+        groupRef.current.rotation.x = 0
         startT.current = -1
       }
       return  // don't process other movement until car is in position
@@ -177,7 +183,7 @@ export default function PlayerVehicle() {
   })
 
   return (
-    <group ref={groupRef} position={[0, -1.5, 2]}>
+    <group ref={groupRef} position={[0, BASE_Y, START_Z_FROM]}>
 
       {/* ── Main body ────────────────────────────────────────────────────── */}
       <mesh castShadow position={[0, 0.1, 0]}>
