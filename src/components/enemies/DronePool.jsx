@@ -44,7 +44,8 @@ export default function DronePool({ hitCooldown }) {
 
   useFrame((_, delta) => {
     const { phase, speed, zone, playerLane } = useGameStore.getState()
-    if (phase !== 'playing') return
+    // Drones keep moving during zoneout (dynamic feel), just no new spawns or collisions
+    if (phase !== 'playing' && phase !== 'zoneout') return
 
     const zoneData  = ZONES[zone]
     const playerX   = LANES[playerLane]
@@ -81,20 +82,23 @@ export default function DronePool({ hitCooldown }) {
         return
       }
 
-      // Collision with player
-      if (hitCooldown.current > 0) return
-      if (aabbXZ(
-        slot.x, slot.z, HALF.drone.x, HALF.drone.z,
-        playerX, 2, HALF.player.x, HALF.player.z
-      )) {
-        slot.active = false
-        ref.position.z = PARK_Z
-        useGameStore.getState().takeDamage('drone')
-        hitCooldown.current = 1.5
+      // No collisions during zoneout — drones fly freely
+      if (phase !== 'zoneout') {
+        if (hitCooldown.current > 0) return
+        if (aabbXZ(
+          slot.x, slot.z, HALF.drone.x, HALF.drone.z,
+          playerX, 2, HALF.player.x, HALF.player.z
+        )) {
+          slot.active = false
+          ref.position.z = PARK_Z
+          useGameStore.getState().takeDamage('drone')
+          hitCooldown.current = 1.5
+        }
       }
     })
 
-    // Spawn timer
+    // No new spawns during zoneout
+    if (phase === 'zoneout') return
     spawnTimer.current -= delta
     if (spawnTimer.current <= 0) {
       spawnTimer.current = zoneData.droneRate + (Math.random() - 0.5) * 1.0

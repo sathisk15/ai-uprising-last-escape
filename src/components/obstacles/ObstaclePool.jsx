@@ -27,7 +27,19 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
 
   useFrame((_, delta) => {
     const { phase, speed, zone, playerLane } = useGameStore.getState()
-    if (phase !== 'playing') return
+    if (phase !== 'playing') {
+      // Clear all barricades when zoneout starts
+      if (phase === 'zoneout') {
+        data.current.forEach((slot) => {
+          if (slot.active) {
+            slot.active = false
+            if (slot.ref) slot.ref.position.z = PARK_Z
+            slot.z = PARK_Z
+          }
+        })
+      }
+      return
+    }
 
     const playerX = LANES[playerLane]
 
@@ -107,7 +119,18 @@ function EnergyWallPool({ spawnTimer, hitCooldown }) {
 
   useFrame((_, delta) => {
     const { phase, speed, zone, playerLane } = useGameStore.getState()
-    if (phase !== 'playing' || zone < 2) return
+    if (phase !== 'playing' || zone < 2) {
+      if (phase === 'zoneout') {
+        data.current.forEach((slot) => {
+          if (slot.active) {
+            slot.active = false
+            if (slot.ref) slot.ref.position.z = PARK_Z
+            slot.z = PARK_Z
+          }
+        })
+      }
+      return
+    }
 
     const playerX = LANES[playerLane]
 
