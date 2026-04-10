@@ -34,7 +34,7 @@ const SLIDE_DURATION  = 0.6
 const START_ANIM_DUR  = 1.2   // seconds car takes to zoom in from behind camera
 const START_Z_FROM    = 22    // z position behind camera (camera sits at z≈9)
 const START_Z_TO      = 2     // final play position z
-const DEATH_ANIM_DUR  = 2.4   // seconds before gameover screen appears (longer for full crash sequence)
+
 const DAMAGE_FLASH_DUR = 0.35  // seconds the red damage overlay stays lit
 
 export default function PlayerVehicle() {
@@ -59,8 +59,7 @@ export default function PlayerVehicle() {
   useFrame((_, delta) => {
     if (!groupRef.current) return
     const { phase, playerLane, isJumping, isSliding,
-            endJump, endSlide, shieldActive, speedBoostActive,
-            completeGameOver } = useGameStore.getState()
+            endJump, endSlide, shieldActive, speedBoostActive } = useGameStore.getState()
 
     // ── Detect game-start transition → trigger zoom-in from behind camera ──
     if (phase === 'playing' && prevPhase.current !== 'playing') {
@@ -152,29 +151,18 @@ export default function PlayerVehicle() {
         if (smokeRef.current) smokeRef.current.visible = false
       }
 
-      // ── Phase 2 (0.3s–1.0s): car rolls and tilts in place ──────────────
-      if (raw >= 0.3 && raw < 1.0) {
-        const rollT = (raw - 0.3) / 0.7
+      // ── Phase 2 (0.3s–1.0s): car rolls and tilts, then holds in place ───
+      if (raw >= 0.3) {
+        const rollT = Math.min((raw - 0.3) / 0.7, 1)
         const ease  = 1 - Math.pow(1 - rollT, 2)
         groupRef.current.rotation.z = ease * 1.2
-        groupRef.current.rotation.x = ease * 0.2   // tail dips, nose lifts — stays above road
+        groupRef.current.rotation.x = ease * 0.2   // tail dips, nose lifts
+        // Car is completely frozen — camera flies past, not the car moving
         groupRef.current.position.x = deathX.current
-        groupRef.current.position.y = BASE_Y        // never go below road
+        groupRef.current.position.z = START_Z_TO
+        groupRef.current.position.y = BASE_Y
       }
 
-      // ── Phase 3 (1.0s–end): car drifts behind camera ───────────────────
-      if (raw >= 1.0) {
-        const driftT = (raw - 1.0) / (DEATH_ANIM_DUR - 1.0)
-        const ease   = driftT * driftT
-        groupRef.current.position.x = deathX.current
-        groupRef.current.position.z = START_Z_TO + ease * 18
-        groupRef.current.position.y = BASE_Y        // stay on road surface
-      }
-
-      if (dyingT.current >= DEATH_ANIM_DUR) {
-        dyingT.current = 0
-        completeGameOver()
-      }
       if (shieldRef.current)  shieldRef.current.visible  = false
       if (exhaustRef.current) exhaustRef.current.visible = false
       return

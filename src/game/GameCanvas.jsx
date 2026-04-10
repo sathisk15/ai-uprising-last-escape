@@ -71,6 +71,41 @@ function CameraShake() {
   return null
 }
 
+// Fly camera forward past the crashed car during death sequence
+const FLY_DURATION = 2.2   // seconds to fly past the wreck
+const FLY_Z_END    = -14   // how far forward camera travels (passes car at z=2)
+
+function CameraFlyPast() {
+  const { camera } = useThree()
+  const flyT       = useRef(-1)   // -1 = inactive
+  const prevPhase  = useRef('menu')
+
+  useFrame((_, delta) => {
+    const { phase, completeGameOver } = useGameStore.getState()
+
+    if (phase === 'dying' && prevPhase.current !== 'dying') {
+      flyT.current = 0
+    }
+    prevPhase.current = phase
+
+    if (flyT.current < 0) return
+
+    flyT.current += delta
+    const t    = Math.min(flyT.current / FLY_DURATION, 1)
+    // ease-in: slow start then accelerates (mimics gaining speed driving past)
+    const ease = t * t
+    const z    = BASE_CAM.z + (FLY_Z_END - BASE_CAM.z) * ease
+    camera.position.set(BASE_CAM.x, BASE_CAM.y, z)
+    camera.lookAt(0, 0.5, z - 15)   // always look ahead
+
+    if (flyT.current >= FLY_DURATION) {
+      flyT.current = -1
+      completeGameOver()
+    }
+  })
+  return null
+}
+
 // Updates fog + background when zone changes
 function ZoneFog() {
   const { scene } = useThree()
@@ -98,6 +133,7 @@ export default function GameCanvas() {
     >
       <CameraSetup />
       <CameraShake />
+      <CameraFlyPast />
       <ZoneFog />
 
       {/* ── Lighting ──────────────────────────────────────────────────────── */}

@@ -238,7 +238,7 @@ export default function BuildingPool() {
 
   useFrame((_, delta) => {
     const { phase, speed } = useGameStore.getState()
-    if (phase !== 'playing') return
+    if (phase !== 'playing' && phase !== 'dying') return
 
     const move = speed * delta
 
