@@ -157,18 +157,18 @@ export default function PlayerVehicle() {
         const rollT = (raw - 0.3) / 0.7
         const ease  = 1 - Math.pow(1 - rollT, 2)
         groupRef.current.rotation.z = ease * 1.2
-        groupRef.current.rotation.x = ease * -0.35
-        // keep x locked to the lane where the car died
+        groupRef.current.rotation.x = ease * 0.2   // tail dips, nose lifts — stays above road
         groupRef.current.position.x = deathX.current
+        groupRef.current.position.y = BASE_Y        // never go below road
       }
 
-      // ── Phase 3 (1.0s–end): world scrolls past — car drifts behind ──────
+      // ── Phase 3 (1.0s–end): car drifts behind camera ───────────────────
       if (raw >= 1.0) {
         const driftT = (raw - 1.0) / (DEATH_ANIM_DUR - 1.0)
         const ease   = driftT * driftT
-        groupRef.current.position.x = deathX.current           // stay in crash lane
-        groupRef.current.position.z = START_Z_TO + ease * 18   // slides back toward z≈20
-        groupRef.current.position.y = BASE_Y - driftT * 0.3    // slight sink
+        groupRef.current.position.x = deathX.current
+        groupRef.current.position.z = START_Z_TO + ease * 18
+        groupRef.current.position.y = BASE_Y        // stay on road surface
       }
 
       if (dyingT.current >= DEATH_ANIM_DUR) {
