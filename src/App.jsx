@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import useGameStore from './store/gameStore'
 import MainMenu from './screens/MainMenu'
 import GameScreen from './screens/GameScreen'
@@ -43,7 +43,7 @@ export default function App() {
   return (
     <div className="w-full h-full relative">
       {/* Game stays mounted during transition so the 3D world keeps rendering */}
-      {(phase === 'playing' || phase === 'paused' || phase === 'transition') && <GameScreen />}
+      {(phase === 'playing' || phase === 'paused' || phase === 'transition' || phase === 'dying') && <GameScreen />}
 
       {/* Zone transition overlays the live game */}
       {phase === 'transition' && <ZoneTransition />}

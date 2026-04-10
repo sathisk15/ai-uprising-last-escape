@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { ZONES, BASE_SPEED, DAMAGE } from '../game/zones'
-import { shakeSignal } from '../game/shakeSignal'
+import { shakeSignal, damageSignal } from '../game/shakeSignal'
 
 // Persistent slice — survives page reload
 const persistedSlice = (set) => ({
@@ -54,6 +54,7 @@ const useGameStore = create(
         if (get().phase === 'playing') set({ phase: 'paused' })
       },
 
+
       resumeGame: () => {
         if (get().phase === 'paused') set({ phase: 'playing' })
       },
@@ -62,12 +63,14 @@ const useGameStore = create(
         // Shield absorbs one hit then shatters
         if (get().shieldActive) {
           set({ shieldActive: false })
-          shakeSignal.pending = true
+          shakeSignal.pending  = true
+          damageSignal.pending = true
           return
         }
         const amount = DAMAGE[type] ?? DAMAGE.obstacle
         const health = Math.max(0, get().health - amount)
-        shakeSignal.pending = true
+        shakeSignal.pending  = true
+        damageSignal.pending = true
         if (health <= 0) {
           get().endGame()
         } else {
@@ -149,8 +152,8 @@ const useGameStore = create(
         const newDistance = state.distance + speed * delta
         const scoreFromDistance = Math.floor(newDistance)
 
-        // Energy drains at 2 pts/s in zone 1, slightly faster in higher zones
-        const drainRate = 2.0 + (state.zone - 1) * 0.6
+        // Energy drains at 1.2 pts/s in zone 1, slightly faster in higher zones
+        const drainRate = 1.2 + (state.zone - 1) * 0.35
         const newEnergy = Math.max(0, state.energy - drainRate * delta)
 
         set({ distance: newDistance, speed, score: scoreFromDistance + state.kills * 100, energy: newEnergy, speedBoostActive, speedBoostTimer })
@@ -185,6 +188,10 @@ const useGameStore = create(
       endGame: () => {
         const { score, highScore, setHighScore } = get()
         if (score > highScore) setHighScore(score)
+        set({ phase: 'dying' })   // plays crash animation before gameover screen
+      },
+
+      completeGameOver: () => {
         set({ phase: 'gameover' })
       },
 
