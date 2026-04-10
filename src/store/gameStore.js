@@ -178,7 +178,13 @@ const useGameStore = create(
       nextZone: () => {
         const { zone } = get()
         if (zone >= 3) return
-        set({ zone: zone + 1, phase: 'transition' })
+        // Stay on current zone visuals — car drives into fog first
+        set({ phase: 'zoneout' })
+      },
+
+      beginTransition: () => {
+        const { phase, zone } = get()
+        if (phase === 'zoneout') set({ zone: zone + 1, phase: 'transition' })
       },
 
       resumeFromTransition: () => {

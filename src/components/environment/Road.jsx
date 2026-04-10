@@ -82,7 +82,7 @@ export default function Road() {
 
   useFrame((_, delta) => {
     const { phase, speed } = useGameStore.getState()
-    if (phase !== 'playing' && phase !== 'dying') return
+    if (phase !== 'playing' && phase !== 'dying' && phase !== 'zoneout') return
     const t1 = tile1.current
     const t2 = tile2.current
     if (!t1 || !t2) return

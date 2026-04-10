@@ -58,10 +58,24 @@ export default function PlayerVehicle() {
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
-    const { phase, playerLane, isJumping, isSliding,
+    const { phase, speed, playerLane, isJumping, isSliding,
             endJump, endSlide, shieldActive, speedBoostActive } = useGameStore.getState()
 
-    // ── Detect game-start transition → trigger zoom-in from behind camera ──
+    // ── Zoneout: car drives forward and disappears into fog ──────────────────
+    if (phase === 'zoneout') {
+      groupRef.current.position.z -= speed * delta   // drive forward (-z = away from camera)
+      groupRef.current.position.y  = BASE_Y
+      groupRef.current.rotation.x  = -0.08           // slight nose-down drive posture
+      groupRef.current.rotation.z  = 0
+      // Steer back toward center lane smoothly
+      groupRef.current.position.x += (0 - groupRef.current.position.x) * Math.min(delta * 4, 1)
+      if (shieldRef.current)  shieldRef.current.visible  = false
+      if (exhaustRef.current) exhaustRef.current.visible = false
+      prevPhase.current = phase
+      return
+    }
+
+    // ── Detect game-start / zone-resume → trigger zoom-in from behind camera ─
     if (phase === 'playing' && prevPhase.current !== 'playing') {
       startT.current = 0
       dyingT.current = 0

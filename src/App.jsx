@@ -15,7 +15,7 @@ export default function App() {
 
   // BGM — start/stop based on phase + zone
   useEffect(() => {
-    if (phase === 'playing' || phase === 'paused' || phase === 'transition') {
+    if (phase === 'playing' || phase === 'paused' || phase === 'transition' || phase === 'zoneout') {
       AudioManager.playBGM(zone)
     } else if (phase === 'gameover') {
       AudioManager.stopBGM()
@@ -42,8 +42,8 @@ export default function App() {
 
   return (
     <div className="w-full h-full relative">
-      {/* Game stays mounted during transition so the 3D world keeps rendering */}
-      {(phase === 'playing' || phase === 'paused' || phase === 'transition' || phase === 'dying') && <GameScreen />}
+      {/* Game stays mounted during zoneout/transition/dying so the 3D world keeps rendering */}
+      {(phase === 'playing' || phase === 'paused' || phase === 'transition' || phase === 'dying' || phase === 'zoneout') && <GameScreen />}
 
       {/* Zone transition overlays the live game */}
       {phase === 'transition' && <ZoneTransition />}
