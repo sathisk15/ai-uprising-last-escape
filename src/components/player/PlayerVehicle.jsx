@@ -52,6 +52,7 @@ export default function PlayerVehicle() {
   const blastRefs     = useRef([null, null, null, null, null, null])
   const blastData     = useRef([])  // [{dx,dy,speed,scale} per sphere]
   const smokeRef      = useRef()    // dark smoke billow
+  const deathX        = useRef(0)   // car's x position at moment of death
 
   usePlayerInput()
 
@@ -69,6 +70,11 @@ export default function PlayerVehicle() {
       groupRef.current.position.z  = START_Z_FROM
       groupRef.current.rotation.x  = 0
       groupRef.current.rotation.z  = 0
+    }
+
+    // ── Capture lane position the moment death begins ─────────────────────
+    if (phase === 'dying' && prevPhase.current !== 'dying') {
+      deathX.current = groupRef.current.position.x
     }
     prevPhase.current = phase
 
@@ -98,7 +104,7 @@ export default function PlayerVehicle() {
       // ── Phase 1 (0–0.35s): impact shake + skid to stop ─────────────────
       if (raw < 0.35) {
         const shake = 0.4 * (1 - raw / 0.35)
-        groupRef.current.position.x = (Math.random() * 2 - 1) * shake
+        groupRef.current.position.x = deathX.current + (Math.random() * 2 - 1) * shake
         groupRef.current.position.z = START_Z_TO + (Math.random() * 2 - 1) * shake * 0.4
         groupRef.current.rotation.z = (Math.random() * 2 - 1) * shake * 0.5
       }
@@ -146,21 +152,21 @@ export default function PlayerVehicle() {
         if (smokeRef.current) smokeRef.current.visible = false
       }
 
-      // ── Phase 2 (0.3s–1.0s): car rolls and tilts ────────────────────────
+      // ── Phase 2 (0.3s–1.0s): car rolls and tilts in place ──────────────
       if (raw >= 0.3 && raw < 1.0) {
         const rollT = (raw - 0.3) / 0.7
         const ease  = 1 - Math.pow(1 - rollT, 2)
         groupRef.current.rotation.z = ease * 1.2
         groupRef.current.rotation.x = ease * -0.35
-        groupRef.current.position.x = Math.cos(rollT * Math.PI * 0.5) * 0.4 - 0.4
+        // keep x locked to the lane where the car died
+        groupRef.current.position.x = deathX.current
       }
 
       // ── Phase 3 (1.0s–end): world scrolls past — car drifts behind ──────
       if (raw >= 1.0) {
-        // Car stays put; we push its z backward so it looks like
-        // the camera flies forward past the wreck
         const driftT = (raw - 1.0) / (DEATH_ANIM_DUR - 1.0)
-        const ease   = driftT * driftT                          // accelerate away
+        const ease   = driftT * driftT
+        groupRef.current.position.x = deathX.current           // stay in crash lane
         groupRef.current.position.z = START_Z_TO + ease * 18   // slides back toward z≈20
         groupRef.current.position.y = BASE_Y - driftT * 0.3    // slight sink
       }
