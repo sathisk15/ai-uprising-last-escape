@@ -30,7 +30,6 @@ function Wheel({ position }) {
 const BASE_Y          = 0.5
 const JUMP_HEIGHT     = 2.8
 const JUMP_DURATION   = 0.75
-const SLIDE_DURATION  = 0.6
 const START_ANIM_DUR  = 1.2   // seconds car takes to zoom in from behind camera
 const START_Z_FROM    = 22    // z position behind camera (camera sits at z≈9)
 const START_Z_TO      = 2     // final play position z
@@ -40,7 +39,6 @@ const DAMAGE_FLASH_DUR = 0.35  // seconds the red damage overlay stays lit
 export default function PlayerVehicle() {
   const groupRef      = useRef()
   const jumpT         = useRef(0)
-  const slideT        = useRef(0)
   const shieldRef     = useRef()
   const exhaustRef    = useRef()
   const flashMeshRef  = useRef()   // red damage overlay mesh
@@ -58,8 +56,8 @@ export default function PlayerVehicle() {
 
   useFrame((_, delta) => {
     if (!groupRef.current) return
-    const { phase, speed, playerLane, isJumping, isSliding,
-            endJump, endSlide, shieldActive, speedBoostActive } = useGameStore.getState()
+    const { phase, speed, playerLane, isJumping,
+            endJump, shieldActive, speedBoostActive } = useGameStore.getState()
 
     // ── Zoneout: car drives forward and disappears into fog ──────────────────
     if (phase === 'zoneout') {
@@ -213,18 +211,10 @@ export default function PlayerVehicle() {
       groupRef.current.position.y = BASE_Y + Math.sin(jumpT.current * Math.PI) * JUMP_HEIGHT
       groupRef.current.scale.y    = 1
       if (jumpT.current >= 1) { jumpT.current = 0; groupRef.current.position.y = BASE_Y; endJump() }
-    // ── Slide squish ──────────────────────────────────────────────────────
-    } else if (isSliding) {
-      slideT.current = Math.min(slideT.current + delta / SLIDE_DURATION, 1)
-      const squish = 1 - Math.sin(slideT.current * Math.PI) * 0.55
-      groupRef.current.scale.y    = squish
-      groupRef.current.position.y = BASE_Y - (1 - squish) * 0.35
-      if (slideT.current >= 1) { slideT.current = 0; groupRef.current.scale.y = 1; groupRef.current.position.y = BASE_Y; endSlide() }
     } else {
       groupRef.current.position.y = BASE_Y
       groupRef.current.scale.y    = 1
       jumpT.current  = 0
-      slideT.current = 0
     }
 
     // ── Boost exhaust flames ──────────────────────────────────────────────

@@ -30,7 +30,6 @@ const sessionDefaults = {
   playerLane: 1,   // 0=left, 1=center, 2=right
   speed: BASE_SPEED,
   isJumping: false,
-  isSliding: false,
 }
 
 const useGameStore = create(
@@ -120,18 +119,11 @@ const useGameStore = create(
       },
 
       startJump: () => {
-        const { isJumping, isSliding, phase } = get()
-        if (phase !== 'playing' || isJumping || isSliding) return
+        const { isJumping, phase } = get()
+        if (phase !== 'playing' || isJumping) return
         set({ isJumping: true })
       },
       endJump: () => set({ isJumping: false }),
-
-      startSlide: () => {
-        const { isJumping, isSliding, phase } = get()
-        if (phase !== 'playing' || isJumping || isSliding) return
-        set({ isSliding: true })
-      },
-      endSlide: () => set({ isSliding: false }),
 
       advanceDistance: (delta) => {
         const state = get()

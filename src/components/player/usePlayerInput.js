@@ -25,11 +25,6 @@ export default function usePlayerInput() {
           e.preventDefault()
           useGameStore.getState().startJump()
           break
-        case 'ArrowDown':
-        case 'KeyS':
-          e.preventDefault()
-          useGameStore.getState().startSlide()
-          break
         case 'KeyZ':
         case 'KeyF':
           e.preventDefault()

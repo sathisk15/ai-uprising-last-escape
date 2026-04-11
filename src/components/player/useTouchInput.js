@@ -23,7 +23,7 @@ export default function useTouchInput() {
       const absDx = Math.abs(dx)
       const absDy = Math.abs(dy)
 
-      const { phase, setPlayerLane, playerLane, startJump, startSlide } = useGameStore.getState()
+      const { phase, setPlayerLane, playerLane, startJump } = useGameStore.getState()
       if (phase !== 'playing') return
 
       // Tap — shoot
@@ -41,7 +41,6 @@ export default function useTouchInput() {
       } else {
         // Vertical swipe
         if (dy < -SWIPE_THRESHOLD) startJump()
-        else if (dy > SWIPE_THRESHOLD) startSlide()
       }
     }
 
