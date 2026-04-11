@@ -11,7 +11,7 @@ const SPAWN_Z = -72;
 const PARK_Z = -600;
 const DESPAWN_Z = 18;
 // z threshold at which drone locks on and dives — closer in harder zones
-const DIVE_Z = { 1: -15, 2: -10, 3: -5 }
+const DIVE_Z = { 1: -18, 2: -13, 3: -8 }
 
 // Hover amplitude and frequency
 const HOVER_AMP = 0.18;
