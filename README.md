@@ -48,6 +48,7 @@ npm run preview    # preview the production build
 | Jump | `Space` / `Arrow Up` / `W` | Swipe up |
 | Shoot | `Z` / `F` | Tap |
 | Pause | `P` / `Escape` | — |
+| Toggle fullscreen | `F` | — |
 
 ---
 
@@ -89,7 +90,7 @@ Spawn every ~3.8 s at a random lane. Spawn stops 120 m before zone end.
 | Repair Pack | Green cross | 20% | +25 health |
 | Data Chip | Cyan flat box + circuit lines | 14% | +150 score |
 | Ammo Crate | Brown box + bullet silhouettes | 14% | +8 ammo |
-| Shield Orb | Purple octahedron + rings | 13% | One-hit absorb |
+| Shield Orb | Icy white-cyan octahedron + thin rings + glass bubble | 13% | One-hit absorb |
 | Speed Boost | Orange chevrons + glow core | 12% | 1.6× speed for 6 s |
 
 ### Scoring
@@ -108,7 +109,10 @@ Spawn every ~3.8 s at a random lane. Spawn stops 120 m before zone end.
 
 ```
 menu
- └─ startGame() ──────────────────────────────────────────► playing
+ └─ startIntro() ─────────────────────────────────────────► intro
+                                                               │
+                                    (last dialogue line) ─────┤
+                                         startGame() ─────────► playing
                                                                │
                                          pauseGame() ◄────────┤────► paused ──► resumeGame() ──► playing
                                                                │
@@ -132,6 +136,12 @@ menu
 ### Key Store Actions (exact code)
 
 ```js
+startIntro: () => {
+  set({ phase: 'intro' })
+}
+// No session reset — just transitions to the intro dialogue screen.
+// Fullscreen is requested automatically by App.jsx when phase becomes 'intro'.
+
 startGame: () => {
   set({ ...sessionDefaults, phase: 'playing' })
 }
@@ -234,11 +244,105 @@ Player Z reference: `2` (fixed play position). All obstacles scroll toward the c
 
 ### Camera
 
-Three camera behaviours in `GameCanvas.jsx`:
+Four camera behaviours in `GameCanvas.jsx`:
 
 1. **`CameraShake`** — triggers on `shakeSignal.pending`; magnitude decays over 0.32 s; base position `{x:0, y:3, z:9}`
 2. **`CameraFlyPast`** — fires on entering `'dying'` phase; eases from z=9 to z=-7 over 3 s using `ease = t*t`; calls `completeGameOver()` on completion
 3. **`ZoneFog`** — updates Three.js fog color + scene background on zone change
+4. **`BoostCameraFX`** — lerps FOV from 65° → 82° while `speedBoostActive`, back to 65° when it ends. Fast in (rate 10), slow out (rate 4). `camera.updateProjectionMatrix()` called every frame during transition.
+
+---
+
+## Screen System
+
+### Intro Dialogue (`IntroDialogue.jsx`)
+
+An 8-line narrative sequence that plays between MainMenu and gameplay. Layout: top 30% is a centered **Field Intel** tip card (one tip per page, cycles through 8 tips), bottom 70% is a scrollable **group chat** UI where messages accumulate as the player clicks Next.
+
+**Dialogue characters:**
+| Character | Color | Side |
+|---|---|---|
+| COMMANDER | `#ff6a00` (orange) | Left |
+| OPERATIVE | `#00f5ff` (cyan) | Right |
+| SIGNAL-0 | `#ff2020` (red) | Left |
+
+**Typewriter:** `setInterval` at 22 ms/char. First NEXT while typing: completes line instantly. Second NEXT: advances to next message. Enter/Space also trigger Next.
+
+**SIGNAL-0 line:** triggers a GSAP shake on the chat container (`chatRef`) when that line starts revealing.
+
+**SKIP button:** visible on all pages except the last. Calls `startGame()` directly, bypassing remaining dialogue.
+
+**Last page:** NEXT becomes `▶ BEGIN UPLOAD` with a pulsing glow animation (`@keyframes upload-pulse`). Triggers fullscreen + `startGame()`.
+
+### Fullscreen
+
+Managed in `App.jsx` via the Fullscreen API:
+- **Auto-enter:** when `phase` changes to `'intro'` → `document.documentElement.requestFullscreen()`
+- **Auto-exit:** when `phase` changes to `'menu'` → `document.exitFullscreen()`
+- **Manual toggle:** `F` key at any time
+
+`requestFullscreen` / `exitFullscreen` helpers wrap both standard and webkit-prefixed variants for Safari compatibility.
+
+### Screen Visual Design
+
+All screens share a consistent **cyberpunk aesthetic**:
+
+| Screen | Background | Primary color | Key effects |
+|---|---|---|---|
+| MainMenu | Dark `#07070f` + CSS grid lines | Cyan `#00f5ff` | Floating particles, glow orb pulse, zone strip, button idle pulse |
+| IntroDialogue | Dark `#0a0a0f` + scanlines | Per-character | Group chat bubbles, typewriter, SIGNAL-0 shake |
+| ZoneTransition | Black + zone-colored CSS grid | Zone ambient color | Glitch strobe, scan line, chromatic zone number, SPEED+THREAT pills, 3-dot progress |
+| PauseMenu | Backdrop blur + scanlines | Cyan `#00f5ff` | Color-coded health/energy bars, ZONE/KILLS/AMMO/SCORE mini-cards |
+| GameOver | Dark `#050005` + red CSS grid | Red `#ff2020` | Red floating particles, chromatic "SIGNAL LOST", periodic glitch, count-up stats |
+| Victory | Dark `#020d05` + green CSS grid | Green `#00ff88` | Green/cyan particles, flash burst + pulse rings, zone completion badges, count-up stats |
+
+Particle systems (`Particles`, `RedParticles`, `GreenParticles`) are static on mount — positions seeded from `Math.random()` at component definition time, animated via CSS `@keyframes`.
+
+---
+
+## Visual Effects During Gameplay
+
+### Boost Animation (3 layers)
+
+Activated when `speedBoostActive === true`:
+
+**1. Camera FOV ramp** (`BoostCameraFX` in `GameCanvas.jsx`)
+- FOV lerps 65° → 82° at rate 10 per second (fast)
+- Returns 65° at rate 4 per second (slow) after boost ends
+- Classic "tunnel vision" speed perception trick
+
+**2. 3D speed streaks** (`BoostStreaks` in `GameCanvas.jsx`)
+- 22 thin `boxGeometry(0.014, 0.014, len)` meshes in world space
+- Positioned randomly around the car corridor (x: ±3.5, y: −0.4..2.0)
+- Scroll from front to back at 20 u/s; reset to z=-14 when past camera
+- 70% white emissive, 30% orange (`#ff9933`) emissive, `emissiveIntensity: 5`
+
+**3. CSS orange vignette** (`SpeedVignette` in `GameScreen.jsx`)
+- `radial-gradient` orange border: `rgba(255,100,0,0.30)` at 80%, `rgba(255,60,0,0.55)` at edges
+- Horizontal scanline texture overlay at 55% opacity
+- Fades in/out via `rAF` loop with lerp at rate 8 — no React re-renders
+
+**Enhanced exhaust** (`PlayerVehicle.jsx`):
+- Two-layer per pipe: outer orange cone + inner white core cone
+- Centre-wide burst cone between both pipes
+- All axes flicker each frame (`scale.x/y/z` randomized) for roaring flame look
+- `scale.z: 1.0 + Math.random() * 1.4` (was 0.7 + 0.6)
+
+### Shield Bubble
+
+Deployed when `shieldActive === true`:
+
+- Outer sphere: `#c8f4ff`, `opacity: 0.055`, double-sided — a near-invisible glass dome
+- Inner sphere: `#ffffff`, `opacity: 0.035` — adds depth
+- 2 bright thin torus rings (equatorial + vertical): `#a8e8ff`, `emissiveIntensity: 2.5`, `opacity: 0.75`
+- 1 diagonal accent ring: thinner, `opacity: 0.45`
+- Animation: gentle scale breathe `sin(t * 0.0025) * 0.04` + slow Y-axis rotation `0.6 rad/s`
+
+Shield Orb collectible uses the same icy cyan palette: white-cyan octahedron core + matching rings + glass bubble.
+
+### Damage Flash
+
+CSS vignette (`DamageFlash` in `GameScreen.jsx`): red radial-gradient border fades in at full opacity then decays over 0.35 s. Driven by `damageSignal.pending` flag, read in a `rAF` loop — zero React state.
 
 ---
 
@@ -607,6 +711,7 @@ src/
 ├── screens/
 │   ├── GameOver.jsx
 │   ├── GameScreen.jsx
+│   ├── IntroDialogue.jsx
 │   ├── MainMenu.jsx
 │   ├── PauseMenu.jsx
 │   ├── Victory.jsx
@@ -746,6 +851,42 @@ Drones sweep until zone-specific z threshold, then lock and dive at `DIVE_STEER 
 
 **`remove slide mechanic`** `0af956b`
 Slide removed from store, `PlayerVehicle`, both input hooks, and `ObstaclePool`. Jump is the only evasion.
+
+### Week 3 (continued) — Screens, Polish & Effects (Apr 13)
+
+**`feat: tighten drone dive thresholds per zone`** `0c987c8`
+`DIVE_Z` changed from flat `−15/−10/−5` to `{ 1: −18, 2: −13, 3: −8 }`. Drones dive later in Zone 1 (more reaction time) and earlier in Zone 3 (more pressure).
+
+**`docs: add project README`** `ba593c6` / **`docs: expand README`** `37c1dee`
+Full README created with zone config, spawn logic, store actions, death/start animation code, pool table, singleton list, collision details, Firebase config, file tree, and week-by-week dev history.
+
+**`feat: intro dialogue screen`** (IntroDialogue.jsx)
+New `IntroDialogue` screen between MainMenu and gameplay. 8-line narrative across 3 characters (COMMANDER / OPERATIVE / SIGNAL-0). Group-chat UI: messages accumulate on each Next click. Top 30%: Field Intel tip card (8 tips, one per page). Typewriter at 22 ms/char. SIGNAL-0 line triggers GSAP shake. SKIP button visible until last page. Final page: pulsing `BEGIN UPLOAD` button. Phase flow: `menu → intro → playing`.
+
+**`feat: main menu overhaul`**
+Full rewrite of `MainMenu.jsx`: floating dot particles, CSS grid lines at 7% opacity, central glow orb with GSAP `repeat:-1 yoyo:true` pulse, zone strip (WASTELAND / INDUSTRIAL / CORE), GSAP entrance timeline (badge letter-spacing expand → title skew-slam → tagline → zone strip → button scale-in), button idle pulse via `gsap.to` with `repeat:-1`.
+
+**`feat: overhaul all screens`** `2321358`
+- **GameOver:** `RedParticles` (20 dots), red CSS grid, "FELL IN ZONE X" badge, glow RETRY button, periodic chromatic glitch.
+- **Victory:** `GreenParticles` (30 dots), green CSS grid, zone completion badges (01✓ 02✓ 03✓), flash burst + pulse rings, count-up stats.
+- **PauseMenu:** Color-coded health/energy bars (green/orange/red thresholds), ZONE/KILLS/AMMO/SCORE mini-cards, full GSAP entrance chain.
+- **ZoneTransition:** Zone-colored CSS grid overlay, SPEED+THREAT info pills per zone, 3-dot progress indicator.
+
+**`feat: enter fullscreen on BEGIN UPLOAD`** `2d1c5e3`
+`App.jsx` requests fullscreen when `phase → 'intro'`, exits when `phase → 'menu'`. `F` key toggles at any time. Controls hint updated to show `F FULLSCREEN`.
+
+**`style: font sizes and brightness`** `dd170d8`
+All screens updated: tiny text (`text-[8px]`–`text-[10px]`) bumped to `text-xs`–`text-sm`; body text `text-sm` → `text-base`; dim colors (`#1a1a1a`, `#2a2a2a`, `#333`) brightened to `#555`–`#888` for readability at fullscreen distance.
+
+**`feat: shield redesign — glass dome`** `94859a7`
+Shield bubble replaced from heavy purple sphere + thick magenta rings to: near-invisible light-blue glass dome (`opacity: 0.055`), inner sphere (`opacity: 0.035`), two bright thin torus rings (`#a8e8ff`), diagonal accent ring. Slow Y-axis rotation + gentle scale breathe. Shield Orb collectible redesigned to match (icy white-cyan octahedron + matching rings). HUD indicator and IntroDialogue tip color updated from `#cc44ff` → `#80d8ff`.
+
+**`feat: boost animation`** `015a86d`
+Three-layer boost visual system:
+1. `BoostCameraFX` — FOV lerp 65°→82° (rate 10 in, rate 4 out)
+2. `BoostStreaks` — 22 thin emissive speed lines in world space, scrolling 20 u/s front-to-back, 70% white / 30% orange
+3. `SpeedVignette` — CSS orange radial-gradient vignette + horizontal scanline texture, `rAF` lerp fade
+Enhanced exhaust: 2-layer flames per pipe (outer cone + inner core) + center burst cone, all-axis scale flicker.
 
 ---
 
