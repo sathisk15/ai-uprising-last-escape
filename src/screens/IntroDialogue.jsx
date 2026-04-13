@@ -2,109 +2,58 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { gsap } from 'gsap'
 import useGameStore from '../store/gameStore'
 
+// left = enemy/npc side, right = player side
 const LINES = [
-  {
-    character: 'COMMANDER',
-    color: '#ff6a00',
-    text: "Operative. You receiving this? CORE has taken everything — every grid, every satellite, every network on the planet.",
-  },
-  {
-    character: 'OPERATIVE',
-    color: '#00f5ff',
-    text: "I'm here. What's the play?",
-  },
-  {
-    character: 'COMMANDER',
-    color: '#ff6a00',
-    text: "We cracked the kill-code. We're calling it SIGNAL-0. One broadcast to the global relay and CORE shuts down — permanently.",
-  },
-  {
-    character: 'SIGNAL-0',
-    color: '#ff2020',
-    text: "UPLOAD SEQUENCE DETECTED. TRIANGULATING SOURCE. TERMINATION AUTHORIZED.",
-  },
-  {
-    character: 'COMMANDER',
-    color: '#ff6a00',
-    text: "That's why you can't stop. Broadcast from a fixed point and CORE locks you in seconds. But a moving signal? It can't pin you.",
-  },
-  {
-    character: 'OPERATIVE',
-    color: '#00f5ff',
-    text: "Three relay zones. Keep driving, keep uploading.",
-  },
-  {
-    character: 'COMMANDER',
-    color: '#ff6a00',
-    text: "Exactly. CORE will throw drones, barricades — everything. But it can't lock a moving target fast enough. You're the only shot we have.",
-  },
-  {
-    character: 'OPERATIVE',
-    color: '#00f5ff',
-    text: "Signal stays alive. I keep moving. Let's end this.",
-  },
+  { character: 'COMMANDER',  color: '#ff6a00', side: 'left',  text: "Operative. You receiving this? CORE has taken everything — every grid, every satellite, every network on the planet." },
+  { character: 'OPERATIVE',  color: '#00f5ff', side: 'right', text: "I'm here. What's the play?" },
+  { character: 'COMMANDER',  color: '#ff6a00', side: 'left',  text: "We cracked the kill-code. We're calling it SIGNAL-0. One broadcast to the global relay and CORE shuts down — permanently." },
+  { character: 'SIGNAL-0',   color: '#ff2020', side: 'left',  text: "UPLOAD SEQUENCE DETECTED. TRIANGULATING SOURCE. TERMINATION AUTHORIZED." },
+  { character: 'COMMANDER',  color: '#ff6a00', side: 'left',  text: "That's why you can't stop. Broadcast from a fixed point and CORE locks you in seconds. But a moving signal? It can't pin you." },
+  { character: 'OPERATIVE',  color: '#00f5ff', side: 'right', text: "Three relay zones. Keep driving, keep uploading." },
+  { character: 'COMMANDER',  color: '#ff6a00', side: 'left',  text: "Exactly. CORE will throw drones, barricades — everything. But it can't lock a moving target fast enough. You're the only shot we have." },
+  { character: 'OPERATIVE',  color: '#00f5ff', side: 'right', text: "Signal stays alive. I keep moving. Let's end this." },
 ]
 
-// One tip shown per dialogue page
 const TIPS = [
-  { icon: '⬅ ➡', label: 'LANE SWITCH', color: '#00f5ff', desc: 'Use Arrow Keys or A / D to switch between the three lanes. React fast — obstacles can block any lane.' },
-  { icon: '⬆', label: 'JUMP TO DODGE', color: '#00f5ff', desc: 'Press Space or ↑ to jump over road-level barricades. The jump arc is 0.75s — time it early.' },
-  { icon: '◉', label: 'SHOOT TO CLEAR', color: '#00f5ff', desc: 'Press Z or F to fire. Bullets destroy drones (+100 score) and barricades (+50 score). Ammo is limited — collect crates.' },
-  { icon: '⚠', label: 'DRONE DIVE', color: '#ff6a00', desc: 'Drones sweep lanes then lock onto yours and dive. Switch lanes the moment you see them bank toward you.' },
-  { icon: '⚡', label: 'WATCH YOUR ENERGY', color: '#ff6a00', desc: 'Energy drains constantly and faster each zone. Collect blue Energy Cells to stay alive. Hitting zero is instant game over.' },
-  { icon: '✦', label: 'SHIELD ORB', color: '#cc44ff', desc: 'The purple orb gives you one free hit. Grab it when your health is low — it absorbs the next collision completely.' },
-  { icon: '▶▶', label: 'SPEED BOOST', color: '#ffaa00', desc: 'Orange chevron gives 1.6× speed for 6 seconds. Great for clearing dense zones — but harder to steer. Use wisely.' },
-  { icon: '◆', label: 'WIN CONDITION', color: '#00ff88', desc: 'Survive all 3 relay zones to deliver SIGNAL-0. The further you go, the faster and denser the enemies get. Stay alive.' },
+  { icon: '⬅ ➡', color: '#00f5ff', label: 'LANE SWITCH',      desc: 'Arrow keys or A / D to change lanes.' },
+  { icon: '⬆',    color: '#00f5ff', label: 'JUMP',             desc: 'Space or ↑ clears road-level barricades.' },
+  { icon: '◉',    color: '#00f5ff', label: 'SHOOT',            desc: 'Z or F fires a bullet. Ammo is limited.' },
+  { icon: '⚠',    color: '#ff6a00', label: 'DRONE DIVE',       desc: 'Drones lock onto your lane — switch to dodge.' },
+  { icon: '⚡',    color: '#ff6a00', label: 'ENERGY',           desc: 'Drains over time. Collect blue Energy Cells.' },
+  { icon: '✦',    color: '#cc44ff', label: 'SHIELD ORB',       desc: 'Absorbs one hit. Grab it when health is low.' },
+  { icon: '▶▶',   color: '#ffaa00', label: 'SPEED BOOST',      desc: '1.6× speed for 6 s. Harder to dodge though.' },
+  { icon: '◆',    color: '#00ff88', label: 'WIN CONDITION',    desc: 'Survive all 3 zones to deliver SIGNAL-0.' },
 ]
 
-const CHAR_DELAY = 26
+const CHAR_DELAY = 22
 
 export default function IntroDialogue() {
   const startGame = useGameStore((s) => s.startGame)
 
-  const [lineIndex, setLineIndex]   = useState(0)
-  const [displayed, setDisplayed]   = useState('')
+  // Which lines are visible in the chat (grows with each Next click)
+  const [revealed, setRevealed]     = useState(0)   // count of lines shown so far
+  const [displayed, setDisplayed]   = useState('')   // typewriter progress for current line
   const [typingDone, setTypingDone] = useState(false)
 
   const containerRef = useRef(null)
-  const boxRef       = useRef(null)
-  const tipRef       = useRef(null)
+  const chatRef      = useRef(null)   // scrollable chat area
   const timerRef     = useRef(null)
 
-  const currentLine = LINES[lineIndex]
-  const currentTip  = TIPS[lineIndex % TIPS.length]
-  const isLast      = lineIndex === LINES.length - 1
-  const isSignal    = currentLine.character === 'SIGNAL-0'
+  const tipIndex    = Math.min(revealed, TIPS.length - 1)
+  const currentLine = LINES[revealed]              // line currently being typed
+  const isLast      = revealed === LINES.length - 1
 
   // ── Entry fade-in ─────────────────────────────────────────────────────────
   useEffect(() => {
     gsap.fromTo(containerRef.current, { opacity: 0 }, { opacity: 1, duration: 0.5 })
   }, [])
 
-  // ── Tip card swap animation ────────────────────────────────────────────────
-  useEffect(() => {
-    if (!tipRef.current) return
-    gsap.fromTo(tipRef.current,
-      { opacity: 0, y: 10 },
-      { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }
-    )
-  }, [lineIndex])
-
-  // ── SIGNAL-0 glitch shake ─────────────────────────────────────────────────
-  useEffect(() => {
-    if (!isSignal || !boxRef.current) return
-    const tl = gsap.timeline()
-    tl.to(boxRef.current, { x: -5, duration: 0.04 })
-      .to(boxRef.current, { x:  6, duration: 0.04 })
-      .to(boxRef.current, { x: -4, duration: 0.03 })
-      .to(boxRef.current, { x:  0, duration: 0.04 })
-  }, [lineIndex, isSignal])
-
-  // ── Typewriter ────────────────────────────────────────────────────────────
+  // ── Typewriter for current line ────────────────────────────────────────────
   useEffect(() => {
     setDisplayed('')
     setTypingDone(false)
     clearInterval(timerRef.current)
+    if (!currentLine) return
 
     let i = 0
     const full = currentLine.text
@@ -118,7 +67,24 @@ export default function IntroDialogue() {
     }, CHAR_DELAY)
 
     return () => clearInterval(timerRef.current)
-  }, [lineIndex])
+  }, [revealed])
+
+  // ── Auto-scroll chat to bottom on each new message ────────────────────────
+  useEffect(() => {
+    if (chatRef.current) {
+      chatRef.current.scrollTop = chatRef.current.scrollHeight
+    }
+  }, [displayed, revealed])
+
+  // ── SIGNAL-0 glitch shake when that line is revealed ──────────────────────
+  useEffect(() => {
+    if (!currentLine || currentLine.character !== 'SIGNAL-0') return
+    const tl = gsap.timeline()
+    tl.to(chatRef.current, { x: -5, duration: 0.04 })
+      .to(chatRef.current, { x:  6, duration: 0.04 })
+      .to(chatRef.current, { x: -4, duration: 0.03 })
+      .to(chatRef.current, { x:  0, duration: 0.04 })
+  }, [revealed])
 
   // ── Next / Begin Upload ───────────────────────────────────────────────────
   const handleNext = useCallback(() => {
@@ -129,7 +95,7 @@ export default function IntroDialogue() {
       return
     }
     if (isLast) { startGame(); return }
-    setLineIndex((i) => i + 1)
+    setRevealed((r) => r + 1)
   }, [typingDone, isLast, currentLine, startGame])
 
   // ── Keyboard: Enter / Space ───────────────────────────────────────────────
@@ -141,6 +107,8 @@ export default function IntroDialogue() {
     return () => window.removeEventListener('keydown', onKey)
   }, [handleNext])
 
+  const tip = TIPS[tipIndex]
+
   return (
     <div
       ref={containerRef}
@@ -149,183 +117,135 @@ export default function IntroDialogue() {
     >
       {/* Scanlines */}
       <div className="absolute inset-0 pointer-events-none z-10"
-        style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px)' }}
+        style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px)' }}
       />
 
-      {/* Ambient glow */}
-      <div className="absolute inset-0 pointer-events-none"
-        style={{
-          background: isSignal
-            ? 'radial-gradient(ellipse at 50% 35%, rgba(150,0,0,0.12) 0%, transparent 60%)'
-            : 'radial-gradient(ellipse at 50% 35%, rgba(0,150,150,0.07) 0%, transparent 60%)',
-          transition: 'background 0.5s',
-        }}
-      />
+      {/* ── TOP 30% — Info panel ─────────────────────────────────────────── */}
+      <div
+        className="flex-shrink-0 flex flex-col items-center justify-center relative z-20 border-b"
+        style={{ height: '30%', borderColor: '#0d0d22' }}
+      >
+        {/* Subtle background glow */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(0,140,140,0.06) 0%, transparent 70%)' }}
+        />
 
-      {/* ── Top panel — FIELD TIP ─────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col px-5 pt-6 pb-3 relative z-20 min-h-0">
+        {/* Section label */}
+        <p className="font-mono text-[9px] tracking-[0.45em] text-[#1e1e3a] mb-3 relative z-10">
+          FIELD INTEL
+        </p>
 
-        {/* Header row */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-0.5 h-4 rounded-sm bg-[#00f5ff]" />
-          <span className="font-mono text-[9px] tracking-[0.4em] text-[#00f5ff] opacity-70">OPERATIVE BRIEFING</span>
-        </div>
-
-        {/* Tip card — swaps each page */}
+        {/* Tip card — centered */}
         <div
-          ref={tipRef}
-          className="flex-1 flex flex-col justify-center border rounded-sm p-5 relative overflow-hidden"
-          style={{
-            borderColor: isSignal ? '#280808' : '#0e0e20',
-            background: isSignal ? 'rgba(18,3,3,0.6)' : 'rgba(6,6,18,0.6)',
-          }}
+          className="relative z-10 flex items-center gap-4 px-6 py-3 border rounded-sm mx-6"
+          style={{ borderColor: tip.color + '25', background: tip.color + '08' }}
         >
-          {/* Corner accents */}
-          <div className="absolute top-0 left-0 w-4 h-4 border-t border-l" style={{ borderColor: currentTip.color + '60' }} />
-          <div className="absolute top-0 right-0 w-4 h-4 border-t border-r" style={{ borderColor: currentTip.color + '60' }} />
-          <div className="absolute bottom-0 left-0 w-4 h-4 border-b border-l" style={{ borderColor: currentTip.color + '60' }} />
-          <div className="absolute bottom-0 right-0 w-4 h-4 border-b border-r" style={{ borderColor: currentTip.color + '60' }} />
-
           {/* Icon */}
           <div
-            className="text-3xl mb-4 w-14 h-14 flex items-center justify-center rounded-sm"
-            style={{ background: currentTip.color + '12', color: currentTip.color }}
+            className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-sm text-base"
+            style={{ background: tip.color + '15', color: tip.color }}
           >
-            {currentTip.icon}
+            {tip.icon}
           </div>
 
-          {/* Label */}
-          <p className="font-mono text-[10px] tracking-[0.4em] mb-2" style={{ color: currentTip.color }}>
-            {currentTip.label}
-          </p>
-
-          {/* Description */}
-          <p className="font-mono text-sm leading-relaxed text-[#666]">
-            {currentTip.desc}
-          </p>
-
-          {/* Tip counter */}
-          <p className="font-mono text-[9px] tracking-widest text-[#222] mt-4">
-            TIP {String(lineIndex + 1).padStart(2, '0')} / {String(TIPS.length).padStart(2, '0')}
-          </p>
+          {/* Text */}
+          <div className="text-center">
+            <p className="font-mono text-xs tracking-[0.35em] mb-1" style={{ color: tip.color }}>
+              {tip.label}
+            </p>
+            <p className="font-mono text-sm text-[#666] leading-snug">
+              {tip.desc}
+            </p>
+          </div>
         </div>
 
-        {/* Progress dots */}
-        <div className="flex justify-center gap-2 pt-3">
-          {LINES.map((_, i) => (
-            <div
-              key={i}
-              className="rounded-full transition-all duration-300"
-              style={{
-                width:  i === lineIndex ? '20px' : '5px',
-                height: '5px',
-                backgroundColor: i === lineIndex
-                  ? currentLine.color
-                  : i < lineIndex ? '#252525' : '#151515',
-              }}
-            />
-          ))}
-        </div>
+        {/* Tip counter */}
+        <p className="font-mono text-[9px] tracking-widest text-[#1a1a2a] mt-3 relative z-10">
+          {String(tipIndex + 1).padStart(2, '0')} / {String(TIPS.length).padStart(2, '0')}
+        </p>
       </div>
 
-      {/* ── Dialogue box ──────────────────────────────────────────────────── */}
-      <div
-        ref={boxRef}
-        className="relative z-20 mx-4 mb-4 border flex-shrink-0"
-        style={{
-          background: isSignal ? 'rgba(18,2,2,0.98)' : 'rgba(4,4,16,0.98)',
-          borderColor: isSignal ? '#3a0a0a' : '#0d0d2e',
-        }}
-      >
-        {/* SIGNAL-0 scan lines */}
-        {isSignal && (
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[20, 55, 80].map((top) => (
-              <div key={top} className="absolute left-0 right-0 h-px"
+      {/* ── BOTTOM 70% — Group chat ───────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-h-0 relative z-20">
+
+        {/* Chat header */}
+        <div className="flex items-center px-4 py-2 border-b gap-2" style={{ borderColor: '#0d0d22' }}>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#00ff88] animate-pulse" />
+          <span className="font-mono text-[9px] tracking-[0.3em] text-[#333]">ENCRYPTED CHANNEL · 3 PARTICIPANTS</span>
+        </div>
+
+        {/* Messages — scrollable */}
+        <div
+          ref={chatRef}
+          className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-3"
+          style={{ scrollBehavior: 'smooth' }}
+        >
+          {/* All revealed lines */}
+          {LINES.slice(0, revealed).map((line, i) => (
+            <ChatBubble key={i} line={line} text={line.text} done />
+          ))}
+
+          {/* Currently typing line */}
+          {currentLine && (
+            <ChatBubble key={revealed} line={currentLine} text={displayed} done={typingDone} />
+          )}
+        </div>
+
+        {/* Bottom bar — progress dots + buttons */}
+        <div
+          className="flex-shrink-0 border-t px-4 py-3 flex items-center justify-between gap-3"
+          style={{ borderColor: '#0d0d22', background: 'rgba(4,4,14,0.95)' }}
+        >
+          {/* Progress dots */}
+          <div className="flex gap-1.5 items-center">
+            {LINES.map((_, i) => (
+              <div
+                key={i}
+                className="rounded-full transition-all duration-300"
                 style={{
-                  top: `${top}%`,
-                  background: 'linear-gradient(90deg, transparent, #ff202050, transparent)',
-                  animation: 'glitch-scan 1.4s linear infinite',
-                  animationDelay: `${top * 0.02}s`,
+                  width:  i <= revealed ? '14px' : '5px',
+                  height: '5px',
+                  backgroundColor: i === revealed
+                    ? currentLine?.color ?? '#00f5ff'
+                    : i < revealed ? '#252525' : '#111',
                 }}
               />
             ))}
           </div>
-        )}
 
-        {/* Character name */}
-        <div className="flex items-center gap-3 px-5 pt-4 pb-2">
-          <div className="w-1 h-6 rounded-sm flex-shrink-0" style={{ backgroundColor: currentLine.color }} />
-          <span className="font-mono text-sm tracking-[0.35em] font-bold" style={{ color: currentLine.color }}>
-            {currentLine.character}
-          </span>
-          {!typingDone && (
-            <span className="text-xs font-mono animate-pulse ml-1" style={{ color: currentLine.color }}>▋</span>
-          )}
-        </div>
-
-        {/* Divider */}
-        <div className="mx-5 mb-3 h-px" style={{ backgroundColor: isSignal ? '#2a0808' : '#0d0d2e' }} />
-
-        {/* Dialogue text */}
-        <p
-          className="font-mono leading-relaxed px-5 pb-4 min-h-[5.5rem]"
-          style={{
-            fontSize: '0.95rem',
-            color: isSignal ? '#ff5555' : '#c8c8e8',
-            filter: isSignal ? 'blur(0.3px)' : 'none',
-            letterSpacing: isSignal ? '0.07em' : '0.02em',
-          }}
-        >
-          {displayed}
-          {!typingDone && (
-            <span
-              className="inline-block w-0.5 h-4 ml-0.5 align-middle animate-pulse"
-              style={{ backgroundColor: currentLine.color }}
-            />
-          )}
-        </p>
-
-        {/* Footer — SKIP + line counter + NEXT/BEGIN */}
-        <div className="flex items-center justify-between px-5 pb-4 gap-3">
-          {/* Left: line counter */}
-          <span className="font-mono text-[10px] tracking-widest text-[#252525] flex-shrink-0">
-            {String(lineIndex + 1).padStart(2, '0')} / {String(LINES.length).padStart(2, '0')}
-          </span>
-
-          {/* Right: SKIP + NEXT or BEGIN UPLOAD */}
-          <div className="flex items-center gap-3">
-            {/* SKIP — hidden on last page */}
+          {/* Buttons */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {/* SKIP — visible on all pages except last */}
             {!isLast && (
               <button
                 onClick={startGame}
-                className="font-mono text-[10px] tracking-[0.25em] text-[#333] hover:text-[#666] transition-colors px-2 py-1"
+                className="font-mono text-xs tracking-[0.25em] px-4 py-2 border border-[#2a2a2a] text-[#555]
+                           hover:border-[#555] hover:text-[#aaa] transition-all duration-150 active:scale-95"
               >
-                SKIP ›
+                SKIP
               </button>
             )}
 
-            {/* NEXT / BEGIN UPLOAD */}
             {isLast ? (
               <button
                 onClick={handleNext}
-                className="font-mono text-sm tracking-[0.3em] px-8 py-3 relative overflow-hidden transition-all duration-200 active:scale-95"
+                className="font-mono text-sm tracking-[0.25em] px-7 py-2.5 relative overflow-hidden transition-all duration-200 active:scale-95"
                 style={{
                   border: '2px solid #00f5ff',
                   color: '#00f5ff',
                   background: 'rgba(0,245,255,0.06)',
-                  boxShadow: '0 0 18px rgba(0,245,255,0.25), inset 0 0 18px rgba(0,245,255,0.04)',
+                  boxShadow: '0 0 20px rgba(0,245,255,0.28)',
                   animation: 'upload-pulse 2s ease-in-out infinite',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = '#00f5ff'
                   e.currentTarget.style.color = '#000'
-                  e.currentTarget.style.boxShadow = '0 0 30px rgba(0,245,255,0.6)'
+                  e.currentTarget.style.boxShadow = '0 0 36px rgba(0,245,255,0.7)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'rgba(0,245,255,0.06)'
                   e.currentTarget.style.color = '#00f5ff'
-                  e.currentTarget.style.boxShadow = '0 0 18px rgba(0,245,255,0.25), inset 0 0 18px rgba(0,245,255,0.04)'
+                  e.currentTarget.style.boxShadow = '0 0 20px rgba(0,245,255,0.28)'
                 }}
               >
                 ▶ BEGIN UPLOAD
@@ -334,14 +254,14 @@ export default function IntroDialogue() {
               <button
                 onClick={handleNext}
                 className="font-mono text-xs tracking-[0.3em] px-5 py-2 border transition-all duration-150 active:scale-95"
-                style={{ borderColor: currentLine.color, color: currentLine.color }}
+                style={{ borderColor: currentLine?.color, color: currentLine?.color }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = currentLine.color
+                  e.currentTarget.style.backgroundColor = currentLine?.color
                   e.currentTarget.style.color = '#000'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
-                  e.currentTarget.style.color = currentLine.color
+                  e.currentTarget.style.color = currentLine?.color
                 }}
               >
                 NEXT ›
@@ -352,17 +272,64 @@ export default function IntroDialogue() {
       </div>
 
       <style>{`
-        @keyframes glitch-scan {
-          0%   { transform: translateX(-110%); opacity: 0; }
-          10%  { opacity: 1; }
-          90%  { opacity: 1; }
-          100% { transform: translateX(110%); opacity: 0; }
-        }
         @keyframes upload-pulse {
-          0%, 100% { box-shadow: 0 0 18px rgba(0,245,255,0.25), inset 0 0 18px rgba(0,245,255,0.04); }
-          50%       { box-shadow: 0 0 32px rgba(0,245,255,0.50), inset 0 0 24px rgba(0,245,255,0.08); }
+          0%, 100% { box-shadow: 0 0 20px rgba(0,245,255,0.28); }
+          50%       { box-shadow: 0 0 38px rgba(0,245,255,0.55); }
+        }
+        @keyframes bubble-in {
+          from { opacity: 0; transform: translateY(8px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+    </div>
+  )
+}
+
+// ── Individual chat bubble ─────────────────────────────────────────────────────
+function ChatBubble({ line, text, done }) {
+  const isRight  = line.side === 'right'
+  const isSignal = line.character === 'SIGNAL-0'
+
+  return (
+    <div
+      className={`flex flex-col gap-1 ${isRight ? 'items-end' : 'items-start'}`}
+      style={{ animation: 'bubble-in 0.25s ease-out' }}
+    >
+      {/* Name tag */}
+      <span
+        className="font-mono text-[9px] tracking-[0.3em] px-1"
+        style={{ color: line.color + 'aa' }}
+      >
+        {line.character}
+      </span>
+
+      {/* Bubble */}
+      <div
+        className="max-w-[80%] px-4 py-2.5 rounded-sm font-mono text-sm leading-relaxed"
+        style={{
+          background: isSignal
+            ? 'rgba(60,4,4,0.85)'
+            : isRight
+              ? 'rgba(0,245,255,0.10)'
+              : 'rgba(255,255,255,0.04)',
+          border: `1px solid ${line.color}30`,
+          color: isSignal ? '#ff5555' : isRight ? '#c8f8ff' : '#b8b8cc',
+          filter: isSignal ? 'blur(0.3px)' : 'none',
+          letterSpacing: isSignal ? '0.06em' : '0.015em',
+          boxShadow: isRight
+            ? `2px 0 0 ${line.color}50 inset`
+            : `-2px 0 0 ${line.color}50 inset`,
+        }}
+      >
+        {text}
+        {/* Blinking cursor while typing */}
+        {!done && (
+          <span
+            className="inline-block w-0.5 h-3.5 ml-0.5 align-middle animate-pulse"
+            style={{ backgroundColor: line.color }}
+          />
+        )}
+      </div>
     </div>
   )
 }
