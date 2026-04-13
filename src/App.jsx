@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import useGameStore from './store/gameStore'
 import MainMenu from './screens/MainMenu'
+import IntroDialogue from './screens/IntroDialogue'
 import GameScreen from './screens/GameScreen'
 import GameOver from './screens/GameOver'
 import Victory from './screens/Victory'
@@ -50,6 +51,7 @@ export default function App() {
 
       {/* Other phases */}
       {phase === 'menu'     && <MainMenu />}
+      {phase === 'intro'    && <IntroDialogue />}
       {phase === 'gameover' && <GameOver />}
       {phase === 'victory'  && <Victory />}
     </div>

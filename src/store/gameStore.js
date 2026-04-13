@@ -16,7 +16,7 @@ const persistedSlice = (set) => ({
 
 // Session slice — reset each game
 const sessionDefaults = {
-  phase: 'menu',   // 'menu' | 'playing' | 'paused' | 'transition' | 'gameover' | 'victory'
+  phase: 'menu',   // 'menu' | 'intro' | 'playing' | 'paused' | 'transition' | 'zoneout' | 'dying' | 'gameover' | 'victory'
   zone: 1,
   score: 0,
   distance: 0,
@@ -42,6 +42,10 @@ const useGameStore = create(
       ...sessionDefaults,
 
       // --- Actions ---
+      startIntro: () => {
+        set({ phase: 'intro' })
+      },
+
       startGame: () => {
         set({
           ...sessionDefaults,

@@ -3,7 +3,7 @@ import { gsap } from 'gsap'
 import useGameStore from '../store/gameStore'
 
 export default function MainMenu() {
-  const startGame = useGameStore((s) => s.startGame)
+  const startIntro = useGameStore((s) => s.startIntro)
   const highScore = useGameStore((s) => s.highScore)
 
   const containerRef = useRef(null)
@@ -106,7 +106,7 @@ export default function MainMenu() {
         {/* CTA */}
         <button
           ref={btnRef}
-          onClick={startGame}
+          onClick={startIntro}
           className="font-mono tracking-[0.3em] text-sm px-12 py-4 border-2 border-[#00f5ff] text-[#00f5ff] uppercase
                      hover:bg-[#00f5ff] hover:text-black transition-all duration-200 active:scale-95"
           style={{ opacity: 0 }}
@@ -116,7 +116,7 @@ export default function MainMenu() {
 
         {/* Controls hint */}
         <p className="text-[#444] text-xs mt-6 tracking-widest font-mono">
-          ← → LANE &nbsp;|&nbsp; ↑ JUMP &nbsp;|&nbsp; ↓ SLIDE &nbsp;|&nbsp; Z SHOOT &nbsp;|&nbsp; P PAUSE
+          ← → LANE &nbsp;|&nbsp; ↑ JUMP &nbsp;|&nbsp; Z SHOOT &nbsp;|&nbsp; P PAUSE
         </p>
         <p className="text-[#333] text-[10px] mt-2 tracking-widest font-mono">
           SIGNAL MUST STAY ALIVE THROUGH ALL 3 RELAY ZONES
