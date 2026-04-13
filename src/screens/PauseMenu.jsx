@@ -134,7 +134,7 @@ export default function PauseMenu() {
             style={{ opacity:0 }}>
             MAIN MENU
           </button>
-          <p className="text-[#1e1e1e] text-[9px] tracking-widest text-center mt-1">P / ESC TO RESUME</p>
+          <p className="text-[#1e1e1e] text-[9px] tracking-widest text-center mt-1">P / ESC TO RESUME · F TO TOGGLE FULLSCREEN</p>
         </div>
       </div>
     </div>

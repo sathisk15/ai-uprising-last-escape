@@ -8,11 +8,35 @@ import Victory from './screens/Victory'
 import ZoneTransition from './screens/ZoneTransition'
 import AudioManager from './audio/AudioManager'
 
+function requestFullscreen() {
+  const el = document.documentElement
+  if (el.requestFullscreen) el.requestFullscreen()
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen()
+}
+
+function exitFullscreen() {
+  if (document.exitFullscreen) document.exitFullscreen()
+  else if (document.webkitExitFullscreen) document.webkitExitFullscreen()
+}
+
+function isFullscreen() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement)
+}
+
 export default function App() {
   const phase = useGameStore((s) => s.phase)
   const zone  = useGameStore((s) => s.zone)
   const pauseGame = useGameStore((s) => s.pauseGame)
   const resumeGame = useGameStore((s) => s.resumeGame)
+
+  // Fullscreen: enter on intro/game start, exit when back at menu
+  useEffect(() => {
+    if (phase === 'intro') {
+      requestFullscreen()
+    } else if (phase === 'menu') {
+      if (isFullscreen()) exitFullscreen()
+    }
+  }, [phase])
 
   // BGM — start/stop based on phase + zone
   useEffect(() => {
@@ -29,9 +53,13 @@ export default function App() {
     }
   }, [phase, zone])
 
-  // Global keyboard: P / Escape to pause-resume
+  // Global keyboard: P to pause-resume | Escape to pause (not fullscreen exit) | F to toggle fullscreen
   useEffect(() => {
     const onKey = (e) => {
+      if (e.code === 'KeyF') {
+        isFullscreen() ? exitFullscreen() : requestFullscreen()
+        return
+      }
       if (e.code === 'KeyP' || e.code === 'Escape') {
         if (phase === 'playing') pauseGame()
         else if (phase === 'paused') resumeGame()

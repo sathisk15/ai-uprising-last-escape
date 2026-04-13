@@ -315,7 +315,7 @@ export default function MainMenu() {
 
         {/* Controls hint */}
         <div ref={controlsRef} className="flex gap-4 text-[#333] font-mono text-[10px] tracking-widest mb-3 flex-wrap justify-center" style={{ opacity: 0 }}>
-          {['← → LANE', '↑ JUMP', 'Z SHOOT', 'P PAUSE'].map((hint) => (
+          {['← → LANE', '↑ JUMP', 'Z SHOOT', 'P PAUSE', 'F FULLSCREEN'].map((hint) => (
             <span key={hint} className="border border-[#1a1a1a] px-2 py-0.5 rounded-sm">{hint}</span>
           ))}
         </div>
