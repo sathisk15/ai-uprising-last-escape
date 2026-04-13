@@ -229,8 +229,10 @@ export default function PlayerVehicle() {
     if (shieldRef.current) {
       shieldRef.current.visible = shieldActive
       if (shieldActive) {
-        const pulse = 1 + Math.sin(performance.now() * 0.004) * 0.06
-        shieldRef.current.scale.setScalar(pulse)
+        const t = performance.now()
+        const breathe = 1 + Math.sin(t * 0.0025) * 0.04
+        shieldRef.current.scale.setScalar(breathe)
+        shieldRef.current.rotation.y += delta * 0.6   // slow energy-field spin
       }
     }
   })
@@ -352,20 +354,37 @@ export default function PlayerVehicle() {
         </mesh>
       </group>
 
-      {/* ── Shield bubble ────────────────────────────────────────────────── */}
-      <group ref={shieldRef} visible={false} position={[0, 0.15, 0]}>
+      {/* ── Shield bubble — light glass dome ─────────────────────────────── */}
+      <group ref={shieldRef} visible={false} position={[0, 0.1, 0]}>
+        {/* Outer glass sphere — barely visible bubble */}
         <mesh>
-          <sphereGeometry args={[1.6, 16, 16]} />
-          <meshStandardMaterial color="#cc44ff" emissive="#aa00ff" emissiveIntensity={1.2}
-            transparent opacity={0.18} toneMapped={false} side={2} />
+          <sphereGeometry args={[1.65, 28, 28]} />
+          <meshStandardMaterial color="#c8f4ff" emissive="#60c8ff" emissiveIntensity={0.3}
+            transparent opacity={0.055} toneMapped={false} side={2} depthWrite={false} />
         </mesh>
+        {/* Inner slightly brighter sphere */}
         <mesh>
-          <torusGeometry args={[1.6, 0.035, 8, 40]} />
-          <meshStandardMaterial color="#ee88ff" emissive="#cc00ff" emissiveIntensity={3} toneMapped={false} />
+          <sphereGeometry args={[1.52, 18, 18]} />
+          <meshStandardMaterial color="#ffffff" emissive="#90dcff" emissiveIntensity={0.2}
+            transparent opacity={0.035} toneMapped={false} side={2} depthWrite={false} />
         </mesh>
+        {/* Equatorial ring — crisp bright edge */}
+        <mesh>
+          <torusGeometry args={[1.64, 0.022, 6, 52]} />
+          <meshStandardMaterial color="#ffffff" emissive="#a8e8ff" emissiveIntensity={2.5}
+            transparent opacity={0.75} toneMapped={false} depthWrite={false} />
+        </mesh>
+        {/* Vertical ring */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <torusGeometry args={[1.6, 0.035, 8, 40]} />
-          <meshStandardMaterial color="#ee88ff" emissive="#cc00ff" emissiveIntensity={3} toneMapped={false} />
+          <torusGeometry args={[1.64, 0.022, 6, 52]} />
+          <meshStandardMaterial color="#ffffff" emissive="#a8e8ff" emissiveIntensity={2.5}
+            transparent opacity={0.75} toneMapped={false} depthWrite={false} />
+        </mesh>
+        {/* Diagonal accent ring — thinner, subtler */}
+        <mesh rotation={[Math.PI / 3, 0, Math.PI / 5]}>
+          <torusGeometry args={[1.64, 0.012, 5, 52]} />
+          <meshStandardMaterial color="#ddf5ff" emissive="#c0eeff" emissiveIntensity={1.5}
+            transparent opacity={0.45} toneMapped={false} depthWrite={false} />
         </mesh>
       </group>
 

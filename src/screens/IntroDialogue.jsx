@@ -20,7 +20,7 @@ const TIPS = [
   { icon: '◉',    color: '#00f5ff', label: 'SHOOT',            desc: 'Z or F fires a bullet. Ammo is limited.' },
   { icon: '⚠',    color: '#ff6a00', label: 'DRONE DIVE',       desc: 'Drones lock onto your lane — switch to dodge.' },
   { icon: '⚡',    color: '#ff6a00', label: 'ENERGY',           desc: 'Drains over time. Collect blue Energy Cells.' },
-  { icon: '✦',    color: '#cc44ff', label: 'SHIELD ORB',       desc: 'Absorbs one hit. Grab it when health is low.' },
+  { icon: '✦',    color: '#80d8ff', label: 'SHIELD ORB',       desc: 'Absorbs one hit. Grab it when health is low.' },
   { icon: '▶▶',   color: '#ffaa00', label: 'SPEED BOOST',      desc: '1.6× speed for 6 s. Harder to dodge though.' },
   { icon: '◆',    color: '#00ff88', label: 'WIN CONDITION',    desc: 'Survive all 3 zones to deliver SIGNAL-0.' },
 ]

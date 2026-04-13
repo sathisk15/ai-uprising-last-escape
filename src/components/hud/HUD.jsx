@@ -143,10 +143,10 @@ function ShieldIndicator() {
     <div
       className="flex items-center gap-2 px-3 py-1 font-mono border animate-pulse"
       style={{
-        borderColor: '#cc44ff',
-        color: '#cc44ff',
-        boxShadow: '0 0 10px #aa00ff88',
-        background: 'rgba(170,0,255,0.08)',
+        borderColor: '#80d8ff',
+        color: '#c0eeff',
+        boxShadow: '0 0 10px rgba(128,216,255,0.5)',
+        background: 'rgba(100,210,255,0.07)',
       }}
     >
       <span style={{ fontSize: 12 }}>⬡</span>

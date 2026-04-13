@@ -151,25 +151,29 @@ function BoostPack() {
 function ShieldOrb() {
   return (
     <group>
-      {/* Core gem — octahedron */}
+      {/* Core gem — octahedron, icy white-cyan */}
       <mesh castShadow>
-        <octahedronGeometry args={[0.22, 0]} />
-        <meshStandardMaterial color="#cc44ff" emissive="#aa00ff" emissiveIntensity={2.5} toneMapped={false} metalness={0.8} roughness={0.1} />
+        <octahedronGeometry args={[0.2, 0]} />
+        <meshStandardMaterial color="#ddf6ff" emissive="#80d8ff" emissiveIntensity={3}
+          toneMapped={false} metalness={0.5} roughness={0.05} />
       </mesh>
-      {/* Outer shield ring — horizontal */}
+      {/* Ring — horizontal */}
       <mesh>
-        <torusGeometry args={[0.44, 0.04, 6, 22]} />
-        <meshStandardMaterial color="#dd88ff" emissive="#cc00ff" emissiveIntensity={2} toneMapped={false} />
+        <torusGeometry args={[0.42, 0.022, 6, 28]} />
+        <meshStandardMaterial color="#ffffff" emissive="#a8e8ff" emissiveIntensity={2.5}
+          transparent opacity={0.85} toneMapped={false} />
       </mesh>
-      {/* Outer shield ring — vertical */}
+      {/* Ring — vertical */}
       <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[0.44, 0.04, 6, 22]} />
-        <meshStandardMaterial color="#dd88ff" emissive="#cc00ff" emissiveIntensity={2} toneMapped={false} />
+        <torusGeometry args={[0.42, 0.022, 6, 28]} />
+        <meshStandardMaterial color="#ffffff" emissive="#a8e8ff" emissiveIntensity={2.5}
+          transparent opacity={0.85} toneMapped={false} />
       </mesh>
-      {/* Outer translucent bubble */}
+      {/* Outer translucent glass bubble */}
       <mesh>
-        <sphereGeometry args={[0.5, 10, 10]} />
-        <meshStandardMaterial color="#cc44ff" emissive="#aa00ff" emissiveIntensity={0.5} transparent opacity={0.12} toneMapped={false} />
+        <sphereGeometry args={[0.52, 14, 14]} />
+        <meshStandardMaterial color="#c8f4ff" emissive="#60c8ff" emissiveIntensity={0.3}
+          transparent opacity={0.07} toneMapped={false} side={2} depthWrite={false} />
       </mesh>
     </group>
   )
