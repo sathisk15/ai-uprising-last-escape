@@ -221,7 +221,12 @@ export default function PlayerVehicle() {
     if (exhaustRef.current) {
       exhaustRef.current.visible = speedBoostActive
       if (speedBoostActive) {
-        exhaustRef.current.scale.z = 0.7 + Math.random() * 0.6
+        // Flicker scale on all axes for a roaring flame effect
+        exhaustRef.current.scale.z = 1.0 + Math.random() * 1.4
+        exhaustRef.current.scale.x = 0.8 + Math.random() * 0.45
+        exhaustRef.current.scale.y = 0.8 + Math.random() * 0.45
+      } else {
+        exhaustRef.current.scale.set(1, 1, 1)
       }
     }
 
@@ -336,21 +341,47 @@ export default function PlayerVehicle() {
 
       {/* ── Boost exhaust flames ─────────────────────────────────────────── */}
       <group ref={exhaustRef} visible={false}>
-        <mesh position={[-0.3, -0.12, -1.62]} rotation={[-Math.PI / 2, 0, 0]}>
-          <coneGeometry args={[0.07, 0.55, 6]} />
-          <meshStandardMaterial color="#ff8800" emissive="#ff4400" emissiveIntensity={4} transparent opacity={0.85} toneMapped={false} />
+        {/* Left pipe — outer flame */}
+        <mesh position={[-0.3, -0.12, -1.65]} rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.09, 0.85, 7]} />
+          <meshStandardMaterial color="#ff6600" emissive="#ff3300" emissiveIntensity={5}
+            transparent opacity={0.82} toneMapped={false} depthWrite={false} />
         </mesh>
-        <mesh position={[0.3, -0.12, -1.62]} rotation={[-Math.PI / 2, 0, 0]}>
-          <coneGeometry args={[0.07, 0.55, 6]} />
-          <meshStandardMaterial color="#ff8800" emissive="#ff4400" emissiveIntensity={4} transparent opacity={0.85} toneMapped={false} />
+        {/* Left pipe — inner bright core */}
+        <mesh position={[-0.3, -0.12, -1.65]} rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.04, 0.6, 5]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffee88" emissiveIntensity={8}
+            transparent opacity={0.9} toneMapped={false} depthWrite={false} />
         </mesh>
+
+        {/* Right pipe — outer flame */}
+        <mesh position={[0.3, -0.12, -1.65]} rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.09, 0.85, 7]} />
+          <meshStandardMaterial color="#ff6600" emissive="#ff3300" emissiveIntensity={5}
+            transparent opacity={0.82} toneMapped={false} depthWrite={false} />
+        </mesh>
+        {/* Right pipe — inner bright core */}
+        <mesh position={[0.3, -0.12, -1.65]} rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.04, 0.6, 5]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffee88" emissiveIntensity={8}
+            transparent opacity={0.9} toneMapped={false} depthWrite={false} />
+        </mesh>
+
+        {/* Center wide flame — bigger burst between both pipes */}
+        <mesh position={[0, -0.12, -1.68]} rotation={[-Math.PI / 2, 0, 0]}>
+          <coneGeometry args={[0.18, 1.1, 8]} />
+          <meshStandardMaterial color="#ff8800" emissive="#ff5500" emissiveIntensity={3.5}
+            transparent opacity={0.45} toneMapped={false} depthWrite={false} />
+        </mesh>
+
+        {/* Hot glow balls at pipe mouths */}
         <mesh position={[-0.3, -0.12, -1.52]}>
-          <sphereGeometry args={[0.055, 6, 6]} />
-          <meshStandardMaterial color="#ffffff" emissive="#ffcc44" emissiveIntensity={5} toneMapped={false} />
+          <sphereGeometry args={[0.075, 7, 7]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffdd55" emissiveIntensity={7} toneMapped={false} />
         </mesh>
         <mesh position={[0.3, -0.12, -1.52]}>
-          <sphereGeometry args={[0.055, 6, 6]} />
-          <meshStandardMaterial color="#ffffff" emissive="#ffcc44" emissiveIntensity={5} toneMapped={false} />
+          <sphereGeometry args={[0.075, 7, 7]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ffdd55" emissiveIntensity={7} toneMapped={false} />
         </mesh>
       </group>
 

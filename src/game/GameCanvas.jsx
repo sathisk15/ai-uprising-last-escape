@@ -106,6 +106,70 @@ function CameraFlyPast() {
   return null;
 }
 
+// ── Boost: widen FOV for speed sensation ─────────────────────────────────────
+const BASE_FOV  = 65;
+const BOOST_FOV = 82;
+
+function BoostCameraFX() {
+  const { camera } = useThree();
+  useFrame((_, delta) => {
+    const { speedBoostActive } = useGameStore.getState();
+    const target = speedBoostActive ? BOOST_FOV : BASE_FOV;
+    const rate   = speedBoostActive ? 10 : 4;   // fast in, slower out
+    camera.fov += (target - camera.fov) * Math.min(delta * rate, 1);
+    camera.updateProjectionMatrix();
+  });
+  return null;
+}
+
+// ── Boost: 3D speed-streak lines rushing past the camera ─────────────────────
+const STREAK_COUNT = 22;
+const streakData = Array.from({ length: STREAK_COUNT }, () => ({
+  ref:  null,
+  x:    (Math.random() - 0.5) * 7,
+  y:    Math.random() * 2.4 - 0.4,
+  z:    Math.random() * 16 - 14,
+  len:  2.2 + Math.random() * 2.4,
+  isOrange: Math.random() < 0.3,
+}));
+
+function BoostStreaks() {
+  useFrame((_, delta) => {
+    const { speedBoostActive } = useGameStore.getState();
+    for (const s of streakData) {
+      if (!s.ref) continue;
+      s.ref.visible = speedBoostActive;
+      if (!speedBoostActive) continue;
+      s.z += 20 * delta;
+      if (s.z > 8) {
+        s.z = -14 + Math.random() * 3;
+        s.x = (Math.random() - 0.5) * 7;
+        s.y = Math.random() * 2.4 - 0.4;
+      }
+      s.ref.position.z = s.z;
+    }
+  });
+
+  return (
+    <>
+      {streakData.map((s, i) => (
+        <mesh key={i} ref={el => { s.ref = el }} visible={false}
+          position={[s.x, s.y, s.z]}>
+          <boxGeometry args={[0.014, 0.014, s.len]} />
+          <meshStandardMaterial
+            color="#ffffff"
+            emissive={s.isOrange ? '#ff9933' : '#ffffff'}
+            emissiveIntensity={5}
+            toneMapped={false}
+            transparent opacity={0.55}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
 // Updates fog + background when zone changes
 function ZoneFog() {
   const { scene } = useThree();
@@ -134,6 +198,8 @@ export default function GameCanvas() {
       <CameraSetup />
       <CameraShake />
       <CameraFlyPast />
+      <BoostCameraFX />
+      <BoostStreaks />
       <ZoneFog />
 
       {/* ── Lighting ──────────────────────────────────────────────────────── */}
