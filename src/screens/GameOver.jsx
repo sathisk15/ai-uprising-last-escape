@@ -2,6 +2,31 @@ import React, { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import useGameStore from '../store/gameStore'
 
+function RedParticles() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {Array.from({ length: 20 }).map((_, i) => {
+        const size  = 1 + Math.random() * 2
+        const left  = Math.random() * 100
+        const top   = 10 + Math.random() * 80
+        const dur   = 5 + Math.random() * 7
+        const delay = Math.random() * 5
+        return (
+          <div key={i} className="absolute rounded-full"
+            style={{
+              width: size, height: size,
+              left: `${left}%`, top: `${top}%`,
+              backgroundColor: '#ff2020',
+              opacity: 0.1 + Math.random() * 0.2,
+              animation: `float-dot ${dur}s ${delay}s ease-in-out infinite alternate`,
+            }}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
 export default function GameOver() {
   const score     = useGameStore((s) => s.score)
   const highScore = useGameStore((s) => s.highScore)
@@ -11,227 +36,207 @@ export default function GameOver() {
   const startGame = useGameStore((s) => s.startGame)
   const goToMenu  = useGameStore((s) => s.goToMenu)
 
-  const overlayRef   = useRef(null)
-  const flashRef     = useRef(null)
-  const noiseRef     = useRef(null)
-  const titleRef     = useRef(null)
-  const ghostRedRef  = useRef(null)
-  const ghostCynRef  = useRef(null)
-  const subRef       = useRef(null)
-  const statsRef     = useRef(null)
-  const btnsRef      = useRef(null)
-  const glitchTimer  = useRef(null)
-  const scoreValRef  = useRef(null)
-  const distValRef   = useRef(null)
-  const killsValRef  = useRef(null)
+  const overlayRef  = useRef(null)
+  const flashRef    = useRef(null)
+  const noiseRef    = useRef(null)
+  const titleRef    = useRef(null)
+  const ghostRedRef = useRef(null)
+  const ghostCynRef = useRef(null)
+  const subRef      = useRef(null)
+  const zoneRef     = useRef(null)
+  const statsRef    = useRef(null)
+  const btnsRef     = useRef(null)
+  const glitchTimer = useRef(null)
+  const scoreValRef = useRef(null)
+  const distValRef  = useRef(null)
+  const killsValRef = useRef(null)
 
   const isNewRecord = score > 0 && score >= highScore
 
   useEffect(() => {
     const tl = gsap.timeline()
 
-    // ── 1. Full-screen red flash strobe ─────────────────────────────────────
     tl.set(overlayRef.current, { opacity: 1 })
-      .fromTo(flashRef.current,
-        { opacity: 1 },
-        { opacity: 0, duration: 0.12, ease: 'power2.out' }
-      )
+      // Red flash strobe
+      .fromTo(flashRef.current, { opacity: 1 }, { opacity: 0, duration: 0.12, ease: 'power2.out' })
       .to(flashRef.current, { opacity: 0.6, duration: 0.05 })
       .to(flashRef.current, { opacity: 0,   duration: 0.08 })
       .to(flashRef.current, { opacity: 0.3, duration: 0.04 })
       .to(flashRef.current, { opacity: 0,   duration: 0.12 })
 
-    // ── 2. Noise / static flicker ─────────────────────────────────────────────
-    tl.fromTo(noiseRef.current,
-      { opacity: 0.35 },
-      { opacity: 0, duration: 0.6, ease: 'power2.in' },
-      '-=0.3'
-    )
+      // Static noise flicker
+      .fromTo(noiseRef.current, { opacity: 0.4 }, { opacity: 0, duration: 0.6, ease: 'power2.in' }, '-=0.3')
 
-    // ── 3. Ghost title layers slam in offset (chromatic aberration) ──────────
-    tl.fromTo([ghostRedRef.current, ghostCynRef.current],
-      { y: -80, opacity: 0, skewX: 15 },
-      { y: 0, opacity: 0.55, skewX: 0, duration: 0.35, ease: 'power4.out', stagger: 0.04 },
-      '-=0.2'
-    )
-    // Main title slams over them
-    .fromTo(titleRef.current,
-      { y: -80, opacity: 0, skewX: 8 },
-      { y: 0, opacity: 1, skewX: 0, duration: 0.35, ease: 'power4.out' },
-      '<0.04'
-    )
-    // Ghost layers jitter then settle
-    .to(ghostRedRef.current,  { x: 0, y: 0, opacity: 0, duration: 0.25 }, '-=0.1')
-    .to(ghostCynRef.current,  { x: 0, y: 0, opacity: 0, duration: 0.25 }, '<')
+      // Chromatic title slam
+      .fromTo([ghostRedRef.current, ghostCynRef.current],
+        { y: -80, opacity: 0, skewX: 15 },
+        { y: 0, opacity: 0.55, skewX: 0, duration: 0.35, ease: 'power4.out', stagger: 0.04 }, '-=0.2'
+      )
+      .fromTo(titleRef.current,
+        { y: -80, opacity: 0, skewX: 8 },
+        { y: 0, opacity: 1, skewX: 0, duration: 0.35, ease: 'power4.out' }, '<0.04'
+      )
+      .to(ghostRedRef.current, { x: 0, y: 0, opacity: 0, duration: 0.25 }, '-=0.1')
+      .to(ghostCynRef.current, { x: 0, y: 0, opacity: 0, duration: 0.25 }, '<')
 
-    // ── 4. Subtitle slides in ────────────────────────────────────────────────
-    tl.fromTo(subRef.current,
-      { opacity: 0, x: -24 },
-      { opacity: 1, x: 0, duration: 0.35, ease: 'power2.out' },
-      '-=0.1'
-    )
+      // Subtitle + zone badge
+      .fromTo(subRef.current, { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.3 }, '-=0.1')
+      .fromTo(zoneRef.current, { opacity: 0, scale: 0.8 }, { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(1.5)' }, '-=0.1')
 
-    // ── 5. Stats slide in + counters animate ─────────────────────────────────
-    tl.fromTo(statsRef.current,
-      { y: 24, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.35, ease: 'power2.out' },
-      '-=0.1'
-    )
+      // Stats cards slide up
+      .fromTo(statsRef.current, { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35 }, '-=0.1')
 
+    // Count-up
     const scoreObj = { val: 0 }
-    tl.to(scoreObj, {
-      val: score, duration: 1.0, ease: 'power2.out',
-      onUpdate: () => {
-        if (scoreValRef.current) scoreValRef.current.textContent = Math.floor(scoreObj.val).toLocaleString()
-      }
+    tl.to(scoreObj, { val: score, duration: 1.0, ease: 'power2.out',
+      onUpdate: () => { if (scoreValRef.current) scoreValRef.current.textContent = Math.floor(scoreObj.val).toLocaleString() }
     }, '-=0.1')
-
     const distObj = { val: 0 }
-    tl.to(distObj, {
-      val: Math.floor(distance), duration: 0.9, ease: 'power2.out',
-      onUpdate: () => {
-        if (distValRef.current) distValRef.current.textContent = Math.floor(distObj.val).toLocaleString() + 'm'
-      }
+    tl.to(distObj, { val: Math.floor(distance), duration: 0.9, ease: 'power2.out',
+      onUpdate: () => { if (distValRef.current) distValRef.current.textContent = Math.floor(distObj.val).toLocaleString() + 'm' }
     }, '<')
-
     const killsObj = { val: 0 }
-    tl.to(killsObj, {
-      val: kills, duration: 0.7, ease: 'power2.out',
-      onUpdate: () => {
-        if (killsValRef.current) killsValRef.current.textContent = Math.floor(killsObj.val)
-      }
+    tl.to(killsObj, { val: kills, duration: 0.7, ease: 'power2.out',
+      onUpdate: () => { if (killsValRef.current) killsValRef.current.textContent = Math.floor(killsObj.val) }
     }, '<')
 
-    // ── 6. Buttons ──────────────────────────────────────────────────────────
-    tl.fromTo(btnsRef.current,
-      { y: 16, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.3 },
-      '-=0.2'
-    )
+    tl.fromTo(btnsRef.current, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3 }, '-=0.2')
 
-    // ── Ambient glitch pulse every 3s ────────────────────────────────────────
+    // Periodic glitch
     glitchTimer.current = setInterval(() => {
       if (!titleRef.current) return
       const seq = gsap.timeline()
       seq.to([ghostRedRef.current, ghostCynRef.current], { opacity: 0.4, duration: 0.02 })
-        .to(ghostRedRef.current,  { x: gsap.utils.random(-8, 8), y: gsap.utils.random(-3, 3), duration: 0.04 })
-        .to(ghostCynRef.current,  { x: gsap.utils.random(-8, 8), y: gsap.utils.random(-3, 3), duration: 0.04 }, '<')
-        .to(titleRef.current,     { skewX: gsap.utils.random(-4, 4), duration: 0.04 }, '<')
+        .to(ghostRedRef.current, { x: gsap.utils.random(-8,8), y: gsap.utils.random(-3,3), duration: 0.04 })
+        .to(ghostCynRef.current, { x: gsap.utils.random(-8,8), y: gsap.utils.random(-3,3), duration: 0.04 }, '<')
+        .to(titleRef.current, { skewX: gsap.utils.random(-4,4), duration: 0.04 }, '<')
         .to([ghostRedRef.current, ghostCynRef.current], { opacity: 0, duration: 0.08 })
-        .to(titleRef.current,     { skewX: 0, duration: 0.06 }, '<')
+        .to(titleRef.current, { skewX: 0, duration: 0.06 }, '<')
         .to([ghostRedRef.current, ghostCynRef.current], { x: 0, y: 0, duration: 0 })
     }, 2800)
 
-    return () => {
-      tl.kill()
-      clearInterval(glitchTimer.current)
-      gsap.killTweensOf([titleRef.current, ghostRedRef.current, ghostCynRef.current])
-    }
+    return () => { tl.kill(); clearInterval(glitchTimer.current) }
   }, [])
 
+  const STAT = (label, valRef, accent) => (
+    <div className="flex items-center justify-between py-2.5 px-4 border-b last:border-0"
+      style={{ borderColor: '#1a0404' }}>
+      <span className="font-mono text-xs tracking-[0.3em]" style={{ color: '#4a1515' }}>{label}</span>
+      <span ref={valRef} className="font-mono text-sm" style={{ color: accent ?? '#aaa' }}>0</span>
+    </div>
+  )
+
   return (
-    <div
-      ref={overlayRef}
-      className="w-full h-full flex flex-col items-center justify-center bg-[#050005] relative overflow-hidden"
-      style={{ opacity: 0 }}
-    >
+    <div ref={overlayRef} className="w-full h-full flex flex-col items-center justify-center bg-[#050005] relative overflow-hidden"
+      style={{ opacity: 0 }}>
+
+      {/* Grid background */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.04]"
+        style={{ backgroundImage: 'linear-gradient(#ff2020 1px, transparent 1px), linear-gradient(90deg, #ff2020 1px, transparent 1px)', backgroundSize: '48px 48px' }}
+      />
+      <RedParticles />
+
       {/* Scanlines */}
       <div className="absolute inset-0 pointer-events-none"
-        style={{ background: 'repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,0,0,0.035) 3px,rgba(255,0,0,0.035) 4px)' }}
+        style={{ background: 'repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,0,0,0.03) 3px,rgba(255,0,0,0.03) 4px)' }}
       />
 
       {/* Red radial glow */}
       <div className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at center, rgba(200,0,0,0.15) 0%, transparent 60%)' }}
+        style={{ background: 'radial-gradient(ellipse at center, rgba(200,0,0,0.13) 0%, transparent 60%)' }}
       />
 
       {/* Flash overlay */}
-      <div ref={flashRef} className="absolute inset-0 pointer-events-none"
-        style={{ background: '#ff0000', opacity: 0 }}
-      />
+      <div ref={flashRef} className="absolute inset-0 pointer-events-none" style={{ background: '#ff0000', opacity: 0 }} />
 
-      {/* Static noise overlay */}
+      {/* Static noise */}
       <div ref={noiseRef} className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\' opacity=\'0.4\'/%3E%3C/svg%3E")',
-          backgroundRepeat: 'repeat',
-          backgroundSize: '128px',
-          mixBlendMode: 'overlay',
-          opacity: 0,
+          backgroundSize: '128px', mixBlendMode: 'overlay', opacity: 0,
         }}
       />
 
-      {/* Title with chromatic ghost layers */}
-      <div className="relative z-10 text-center mb-3">
-        <div className="relative inline-block">
-          {/* Red ghost */}
-          <h1 ref={ghostRedRef} className="absolute inset-0 font-mono font-black tracking-widest leading-none select-none pointer-events-none"
-            style={{ fontSize: 'clamp(2.5rem, 10vw, 5rem)', color: '#ff2020',
-              transform: 'translate(-6px, 3px)', filter: 'blur(1.5px)', opacity: 0 }}>
-            SIGNAL LOST
-          </h1>
-          {/* Cyan ghost */}
-          <h1 ref={ghostCynRef} className="absolute inset-0 font-mono font-black tracking-widest leading-none select-none pointer-events-none"
-            style={{ fontSize: 'clamp(2.5rem, 10vw, 5rem)', color: '#00f5ff',
-              transform: 'translate(6px, -3px)', filter: 'blur(1.5px)', opacity: 0 }}>
-            SIGNAL LOST
-          </h1>
-          {/* Main */}
-          <h1 ref={titleRef} className="relative font-mono font-black tracking-widest leading-none"
-            style={{ fontSize: 'clamp(2.5rem, 10vw, 5rem)', color: '#ff2020',
-              textShadow: '0 0 30px #ff000088, 0 0 60px #ff000044', opacity: 0 }}>
-            SIGNAL LOST
-          </h1>
-        </div>
-      </div>
-
-      <p ref={subRef} className="font-mono text-[#553333] tracking-[0.25em] text-xs mb-8 relative z-10 text-center px-4"
-        style={{ opacity: 0 }}>
-        UPLOAD ABORTED — CORE TRIANGULATED YOUR POSITION IN ZONE {zone}
-      </p>
-
-      {/* Stats */}
-      <div ref={statsRef} className="relative z-10 font-mono text-sm mb-8 border border-[#2a0000] px-10 py-5 min-w-64"
-        style={{ opacity: 0, background: 'rgba(80,0,0,0.15)' }}>
-        <div className="flex justify-between gap-12 mb-2">
-          <span className="text-[#553333] tracking-widest">SCORE</span>
-          <span ref={scoreValRef} className="text-white">0</span>
-        </div>
-        <div className="flex justify-between gap-12 mb-2">
-          <span className="text-[#553333] tracking-widest">BEST</span>
-          <span className={isNewRecord ? 'text-[#ff6a00] animate-pulse' : 'text-[#ff6a00]'}>
-            {highScore.toLocaleString()}{isNewRecord && ' ★'}
-          </span>
-        </div>
-        <div className="flex justify-between gap-12 mb-2">
-          <span className="text-[#553333] tracking-widest">DISTANCE</span>
-          <span ref={distValRef} className="text-white">0m</span>
-        </div>
-        <div className="flex justify-between gap-12">
-          <span className="text-[#553333] tracking-widest">KILLS</span>
-          <span ref={killsValRef} className="text-[#ff6a00]">0</span>
-        </div>
-      </div>
-
-      {/* Buttons */}
-      <div ref={btnsRef} className="relative z-10 flex gap-4" style={{ opacity: 0 }}>
-        <button onClick={startGame}
-          className="font-mono tracking-[0.25em] text-sm px-8 py-3 border-2 border-[#ff2020] text-[#ff2020]
-                     hover:bg-[#ff2020] hover:text-black transition-all duration-200 active:scale-95">
-          RETRY UPLOAD
-        </button>
-        <button onClick={goToMenu}
-          className="font-mono tracking-[0.25em] text-sm px-8 py-3 border border-[#333] text-[#666]
-                     hover:bg-[#333] hover:text-white transition-all duration-200 active:scale-95">
-          MAIN MENU
-        </button>
-      </div>
-
       {/* Corner brackets */}
-      <div className="absolute top-3 left-3 w-5 h-5 border-t-2 border-l-2 border-[#ff2020]/40" />
-      <div className="absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-[#ff2020]/40" />
-      <div className="absolute bottom-3 left-3 w-5 h-5 border-b-2 border-l-2 border-[#ff2020]/40" />
-      <div className="absolute bottom-3 right-3 w-5 h-5 border-b-2 border-r-2 border-[#ff2020]/40" />
+      <div className="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-[#ff2020]/30 z-20" />
+      <div className="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-[#ff2020]/30 z-20" />
+      <div className="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-[#ff2020]/30 z-20" />
+      <div className="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-[#ff2020]/30 z-20" />
+
+      <div className="relative z-10 flex flex-col items-center w-full max-w-sm px-4">
+
+        {/* Chromatic title */}
+        <div className="relative text-center mb-2">
+          <h1 ref={ghostRedRef} className="absolute inset-0 font-mono font-black tracking-widest leading-none select-none pointer-events-none"
+            style={{ fontSize: 'clamp(2.2rem,9vw,4.5rem)', color:'#ff2020', transform:'translate(-6px,3px)', filter:'blur(1.5px)', opacity:0 }}>
+            SIGNAL LOST
+          </h1>
+          <h1 ref={ghostCynRef} className="absolute inset-0 font-mono font-black tracking-widest leading-none select-none pointer-events-none"
+            style={{ fontSize: 'clamp(2.2rem,9vw,4.5rem)', color:'#00f5ff', transform:'translate(6px,-3px)', filter:'blur(1.5px)', opacity:0 }}>
+            SIGNAL LOST
+          </h1>
+          <h1 ref={titleRef} className="relative font-mono font-black tracking-widest leading-none"
+            style={{ fontSize: 'clamp(2.2rem,9vw,4.5rem)', color:'#ff2020', textShadow:'0 0 30px #ff000088, 0 0 60px #ff000044', opacity:0 }}>
+            SIGNAL LOST
+          </h1>
+        </div>
+
+        <p ref={subRef} className="font-mono text-[#553333] tracking-[0.2em] text-[10px] mb-3 text-center" style={{ opacity:0 }}>
+          UPLOAD ABORTED — CORE TRIANGULATED YOUR POSITION
+        </p>
+
+        {/* Zone reached badge */}
+        <div ref={zoneRef} className="flex items-center gap-2 mb-5" style={{ opacity:0 }}>
+          <div className="h-px w-8" style={{ background: '#ff2020' }} />
+          <span className="font-mono text-[10px] tracking-[0.35em] px-3 py-1 border" style={{ color:'#ff6a00', borderColor:'#ff6a0030' }}>
+            FELL IN ZONE {zone}
+          </span>
+          <div className="h-px w-8" style={{ background: '#ff2020' }} />
+        </div>
+
+        {/* Stats */}
+        <div ref={statsRef} className="w-full border mb-5" style={{ opacity:0, borderColor:'#1a0404', background:'rgba(60,0,0,0.15)' }}>
+          <div className="flex items-center justify-between py-2.5 px-4 border-b" style={{ borderColor:'#1a0404' }}>
+            <span className="font-mono text-xs tracking-[0.3em] text-[#4a1515]">SCORE</span>
+            <span ref={scoreValRef} className="font-mono text-sm text-white">0</span>
+          </div>
+          <div className="flex items-center justify-between py-2.5 px-4 border-b" style={{ borderColor:'#1a0404' }}>
+            <span className="font-mono text-xs tracking-[0.3em] text-[#4a1515]">BEST</span>
+            <span className="font-mono text-sm" style={{ color: isNewRecord ? '#ff6a00' : '#ff6a00' }}>
+              {highScore.toLocaleString()}{isNewRecord && ' ★'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-2.5 px-4 border-b" style={{ borderColor:'#1a0404' }}>
+            <span className="font-mono text-xs tracking-[0.3em] text-[#4a1515]">DISTANCE</span>
+            <span ref={distValRef} className="font-mono text-sm text-white">0m</span>
+          </div>
+          <div className="flex items-center justify-between py-2.5 px-4">
+            <span className="font-mono text-xs tracking-[0.3em] text-[#4a1515]">KILLS</span>
+            <span ref={killsValRef} className="font-mono text-sm text-[#ff6a00]">0</span>
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div ref={btnsRef} className="flex flex-col gap-3 w-full" style={{ opacity:0 }}>
+          <button onClick={startGame}
+            className="font-mono tracking-[0.25em] text-sm py-3.5 border-2 border-[#ff2020] text-[#ff2020] relative overflow-hidden
+                       hover:bg-[#ff2020] hover:text-black transition-all duration-200 active:scale-95"
+            style={{ boxShadow:'0 0 16px rgba(255,32,32,0.25)' }}
+            onMouseEnter={e => e.currentTarget.style.boxShadow='0 0 28px rgba(255,32,32,0.6)'}
+            onMouseLeave={e => e.currentTarget.style.boxShadow='0 0 16px rgba(255,32,32,0.25)'}>
+            ↺ RETRY UPLOAD
+          </button>
+          <button onClick={goToMenu}
+            className="font-mono tracking-[0.25em] text-sm py-3.5 border border-[#2a2a2a] text-[#555]
+                       hover:border-[#555] hover:text-white transition-all duration-200 active:scale-95">
+            MAIN MENU
+          </button>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes float-dot { from { transform: translateY(0); } to { transform: translateY(-16px); } }
+      `}</style>
     </div>
   )
 }
