@@ -210,7 +210,7 @@ export default function MainMenu() {
         {/* Year badge */}
         <div ref={badgeRef} className="flex items-center gap-3 mb-4" style={{ opacity: 0 }}>
           <div className="h-px w-8 bg-[#ff6a00]" />
-          <span className="text-[#ff6a00] tracking-[0.45em] text-[10px] font-mono uppercase">Earth · 2045</span>
+          <span className="text-[#ff6a00] tracking-[0.45em] text-xs font-mono uppercase">Earth · 2045</span>
           <div className="h-px w-8 bg-[#ff6a00]" />
         </div>
 
@@ -244,7 +244,7 @@ export default function MainMenu() {
         {/* Tagline */}
         <p
           ref={taglineRef}
-          className="font-mono text-[#ff6a00] tracking-[0.25em] text-[11px] mb-5"
+          className="font-mono text-[#ff6a00] tracking-[0.25em] text-sm mb-5"
           style={{ opacity: 0 }}
         >
           STAY CONNECTED · KEEP MOVING · END CORE
@@ -256,7 +256,7 @@ export default function MainMenu() {
         {/* Lore — condensed */}
         <p
           ref={loreRef}
-          className="text-[#666] text-sm leading-relaxed mb-5 font-mono"
+          className="text-[#999] text-base leading-relaxed mb-5 font-mono"
           style={{ opacity: 0 }}
         >
           CORE went rogue. Every network, every grid — under its control.
@@ -279,9 +279,9 @@ export default function MainMenu() {
               className="flex-1 flex flex-col items-center py-2 border rounded-sm"
               style={{ borderColor: z.color + '30', background: z.color + '08' }}
             >
-              <span className="font-mono text-[9px] tracking-[0.3em] mb-0.5" style={{ color: z.color + '80' }}>ZONE</span>
-              <span className="font-mono text-base font-bold" style={{ color: z.color }}>{z.num}</span>
-              <span className="font-mono text-[8px] tracking-widest mt-0.5" style={{ color: z.color + '60' }}>{z.name}</span>
+              <span className="font-mono text-[11px] tracking-[0.3em] mb-0.5" style={{ color: z.color + 'cc' }}>ZONE</span>
+              <span className="font-mono text-lg font-bold" style={{ color: z.color }}>{z.num}</span>
+              <span className="font-mono text-[10px] tracking-widest mt-0.5" style={{ color: z.color + 'aa' }}>{z.name}</span>
             </div>
           ))}
         </div>
@@ -292,7 +292,7 @@ export default function MainMenu() {
           onClick={startIntro}
           onMouseEnter={() => setBtnHover(true)}
           onMouseLeave={() => setBtnHover(false)}
-          className="font-mono font-bold tracking-[0.35em] text-sm px-14 py-4 mb-5 relative overflow-hidden transition-all duration-200 active:scale-95"
+          className="font-mono font-bold tracking-[0.35em] text-base px-14 py-4 mb-5 relative overflow-hidden transition-all duration-200 active:scale-95"
           style={{
             opacity: 0,
             border: '2px solid #00f5ff',
@@ -314,14 +314,14 @@ export default function MainMenu() {
         </button>
 
         {/* Controls hint */}
-        <div ref={controlsRef} className="flex gap-4 text-[#333] font-mono text-[10px] tracking-widest mb-3 flex-wrap justify-center" style={{ opacity: 0 }}>
+        <div ref={controlsRef} className="flex gap-4 text-[#777] font-mono text-xs tracking-widest mb-3 flex-wrap justify-center" style={{ opacity: 0 }}>
           {['← → LANE', '↑ JUMP', 'Z SHOOT', 'P PAUSE', 'F FULLSCREEN'].map((hint) => (
             <span key={hint} className="border border-[#1a1a1a] px-2 py-0.5 rounded-sm">{hint}</span>
           ))}
         </div>
 
         {/* High score */}
-        <p ref={scoreRef} className="font-mono text-xs tracking-widest" style={{ opacity: 0, color: highScore > 0 ? '#ff6a00' : '#222' }}>
+        <p ref={scoreRef} className="font-mono text-sm tracking-widest" style={{ opacity: 0, color: highScore > 0 ? '#ff6a00' : '#555' }}>
           {highScore > 0 ? `▲ BEST SIGNAL: ${highScore.toLocaleString()} pts` : '— NO SIGNAL RECORD —'}
         </p>
       </div>

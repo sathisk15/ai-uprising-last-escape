@@ -131,7 +131,7 @@ export default function IntroDialogue() {
         />
 
         {/* Section label */}
-        <p className="font-mono text-[9px] tracking-[0.45em] text-[#1e1e3a] mb-3 relative z-10">
+        <p className="font-mono text-xs tracking-[0.45em] text-[#5a5a8a] mb-3 relative z-10">
           FIELD INTEL
         </p>
 
@@ -150,17 +150,17 @@ export default function IntroDialogue() {
 
           {/* Text */}
           <div className="text-center">
-            <p className="font-mono text-xs tracking-[0.35em] mb-1" style={{ color: tip.color }}>
+            <p className="font-mono text-sm tracking-[0.35em] mb-1" style={{ color: tip.color }}>
               {tip.label}
             </p>
-            <p className="font-mono text-sm text-[#666] leading-snug">
+            <p className="font-mono text-base text-[#999] leading-snug">
               {tip.desc}
             </p>
           </div>
         </div>
 
         {/* Tip counter */}
-        <p className="font-mono text-[9px] tracking-widest text-[#1a1a2a] mt-3 relative z-10">
+        <p className="font-mono text-xs tracking-widest text-[#555] mt-3 relative z-10">
           {String(tipIndex + 1).padStart(2, '0')} / {String(TIPS.length).padStart(2, '0')}
         </p>
       </div>
@@ -171,7 +171,7 @@ export default function IntroDialogue() {
         {/* Chat header */}
         <div className="flex items-center px-4 py-2 border-b gap-2" style={{ borderColor: '#0d0d22' }}>
           <div className="w-1.5 h-1.5 rounded-full bg-[#00ff88] animate-pulse" />
-          <span className="font-mono text-[9px] tracking-[0.3em] text-[#333]">ENCRYPTED CHANNEL · 3 PARTICIPANTS</span>
+          <span className="font-mono text-xs tracking-[0.3em] text-[#666]">ENCRYPTED CHANNEL · 3 PARTICIPANTS</span>
         </div>
 
         {/* Messages — scrollable */}
@@ -219,8 +219,8 @@ export default function IntroDialogue() {
             {!isLast && (
               <button
                 onClick={startGame}
-                className="font-mono text-xs tracking-[0.25em] px-4 py-2 border border-[#2a2a2a] text-[#555]
-                           hover:border-[#555] hover:text-[#aaa] transition-all duration-150 active:scale-95"
+                className="font-mono text-sm tracking-[0.25em] px-4 py-2 border border-[#3a3a3a] text-[#777]
+                           hover:border-[#777] hover:text-[#ccc] transition-all duration-150 active:scale-95"
               >
                 SKIP
               </button>
@@ -253,7 +253,7 @@ export default function IntroDialogue() {
             ) : (
               <button
                 onClick={handleNext}
-                className="font-mono text-xs tracking-[0.3em] px-5 py-2 border transition-all duration-150 active:scale-95"
+                className="font-mono text-sm tracking-[0.3em] px-5 py-2 border transition-all duration-150 active:scale-95"
                 style={{ borderColor: currentLine?.color, color: currentLine?.color }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = currentLine?.color
@@ -297,15 +297,15 @@ function ChatBubble({ line, text, done }) {
     >
       {/* Name tag */}
       <span
-        className="font-mono text-[9px] tracking-[0.3em] px-1"
-        style={{ color: line.color + 'aa' }}
+        className="font-mono text-xs tracking-[0.3em] px-1"
+        style={{ color: line.color + 'cc' }}
       >
         {line.character}
       </span>
 
       {/* Bubble */}
       <div
-        className="max-w-[80%] px-4 py-2.5 rounded-sm font-mono text-sm leading-relaxed"
+        className="max-w-[80%] px-4 py-2.5 rounded-sm font-mono text-base leading-relaxed"
         style={{
           background: isSignal
             ? 'rgba(60,4,4,0.85)'

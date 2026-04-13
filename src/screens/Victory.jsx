@@ -159,7 +159,7 @@ export default function Victory() {
       <div className="relative z-10 flex flex-col items-center w-full max-w-sm px-4">
 
         {/* Upload complete label */}
-        <p ref={uploadRef} className="font-mono tracking-[0.5em] text-xs mb-4 uppercase"
+        <p ref={uploadRef} className="font-mono tracking-[0.5em] text-sm mb-4 uppercase"
           style={{ color:'#00ff88', opacity:0 }}>
           ✓ UPLOAD COMPLETE
         </p>
@@ -177,8 +177,8 @@ export default function Victory() {
         </h2>
 
         <div ref={tagRef} className="text-center mb-5" style={{ opacity:0 }}>
-          <p className="font-mono text-[#00ff88] text-xs tracking-widest">CORE HAS BEEN NEUTRALIZED</p>
-          <p className="font-mono text-[#2a4a33] text-[10px] tracking-widest mt-1">HUMANITY IS FREE</p>
+          <p className="font-mono text-[#00ff88] text-sm tracking-widest">CORE HAS BEEN NEUTRALIZED</p>
+          <p className="font-mono text-[#558855] text-xs tracking-widest mt-1">HUMANITY IS FREE</p>
         </div>
 
         {/* Zone completion badges */}
@@ -190,9 +190,9 @@ export default function Victory() {
           ].map((z) => (
             <div key={z.n} className="flex flex-col items-center px-3 py-2 border rounded-sm"
               style={{ borderColor: z.color + '40', background: z.color + '0a', opacity:0 }}>
-              <span className="font-mono text-[9px] tracking-widest mb-1" style={{ color: z.color + '80' }}>ZONE {z.n}</span>
-              <span className="font-mono font-bold text-sm" style={{ color: z.color }}>✓</span>
-              <span className="font-mono text-[8px] tracking-wider mt-1" style={{ color: z.color + '60' }}>{z.label}</span>
+              <span className="font-mono text-xs tracking-widest mb-1" style={{ color: z.color + 'cc' }}>ZONE {z.n}</span>
+              <span className="font-mono font-bold text-base" style={{ color: z.color }}>✓</span>
+              <span className="font-mono text-[10px] tracking-wider mt-1" style={{ color: z.color + 'aa' }}>{z.label}</span>
             </div>
           ))}
         </div>
@@ -214,10 +214,10 @@ export default function Victory() {
           ].map(({ label, ref: vRef, staticVal, color }, i) => (
             <div key={i} className="flex items-center justify-between py-2.5 px-4 border-b last:border-0"
               style={{ borderColor:'#0a2014' }}>
-              <span className="font-mono text-xs tracking-[0.3em] text-[#1a4a2a]">{label}</span>
+              <span className="font-mono text-sm tracking-[0.3em] text-[#5a9a6a]">{label}</span>
               {staticVal
-                ? <span className="font-mono text-sm" style={{ color }}>{staticVal}</span>
-                : <span ref={vRef} className="font-mono text-sm" style={{ color }}>0</span>
+                ? <span className="font-mono text-base" style={{ color }}>{staticVal}</span>
+                : <span ref={vRef} className="font-mono text-base" style={{ color }}>0</span>
               }
             </div>
           ))}
@@ -226,7 +226,7 @@ export default function Victory() {
         {/* Buttons */}
         <div ref={btnsRef} className="flex flex-col gap-3 w-full" style={{ opacity:0 }}>
           <button onClick={startGame}
-            className="font-mono tracking-[0.25em] text-sm py-3.5 border-2 border-[#00ff88] text-[#00ff88]
+            className="font-mono tracking-[0.25em] text-base py-3.5 border-2 border-[#00ff88] text-[#00ff88]
                        hover:bg-[#00ff88] hover:text-black transition-all duration-200 active:scale-95"
             style={{ boxShadow:'0 0 18px rgba(0,255,136,0.3)' }}
             onMouseEnter={e => e.currentTarget.style.boxShadow='0 0 32px rgba(0,255,136,0.6)'}
@@ -234,8 +234,8 @@ export default function Victory() {
             ▶ PLAY AGAIN
           </button>
           <button onClick={goToMenu}
-            className="font-mono tracking-[0.25em] text-sm py-3.5 border border-[#2a2a2a] text-[#555]
-                       hover:border-[#555] hover:text-white transition-all duration-200 active:scale-95">
+            className="font-mono tracking-[0.25em] text-base py-3.5 border border-[#444] text-[#888]
+                       hover:border-[#888] hover:text-white transition-all duration-200 active:scale-95">
             MAIN MENU
           </button>
         </div>

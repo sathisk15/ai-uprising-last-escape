@@ -185,7 +185,7 @@ export default function ZoneTransition() {
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center text-center px-8">
 
-        <p ref={labelRef} className="font-mono tracking-[0.6em] text-xs mb-4 uppercase"
+        <p ref={labelRef} className="font-mono tracking-[0.6em] text-sm mb-4 uppercase"
           style={{ color, opacity:0 }}>
           — ROUTING SIGNAL —
         </p>
@@ -211,8 +211,8 @@ export default function ZoneTransition() {
           {zoneData.name.toUpperCase()}
         </h2>
 
-        <p ref={taglineRef} className="font-mono text-xs tracking-widest max-w-xs mb-5"
-          style={{ color:'#666', opacity:0 }}>
+        <p ref={taglineRef} className="font-mono text-sm tracking-widest max-w-xs mb-5"
+          style={{ color:'#999', opacity:0 }}>
           {taglines[zone] ?? ''}
         </p>
 
@@ -220,13 +220,13 @@ export default function ZoneTransition() {
         <div ref={infoRef} className="flex gap-3 mb-2" style={{ opacity:0 }}>
           <div className="flex items-center gap-2 px-3 py-1.5 border rounded-sm"
             style={{ borderColor: color + '30', background: color + '08' }}>
-            <span className="font-mono text-[9px] tracking-widest text-[#333]">SPEED</span>
-            <span className="font-mono text-xs font-bold" style={{ color }}>{info.speed}</span>
+            <span className="font-mono text-xs tracking-widest text-[#888]">SPEED</span>
+            <span className="font-mono text-sm font-bold" style={{ color }}>{info.speed}</span>
           </div>
           <div className="flex items-center gap-2 px-3 py-1.5 border rounded-sm"
             style={{ borderColor: info.threatColor + '30', background: info.threatColor + '08' }}>
-            <span className="font-mono text-[9px] tracking-widest text-[#333]">THREAT</span>
-            <span className="font-mono text-xs font-bold" style={{ color: info.threatColor }}>{info.threat}</span>
+            <span className="font-mono text-xs tracking-widest text-[#888]">THREAT</span>
+            <span className="font-mono text-sm font-bold" style={{ color: info.threatColor }}>{info.threat}</span>
           </div>
         </div>
 
@@ -254,7 +254,7 @@ export default function ZoneTransition() {
             style={{ background: color, boxShadow:`0 0 8px ${color}`, transformOrigin:'left' }}
           />
         </div>
-        <p ref={progressLabelRef} className="text-center text-[9px] tracking-widest text-white/25 font-mono mt-2"
+        <p ref={progressLabelRef} className="text-center text-xs tracking-widest text-white/50 font-mono mt-2"
           style={{ opacity:0 }}>
           SIGNAL-0 RELAY {zone}/3 ESTABLISHED
         </p>

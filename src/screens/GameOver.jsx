@@ -121,8 +121,8 @@ export default function GameOver() {
   const STAT = (label, valRef, accent) => (
     <div className="flex items-center justify-between py-2.5 px-4 border-b last:border-0"
       style={{ borderColor: '#1a0404' }}>
-      <span className="font-mono text-xs tracking-[0.3em]" style={{ color: '#4a1515' }}>{label}</span>
-      <span ref={valRef} className="font-mono text-sm" style={{ color: accent ?? '#aaa' }}>0</span>
+      <span className="font-mono text-sm tracking-[0.3em]" style={{ color: '#aa5555' }}>{label}</span>
+      <span ref={valRef} className="font-mono text-base" style={{ color: accent ?? '#ccc' }}>0</span>
     </div>
   )
 
@@ -181,14 +181,14 @@ export default function GameOver() {
           </h1>
         </div>
 
-        <p ref={subRef} className="font-mono text-[#553333] tracking-[0.2em] text-[10px] mb-3 text-center" style={{ opacity:0 }}>
+        <p ref={subRef} className="font-mono text-[#aa6666] tracking-[0.2em] text-sm mb-3 text-center" style={{ opacity:0 }}>
           UPLOAD ABORTED — CORE TRIANGULATED YOUR POSITION
         </p>
 
         {/* Zone reached badge */}
         <div ref={zoneRef} className="flex items-center gap-2 mb-5" style={{ opacity:0 }}>
           <div className="h-px w-8" style={{ background: '#ff2020' }} />
-          <span className="font-mono text-[10px] tracking-[0.35em] px-3 py-1 border" style={{ color:'#ff6a00', borderColor:'#ff6a0030' }}>
+          <span className="font-mono text-sm tracking-[0.35em] px-3 py-1 border" style={{ color:'#ff6a00', borderColor:'#ff6a0060' }}>
             FELL IN ZONE {zone}
           </span>
           <div className="h-px w-8" style={{ background: '#ff2020' }} />
@@ -197,29 +197,29 @@ export default function GameOver() {
         {/* Stats */}
         <div ref={statsRef} className="w-full border mb-5" style={{ opacity:0, borderColor:'#1a0404', background:'rgba(60,0,0,0.15)' }}>
           <div className="flex items-center justify-between py-2.5 px-4 border-b" style={{ borderColor:'#1a0404' }}>
-            <span className="font-mono text-xs tracking-[0.3em] text-[#4a1515]">SCORE</span>
-            <span ref={scoreValRef} className="font-mono text-sm text-white">0</span>
+            <span className="font-mono text-sm tracking-[0.3em] text-[#aa5555]">SCORE</span>
+            <span ref={scoreValRef} className="font-mono text-base text-white">0</span>
           </div>
           <div className="flex items-center justify-between py-2.5 px-4 border-b" style={{ borderColor:'#1a0404' }}>
-            <span className="font-mono text-xs tracking-[0.3em] text-[#4a1515]">BEST</span>
+            <span className="font-mono text-sm tracking-[0.3em] text-[#aa5555]">BEST</span>
             <span className="font-mono text-sm" style={{ color: isNewRecord ? '#ff6a00' : '#ff6a00' }}>
               {highScore.toLocaleString()}{isNewRecord && ' ★'}
             </span>
           </div>
           <div className="flex items-center justify-between py-2.5 px-4 border-b" style={{ borderColor:'#1a0404' }}>
-            <span className="font-mono text-xs tracking-[0.3em] text-[#4a1515]">DISTANCE</span>
-            <span ref={distValRef} className="font-mono text-sm text-white">0m</span>
+            <span className="font-mono text-sm tracking-[0.3em] text-[#aa5555]">DISTANCE</span>
+            <span ref={distValRef} className="font-mono text-base text-white">0m</span>
           </div>
           <div className="flex items-center justify-between py-2.5 px-4">
-            <span className="font-mono text-xs tracking-[0.3em] text-[#4a1515]">KILLS</span>
-            <span ref={killsValRef} className="font-mono text-sm text-[#ff6a00]">0</span>
+            <span className="font-mono text-sm tracking-[0.3em] text-[#aa5555]">KILLS</span>
+            <span ref={killsValRef} className="font-mono text-base text-[#ff6a00]">0</span>
           </div>
         </div>
 
         {/* Buttons */}
         <div ref={btnsRef} className="flex flex-col gap-3 w-full" style={{ opacity:0 }}>
           <button onClick={startGame}
-            className="font-mono tracking-[0.25em] text-sm py-3.5 border-2 border-[#ff2020] text-[#ff2020] relative overflow-hidden
+            className="font-mono tracking-[0.25em] text-base py-3.5 border-2 border-[#ff2020] text-[#ff2020] relative overflow-hidden
                        hover:bg-[#ff2020] hover:text-black transition-all duration-200 active:scale-95"
             style={{ boxShadow:'0 0 16px rgba(255,32,32,0.25)' }}
             onMouseEnter={e => e.currentTarget.style.boxShadow='0 0 28px rgba(255,32,32,0.6)'}
@@ -227,8 +227,8 @@ export default function GameOver() {
             ↺ RETRY UPLOAD
           </button>
           <button onClick={goToMenu}
-            className="font-mono tracking-[0.25em] text-sm py-3.5 border border-[#2a2a2a] text-[#555]
-                       hover:border-[#555] hover:text-white transition-all duration-200 active:scale-95">
+            className="font-mono tracking-[0.25em] text-base py-3.5 border border-[#444] text-[#888]
+                       hover:border-[#888] hover:text-white transition-all duration-200 active:scale-95">
             MAIN MENU
           </button>
         </div>
