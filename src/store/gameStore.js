@@ -62,7 +62,7 @@ const useGameStore = create(
         if (get().phase === 'paused') set({ phase: 'playing' })
       },
 
-      takeDamage: (type = 'obstacle') => {
+      takeDamage: (type = 'obstacle', amount) => {
         // Shield absorbs one hit then shatters
         if (get().shieldActive) {
           set({ shieldActive: false })
@@ -70,8 +70,8 @@ const useGameStore = create(
           damageSignal.pending = true
           return
         }
-        const amount = DAMAGE[type] ?? DAMAGE.obstacle
-        const health = Math.max(0, get().health - amount)
+        const dmg = amount ?? (DAMAGE[type]?.[1] ?? 10)
+        const health = Math.max(0, get().health - dmg)
         shakeSignal.pending  = true
         damageSignal.pending = true
         if (health <= 0) {

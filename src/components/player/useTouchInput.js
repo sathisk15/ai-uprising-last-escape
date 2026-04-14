@@ -11,12 +11,18 @@ export default function useTouchInput() {
     let startY = 0
 
     function onTouchStart(e) {
+      e.preventDefault()   // blocks pull-to-refresh and page scroll
       const t = e.touches[0]
       startX = t.clientX
       startY = t.clientY
     }
 
+    function onTouchMove(e) {
+      e.preventDefault()   // blocks scroll while finger is moving
+    }
+
     function onTouchEnd(e) {
+      e.preventDefault()
       const t = e.changedTouches[0]
       const dx = t.clientX - startX
       const dy = t.clientY - startY
@@ -44,10 +50,13 @@ export default function useTouchInput() {
       }
     }
 
-    window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchend',   onTouchEnd,   { passive: true })
+    // passive: false is required to allow preventDefault()
+    window.addEventListener('touchstart', onTouchStart, { passive: false })
+    window.addEventListener('touchmove',  onTouchMove,  { passive: false })
+    window.addEventListener('touchend',   onTouchEnd,   { passive: false })
     return () => {
       window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchmove',  onTouchMove)
       window.removeEventListener('touchend',   onTouchEnd)
     }
   }, [])
