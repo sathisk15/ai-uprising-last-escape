@@ -24,7 +24,7 @@ In 2045, an AI network called **SIGNAL-0** has overrun global infrastructure. Yo
 | Build | Vite 5 |
 | Deploy | Firebase Hosting (`ai-uprising-last-escape`) |
 
-All 3D objects are built from Three.js primitives (BoxGeometry, SphereGeometry, CylinderGeometry, etc.) — no external `.glb` or `.gltf` assets.
+The player vehicle is a **GLB model** (`public/models/car.glb`) loaded via `useGLTF`. All other 3D objects (drones, obstacles, environment) are built from Three.js primitives (BoxGeometry, SphereGeometry, CylinderGeometry, etc.).
 
 ---
 
@@ -62,7 +62,7 @@ npm run preview    # preview the production build
 | 2 | Modern Industrial Complex | 33 u/s | 2.5 s | 4.0 s | `#1a3320` | 3500 m |
 | 3 | Modern Core Stronghold | 44 u/s | 1.8 s | 2.5 s | `#3d0a0a` | 5500 m (victory) |
 
-Each zone ends with a **zoneout** — the car drives forward into fog, the road clears, then the zone banner slams in. Zone 3 completion at 5500 m triggers the **Victory** screen.
+Each zone ends with a **zoneout** — the car drives forward into fog, the road clears, then the zone banner slams in. Zone 3 has no distance threshold — victory triggers when the player survives to the end of Zone 3.
 
 ### Resources
 
@@ -72,11 +72,13 @@ Each zone ends with a **zoneout** — the car drives forward into fog, the road 
 
 ### Damage Values
 
-| Source | Health lost |
-|---|---|
-| Obstacle collision | −20% |
-| Drone body collision | −15% |
-| ~~Drone projectile~~ (removed) | ~~−10%~~ |
+Damage scales with zone — higher zones hit harder.
+
+| Source | Zone 1 | Zone 2 | Zone 3 |
+|---|---|---|---|
+| Obstacle (barricade) | −10 hp | −18 hp | −28 hp |
+| Energy wall | −12 hp | −20 hp | −30 hp |
+| Drone body collision | −10 hp | −15 hp | −22 hp |
 
 A shared 1.5 s hit cooldown prevents double-damage from any source.
 
@@ -892,8 +894,8 @@ Enhanced exhaust: 2-layer flames per pipe (outer cone + inner core) + center bur
 
 ## Design Decisions
 
-**All primitives, no external assets.**
-Every mesh is built from Three.js geometry. Lightweight repo, no asset licensing issues for the prototype phase.
+**GLB car, primitives everywhere else.**
+The player vehicle uses a GLB model (`car.glb`) loaded via `useGLTF` — embedded lights are disabled on load, emissive intensity capped at 0.4, and custom red tail light boxes added at the rear. All other meshes (drones, obstacles, environment) remain Three.js primitives. Bloom luminance threshold raised to 0.75 to prevent specular hotspots on the GLB materials.
 
 **Object pools over dynamic spawning.**
 Fixed-size slot arrays. Inactive slots parked off-screen. Zero React component mount/unmount during gameplay, zero GC pressure from spawning.
