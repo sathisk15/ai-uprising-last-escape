@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { ZONES, BASE_SPEED, DAMAGE } from '../game/zones'
-import { shakeSignal } from '../game/shakeSignal'
+import { shakeSignal, damageSignal } from '../game/shakeSignal'
 
 // Persistent slice — survives page reload
 const persistedSlice = (set) => ({
@@ -58,16 +58,18 @@ const useGameStore = create(
         if (get().phase === 'paused') set({ phase: 'playing' })
       },
 
-      takeDamage: (type = 'obstacle') => {
+      takeDamage: (type = 'obstacle', amount) => {
         // Shield absorbs one hit then shatters
         if (get().shieldActive) {
           set({ shieldActive: false })
-          shakeSignal.pending = true
+          shakeSignal.pending  = true
+          damageSignal.pending = true
           return
         }
-        const amount = DAMAGE[type] ?? DAMAGE.obstacle
-        const health = Math.max(0, get().health - amount)
-        shakeSignal.pending = true
+        const dmg = amount ?? (DAMAGE[type]?.[1] ?? 10)
+        const health = Math.max(0, get().health - dmg)
+        shakeSignal.pending  = true
+        damageSignal.pending = true
         if (health <= 0) {
           get().endGame()
         } else {
