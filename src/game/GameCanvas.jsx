@@ -224,12 +224,12 @@ export default function GameCanvas() {
       {/* One fill light — no shadows */}
       <directionalLight position={[0, 5, 12]} intensity={0.7} color="#aaccff" />
 
-      {/* Single zone-tinted point light — just one, no shadow */}
+      {/* Single zone-tinted point light — placed ahead of the car so it tints road/buildings not the car */}
       <pointLight
-        position={[0, 1.5, 0]}
+        position={[0, 4, -20]}
         intensity={1.2}
         color={zoneData.ambientColor}
-        distance={20}
+        distance={30}
         decay={2}
       />
 
@@ -258,9 +258,9 @@ export default function GameCanvas() {
       {/* ── Post-processing ───────────────────────────────────────────────── */}
       <EffectComposer multisampling={0}>
         <Bloom
-          luminanceThreshold={0.35}
-          luminanceSmoothing={0.7}
-          intensity={0.7}
+          luminanceThreshold={0.75}
+          luminanceSmoothing={0.4}
+          intensity={0.6}
           blendFunction={BlendFunction.ADD}
         />
       </EffectComposer>
