@@ -269,72 +269,72 @@ export default function PlayerVehicle() {
       </mesh>
 
       {/* ── Cabin ────────────────────────────────────────────────────────── */}
-      <mesh castShadow position={[0, 0.52, -0.15]}>
+      <mesh castShadow position={[0, 0.52, 0.15]}>
         <boxGeometry args={[0.88, 0.38, 1.2]} />
         <meshStandardMaterial color="#0f2a4a" metalness={0.6} roughness={0.35} />
       </mesh>
       {/* Windshield tint */}
-      <mesh position={[0, 0.54, 0.46]}>
+      <mesh position={[0, 0.54, -0.46]}>
         <boxGeometry args={[0.82, 0.3, 0.04]} />
         <meshStandardMaterial color="#001a33" metalness={0.1} roughness={0.1} opacity={0.85} transparent />
       </mesh>
 
       {/* ── Hood ─────────────────────────────────────────────────────────── */}
-      <mesh castShadow position={[0, 0.24, 0.9]}>
+      <mesh castShadow position={[0, 0.24, -0.9]}>
         <boxGeometry args={[1.1, 0.12, 0.6]} />
         <meshStandardMaterial color="#1a3d6e" metalness={0.7} roughness={0.3} />
       </mesh>
 
       {/* ── Front bumper ─────────────────────────────────────────────────── */}
-      <mesh position={[0, -0.06, 1.3]}>
+      <mesh position={[0, -0.06, -1.3]}>
         <boxGeometry args={[1.15, 0.2, 0.16]} />
         <meshStandardMaterial color="#0a1520" metalness={0.8} roughness={0.2} />
       </mesh>
       {/* Bumper accent bar */}
-      <mesh position={[0, 0.02, 1.39]}>
+      <mesh position={[0, 0.02, -1.39]}>
         <boxGeometry args={[0.9, 0.04, 0.02]} />
         <meshStandardMaterial color="#00f5ff" emissive="#00f5ff" emissiveIntensity={3} toneMapped={false} />
       </mesh>
 
       {/* ── Rear spoiler ─────────────────────────────────────────────────── */}
-      <mesh position={[0, 0.52, -1.18]}>
+      <mesh position={[0, 0.52, 1.18]}>
         <boxGeometry args={[1.05, 0.07, 0.08]} />
         <meshStandardMaterial color="#0a1520" metalness={0.8} roughness={0.25} />
       </mesh>
 
       {/* ── Exhaust pipes ────────────────────────────────────────────────── */}
-      <mesh position={[-0.3, -0.12, -1.3]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[-0.3, -0.12, 1.3]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.055, 0.065, 0.18, 8]} />
         <meshStandardMaterial color="#333344" metalness={0.9} roughness={0.15} />
       </mesh>
-      <mesh position={[0.3, -0.12, -1.3]} rotation={[Math.PI / 2, 0, 0]}>
+      <mesh position={[0.3, -0.12, 1.3]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.055, 0.065, 0.18, 8]} />
         <meshStandardMaterial color="#333344" metalness={0.9} roughness={0.15} />
       </mesh>
 
       {/* ── Wheels ───────────────────────────────────────────────────────── */}
-      <Wheel position={[-0.66, -0.15,  0.85]} />
-      <Wheel position={[ 0.66, -0.15,  0.85]} />
       <Wheel position={[-0.66, -0.15, -0.85]} />
       <Wheel position={[ 0.66, -0.15, -0.85]} />
+      <Wheel position={[-0.66, -0.15,  0.85]} />
+      <Wheel position={[ 0.66, -0.15,  0.85]} />
 
       {/* ── Headlights ───────────────────────────────────────────────────── */}
-      <mesh position={[-0.35, 0.1, 1.27]}>
+      <mesh position={[-0.35, 0.1, -1.27]}>
         <boxGeometry args={[0.22, 0.1, 0.03]} />
         <meshStandardMaterial color="#ddeeff" emissive="#aaddff" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
-      <mesh position={[ 0.35, 0.1, 1.27]}>
+      <mesh position={[ 0.35, 0.1, -1.27]}>
         <boxGeometry args={[0.22, 0.1, 0.03]} />
         <meshStandardMaterial color="#ddeeff" emissive="#aaddff" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
-      <pointLight position={[0, 0.1, 2.4]} intensity={2.5} color="#cce8ff" distance={12} decay={2} />
+      <pointLight position={[0, 0.1, -2.4]} intensity={2.5} color="#cce8ff" distance={12} decay={2} />
 
       {/* ── Tail lights ──────────────────────────────────────────────────── */}
-      <mesh position={[-0.42, 0.1, -1.27]}>
+      <mesh position={[-0.42, 0.1, 1.27]}>
         <boxGeometry args={[0.18, 0.08, 0.03]} />
         <meshStandardMaterial color="#ff1a1a" emissive="#ff0000" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
-      <mesh position={[ 0.42, 0.1, -1.27]}>
+      <mesh position={[ 0.42, 0.1, 1.27]}>
         <boxGeometry args={[0.18, 0.08, 0.03]} />
         <meshStandardMaterial color="#ff1a1a" emissive="#ff0000" emissiveIntensity={2.5} toneMapped={false} />
       </mesh>
@@ -342,44 +342,44 @@ export default function PlayerVehicle() {
       {/* ── Boost exhaust flames ─────────────────────────────────────────── */}
       <group ref={exhaustRef} visible={false}>
         {/* Left pipe — outer flame */}
-        <mesh position={[-0.3, -0.12, -1.65]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh position={[-0.3, -0.12, 1.65]} rotation={[Math.PI / 2, 0, 0]}>
           <coneGeometry args={[0.09, 0.85, 7]} />
           <meshStandardMaterial color="#ff6600" emissive="#ff3300" emissiveIntensity={5}
             transparent opacity={0.82} toneMapped={false} depthWrite={false} />
         </mesh>
         {/* Left pipe — inner bright core */}
-        <mesh position={[-0.3, -0.12, -1.65]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh position={[-0.3, -0.12, 1.65]} rotation={[Math.PI / 2, 0, 0]}>
           <coneGeometry args={[0.04, 0.6, 5]} />
           <meshStandardMaterial color="#ffffff" emissive="#ffee88" emissiveIntensity={8}
             transparent opacity={0.9} toneMapped={false} depthWrite={false} />
         </mesh>
 
         {/* Right pipe — outer flame */}
-        <mesh position={[0.3, -0.12, -1.65]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh position={[0.3, -0.12, 1.65]} rotation={[Math.PI / 2, 0, 0]}>
           <coneGeometry args={[0.09, 0.85, 7]} />
           <meshStandardMaterial color="#ff6600" emissive="#ff3300" emissiveIntensity={5}
             transparent opacity={0.82} toneMapped={false} depthWrite={false} />
         </mesh>
         {/* Right pipe — inner bright core */}
-        <mesh position={[0.3, -0.12, -1.65]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh position={[0.3, -0.12, 1.65]} rotation={[Math.PI / 2, 0, 0]}>
           <coneGeometry args={[0.04, 0.6, 5]} />
           <meshStandardMaterial color="#ffffff" emissive="#ffee88" emissiveIntensity={8}
             transparent opacity={0.9} toneMapped={false} depthWrite={false} />
         </mesh>
 
         {/* Center wide flame — bigger burst between both pipes */}
-        <mesh position={[0, -0.12, -1.68]} rotation={[-Math.PI / 2, 0, 0]}>
+        <mesh position={[0, -0.12, 1.68]} rotation={[Math.PI / 2, 0, 0]}>
           <coneGeometry args={[0.18, 1.1, 8]} />
           <meshStandardMaterial color="#ff8800" emissive="#ff5500" emissiveIntensity={3.5}
             transparent opacity={0.45} toneMapped={false} depthWrite={false} />
         </mesh>
 
         {/* Hot glow balls at pipe mouths */}
-        <mesh position={[-0.3, -0.12, -1.52]}>
+        <mesh position={[-0.3, -0.12, 1.52]}>
           <sphereGeometry args={[0.075, 7, 7]} />
           <meshStandardMaterial color="#ffffff" emissive="#ffdd55" emissiveIntensity={7} toneMapped={false} />
         </mesh>
-        <mesh position={[0.3, -0.12, -1.52]}>
+        <mesh position={[0.3, -0.12, 1.52]}>
           <sphereGeometry args={[0.075, 7, 7]} />
           <meshStandardMaterial color="#ffffff" emissive="#ffdd55" emissiveIntensity={7} toneMapped={false} />
         </mesh>
