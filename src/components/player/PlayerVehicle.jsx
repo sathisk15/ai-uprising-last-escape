@@ -20,21 +20,8 @@ export default function PlayerVehicle() {
 
   useEffect(() => {
     carScene.traverse((child) => {
-      if (child.isLight) {
-        child.visible = false;
-        child.intensity = 0;
-      }
-      if (child.isMesh) {
-        child.castShadow = true;
-        child.receiveShadow = false;
-        const mats = Array.isArray(child.material)
-          ? child.material
-          : [child.material];
-        mats.forEach((mat) => {
-          mat.emissiveIntensity = Math.min(mat.emissiveIntensity, 0.4)
-          mat.needsUpdate = true
-        });
-      }
+      if (child.isLight) { child.visible = false; child.intensity = 0; }
+      if (child.isMesh)  { child.castShadow = true; child.receiveShadow = false; }
     });
   }, [carScene]);
 
@@ -276,6 +263,16 @@ export default function PlayerVehicle() {
         rotation={[0, Math.PI, 0]}
         position={[0, -0.35, 0]}
       />
+
+      {/* ── Rear lights ──────────────────────────────────────────────────── */}
+      <mesh position={[-0.32, 0.04, 0.60]}>
+        <boxGeometry args={[0.12, 0.04, 0.01]} />
+        <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={4} toneMapped={false} />
+      </mesh>
+      <mesh position={[0.32, 0.04, 0.60]}>
+        <boxGeometry args={[0.12, 0.04, 0.01]} />
+        <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={4} toneMapped={false} />
+      </mesh>
 
       {/* ── Damage flash overlay ─────────────────────────────────────────── */}
       <mesh ref={flashMeshRef} position={[0, 0.1, 0]} visible={false}>
