@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import useGameStore from './store/gameStore'
 import MainMenu from './screens/MainMenu'
 import IntroDialogue from './screens/IntroDialogue'
@@ -7,6 +7,59 @@ import GameOver from './screens/GameOver'
 import Victory from './screens/Victory'
 import ZoneTransition from './screens/ZoneTransition'
 import AudioManager from './audio/AudioManager'
+
+function CustomCursor() {
+  const pos = useRef({ x: -200, y: -200 })
+  const dotRef   = useRef(null)
+  const ringRef  = useRef(null)
+
+  useEffect(() => {
+    const move = (e) => {
+      pos.current = { x: e.clientX, y: e.clientY }
+      if (dotRef.current)  dotRef.current.style.transform  = `translate(${e.clientX}px, ${e.clientY}px)`
+      if (ringRef.current) ringRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
+    }
+    window.addEventListener('mousemove', move)
+    return () => window.removeEventListener('mousemove', move)
+  }, [])
+
+  const C = '#00f5ff'   // cyan — matches game UI
+  const b = `1.5px solid ${C}`
+
+  return (
+    <>
+      {/* Outer corner-bracket reticle */}
+      <div ref={ringRef} style={{
+        position: 'fixed', top: 0, left: 0, pointerEvents: 'none', zIndex: 99999,
+        width: 28, height: 28, marginLeft: -14, marginTop: -14,
+        animation: 'reticle-pulse 2s ease-in-out infinite',
+      }}>
+        {/* TL */}
+        <div style={{ position:'absolute', top:0,    left:0,  width:7, height:7, borderTop:b, borderLeft:b }} />
+        {/* TR */}
+        <div style={{ position:'absolute', top:0,    right:0, width:7, height:7, borderTop:b, borderRight:b }} />
+        {/* BL */}
+        <div style={{ position:'absolute', bottom:0, left:0,  width:7, height:7, borderBottom:b, borderLeft:b }} />
+        {/* BR */}
+        <div style={{ position:'absolute', bottom:0, right:0, width:7, height:7, borderBottom:b, borderRight:b }} />
+        {/* Centre dot */}
+        <div style={{
+          position:'absolute', top:'50%', left:'50%',
+          width:3, height:3, marginLeft:-1.5, marginTop:-1.5,
+          background: C, borderRadius:'50%',
+          boxShadow: `0 0 4px ${C}`,
+        }} />
+      </div>
+
+      {/* Inner dot that follows exactly */}
+      <div ref={dotRef} style={{
+        position:'fixed', top:0, left:0, pointerEvents:'none', zIndex:99999,
+        width:2, height:2, marginLeft:-1, marginTop:-1,
+        background: C, borderRadius:'50%',
+      }} />
+    </>
+  )
+}
 
 function requestFullscreen() {
   const el = document.documentElement
@@ -71,6 +124,7 @@ export default function App() {
 
   return (
     <div className="w-full h-full relative">
+      <CustomCursor />
       {/* Game stays mounted during zoneout/transition/dying so the 3D world keeps rendering */}
       {(phase === 'playing' || phase === 'paused' || phase === 'transition' || phase === 'dying' || phase === 'zoneout') && <GameScreen />}
 
