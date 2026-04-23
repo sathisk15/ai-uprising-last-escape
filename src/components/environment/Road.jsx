@@ -10,39 +10,38 @@ const isMobile = typeof window !== 'undefined' &&
   (/Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768)
 
 // Dashed lane divider — solid stripe on mobile (1 draw call), dashes on desktop (7 draw calls)
+// White dashed lane divider — standard highway style
 function LaneDivider({ x }) {
-  if (isMobile) {
-    return (
-      <mesh position={[x, 0.12, 0]}>
-        <boxGeometry args={[0.06, 0.012, TILE_LENGTH + 2]} />
-        <meshStandardMaterial color="#ddcc00" emissive="#998800" emissiveIntensity={0.8} toneMapped={false} />
-      </mesh>
-    )
-  }
-  const segLen = 2.4
-  const gap    = 4.0
+  const segLen = 3.0
+  const gap    = 5.0
   const step   = segLen + gap
-  const count  = 7   // fixed count — enough to cover tile, was 14 before
+  const count  = isMobile ? 5 : 9
 
   return (
-    <group position={[x, 0.12, -TILE_LENGTH / 2 + segLen / 2]}>
+    <group position={[x, 0.121, -TILE_LENGTH / 2 + segLen / 2]}>
       {Array.from({ length: count }).map((_, i) => (
         <mesh key={i} position={[0, 0, i * step]}>
-          <boxGeometry args={[0.07, 0.015, segLen]} />
-          <meshStandardMaterial color="#ddcc00" emissive="#998800" emissiveIntensity={1.0} toneMapped={false} />
+          <boxGeometry args={[0.08, 0.01, segLen]} />
+          <meshStandardMaterial color="#e8e8e8" emissive="#aaaaaa" emissiveIntensity={0.3} />
         </mesh>
       ))}
     </group>
   )
 }
 
-// Solid center line (white)
+// Double solid yellow center line — like a real road
 function CenterLine() {
   return (
-    <mesh position={[0, 0.115, 0]}>
-      <boxGeometry args={[0.06, 0.01, TILE_LENGTH + 2]} />
-      <meshStandardMaterial color="#ffffff" emissive="#888888" emissiveIntensity={0.4} />
-    </mesh>
+    <>
+      <mesh position={[-0.06, 0.121, 0]}>
+        <boxGeometry args={[0.05, 0.01, TILE_LENGTH + 2]} />
+        <meshStandardMaterial color="#c8a800" emissive="#000000" emissiveIntensity={0} roughness={0.9} />
+      </mesh>
+      <mesh position={[0.06, 0.121, 0]}>
+        <boxGeometry args={[0.05, 0.01, TILE_LENGTH + 2]} />
+        <meshStandardMaterial color="#c8a800" emissive="#000000" emissiveIntensity={0} roughness={0.9} />
+      </mesh>
+    </>
   )
 }
 
@@ -56,10 +55,10 @@ function Kerb({ x }) {
         <boxGeometry args={[0.4, 0.34, TILE_LENGTH + 2]} />
         <meshStandardMaterial color="#252525" roughness={0.9} metalness={0.1} />
       </mesh>
-      {/* Top emissive strip */}
+      {/* Top edge strip — dim white, no glow */}
       <mesh position={[0, 0.18, 0]}>
         <boxGeometry args={[0.38, 0.02, TILE_LENGTH + 2]} />
-        <meshStandardMaterial color="#ff6600" emissive="#ff4400" emissiveIntensity={1.2} toneMapped={false} />
+        <meshStandardMaterial color="#444444" roughness={0.9} metalness={0.1} />
       </mesh>
     </group>
   )
@@ -68,16 +67,16 @@ function Kerb({ x }) {
 function RoadGeometry() {
   return (
     <>
-      {/* Surface — slightly reflective for wet-road look */}
+      {/* Surface — dark asphalt matching screenshot */}
       <mesh receiveShadow>
         <boxGeometry args={[ROAD_WIDTH, 0.2, TILE_LENGTH + 2]} />
-        <meshStandardMaterial color="#141414" roughness={0.55} metalness={0.3} />
+        <meshStandardMaterial color="#1c1c1c" roughness={0.75} metalness={0.15} />
       </mesh>
-      {/* Subtle wet sheen overlay (desktop only — transparent overdraw is expensive on mobile) */}
+      {/* Subtle wet sheen overlay */}
       {!isMobile && (
         <mesh position={[0, 0.102, 0]}>
           <boxGeometry args={[ROAD_WIDTH - 0.2, 0.001, TILE_LENGTH + 2]} />
-          <meshStandardMaterial color="#223355" metalness={0.9} roughness={0.05} opacity={0.18} transparent />
+          <meshStandardMaterial color="#1a2a3a" metalness={0.95} roughness={0.05} opacity={0.12} transparent />
         </mesh>
       )}
       <CenterLine />

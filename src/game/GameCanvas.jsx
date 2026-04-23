@@ -181,7 +181,7 @@ function ZoneFog() {
     scene.background?.set?.(zoneData.bgColor);
   }, [zone, scene, zoneData]);
 
-  return <fog attach="fog" args={[zoneData.fogColor, 30, 110]} />;
+  return <fog attach="fog" args={[zoneData.fogColor, 60, 200]} />;
 }
 
 export default function GameCanvas() {
@@ -204,13 +204,13 @@ export default function GameCanvas() {
 
       {/* ── Lighting ──────────────────────────────────────────────────────── */}
       {/* Ambient — single, moderate */}
-      <ambientLight intensity={0.7} color="#ffffff" />
+      <ambientLight intensity={1.2} color="#ffffff" />
 
       {/* Single shadow-casting directional — 1024 map is enough */}
       <directionalLight
         castShadow
         position={[5, 14, 8]}
-        intensity={1.6}
+        intensity={2.2}
         color="#ffffff"
         shadow-mapSize={[1024, 1024]}
         shadow-camera-near={0.5}
@@ -222,7 +222,7 @@ export default function GameCanvas() {
         shadow-bias={-0.0005}
       />
       {/* One fill light — no shadows */}
-      <directionalLight position={[0, 5, 12]} intensity={0.7} color="#aaccff" />
+      <directionalLight position={[0, 5, 12]} intensity={1.1} color="#aaccff" />
 
       {/* Single zone-tinted point light — placed ahead of the car so it tints road/buildings not the car */}
       <pointLight
