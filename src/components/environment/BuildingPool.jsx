@@ -3,18 +3,18 @@ import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import useGameStore from '../../store/gameStore';
 
-const TILE_LENGTH = 110; // larger than GLB visual depth to prevent overlap
-const RECYCLE_Z = 55;
+const TILE_LENGTH = 120; // must match visual Z-depth of model at current scale
+const RECYCLE_Z = 80;   // wait until entire tile is fully behind the camera
 
 function CityTile({ tileRef, initZ }) {
-  const { scene } = useGLTF('/models/city.glb');
+  const { scene } = useGLTF('/models/city_night.glb');
   const model = useMemo(() => scene.clone(true), [scene]);
 
   useEffect(() => {
     model.traverse((child) => {
+      // Keep the model's own lights — night city needs them for window/street glow
       if (child.isLight) {
-        child.visible = false;
-        child.intensity = 0;
+        child.intensity = Math.min(child.intensity, 2);
       }
       if (child.isMesh) {
         child.castShadow = true;
@@ -27,7 +27,7 @@ function CityTile({ tileRef, initZ }) {
     <group ref={tileRef} position={[0, 0, initZ]}>
       <primitive
         object={model}
-        scale={[0.16, 0.16, 0.16]}
+        scale={[5, 5, 5]}
         rotation={[0, Math.PI / 2, 0]}
         position={[0, 0, 0]}
       />
@@ -35,7 +35,7 @@ function CityTile({ tileRef, initZ }) {
   );
 }
 
-useGLTF.preload('/models/city.glb');
+useGLTF.preload('/models/city_night.glb');
 
 export default function BuildingPool() {
   const tileA = useRef();

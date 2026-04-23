@@ -193,7 +193,7 @@ export default function GameCanvas() {
       shadows
       style={{ width: '100%', height: '100%', background: zoneData.bgColor }}
       gl={{ antialias: true, toneMappingExposure: 0.9 }}
-      camera={{ position: [0, 3, 9], fov: 65, near: 0.1, far: 160 }}
+      camera={{ position: [0, 3, 9], fov: 65, near: 0.1, far: 280 }}
     >
       <CameraSetup />
       <CameraShake />

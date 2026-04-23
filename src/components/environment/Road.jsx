@@ -2,9 +2,9 @@ import React, { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import useGameStore from '../../store/gameStore'
 
-const TILE_LENGTH = 64
+const TILE_LENGTH = 160
 const ROAD_WIDTH  = 8
-const RECYCLE_Z   = 50
+const RECYCLE_Z   = 80
 
 const isMobile = typeof window !== 'undefined' &&
   (/Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768)
