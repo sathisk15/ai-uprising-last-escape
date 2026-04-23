@@ -181,7 +181,7 @@ function ZoneFog() {
     scene.background?.set?.(zoneData.bgColor);
   }, [zone, scene, zoneData]);
 
-  return <fog attach="fog" args={[zoneData.fogColor, 60, 200]} />;
+  return <fog attach="fog" args={[zoneData.fogColor, 80, 200]} />;
 }
 
 export default function GameCanvas() {

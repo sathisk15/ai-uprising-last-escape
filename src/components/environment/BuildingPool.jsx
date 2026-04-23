@@ -3,8 +3,8 @@ import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import useGameStore from '../../store/gameStore';
 
-const TILE_LENGTH = 120; // must match visual Z-depth of model at current scale
-const RECYCLE_Z = 80;   // wait until entire tile is fully behind the camera
+const TILE_LENGTH = 160; // match road tile length so buildings cover the full road
+const RECYCLE_Z = 120; // wait until entire tile is fully behind the camera
 
 function CityTile({ tileRef, initZ }) {
   const { scene } = useGLTF('/models/city_night.glb');
@@ -40,6 +40,7 @@ useGLTF.preload('/models/city_night.glb');
 export default function BuildingPool() {
   const tileA = useRef();
   const tileB = useRef();
+  const tileC = useRef();
 
   useFrame((_, delta) => {
     const { phase, speed } = useGameStore.getState();
@@ -49,20 +50,26 @@ export default function BuildingPool() {
 
     if (tileA.current) tileA.current.position.z += move;
     if (tileB.current) tileB.current.position.z += move;
+    if (tileC.current) tileC.current.position.z += move;
 
-    // Read both positions BEFORE modifying either — prevents cascade glitch
-    const az = tileA.current?.position.z ?? 0;
-    const bz = tileB.current?.position.z ?? 0;
-    if (tileA.current && az > RECYCLE_Z)
-      tileA.current.position.z = bz - TILE_LENGTH;
-    if (tileB.current && bz > RECYCLE_Z)
-      tileB.current.position.z = az - TILE_LENGTH;
+    // Recycle: snapshot z, find baseZ (rearmost), place each recycler sequentially behind it
+    const tiles = [tileA.current, tileB.current, tileC.current];
+    const zs = tiles.map((t) => t?.position.z ?? 0);
+    const baseZ = Math.min(...zs);
+    const recyclers = zs
+      .map((z, i) => ({ tile: tiles[i], z }))
+      .filter((e) => e.z > RECYCLE_Z)
+      .sort((a, b) => b.z - a.z);
+    recyclers.forEach((entry, i) => {
+      entry.tile.position.z = baseZ - TILE_LENGTH * (i + 1);
+    });
   });
 
   return (
     <>
       <CityTile tileRef={tileA} initZ={0} />
       <CityTile tileRef={tileB} initZ={-TILE_LENGTH} />
+      <CityTile tileRef={tileC} initZ={-TILE_LENGTH * 2} />
     </>
   );
 }

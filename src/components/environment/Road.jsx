@@ -91,20 +91,32 @@ function RoadGeometry() {
 export default function Road() {
   const tile1 = useRef()
   const tile2 = useRef()
+  const tile3 = useRef()
 
   useFrame((_, delta) => {
     const { phase, speed } = useGameStore.getState()
     if (phase !== 'playing' && phase !== 'dying' && phase !== 'zoneout') return
     const t1 = tile1.current
     const t2 = tile2.current
-    if (!t1 || !t2) return
+    const t3 = tile3.current
+    if (!t1 || !t2 || !t3) return
 
     const move = speed * delta
     t1.position.z += move
     t2.position.z += move
+    t3.position.z += move
 
-    if (t1.position.z > RECYCLE_Z) t1.position.z = t2.position.z - TILE_LENGTH
-    if (t2.position.z > RECYCLE_Z) t2.position.z = t1.position.z - TILE_LENGTH
+    // Recycle: snapshot z, find baseZ (rearmost), place each recycler sequentially behind it
+    const tiles = [t1, t2, t3]
+    const zs = tiles.map(t => t.position.z)
+    const baseZ = Math.min(...zs)
+    const recyclers = zs
+      .map((z, i) => ({ tile: tiles[i], z }))
+      .filter(e => e.z > RECYCLE_Z)
+      .sort((a, b) => b.z - a.z)
+    recyclers.forEach((entry, i) => {
+      entry.tile.position.z = baseZ - TILE_LENGTH * (i + 1)
+    })
   })
 
   return (
@@ -113,6 +125,9 @@ export default function Road() {
         <RoadGeometry />
       </group>
       <group ref={tile2} position={[0, 0, -TILE_LENGTH]}>
+        <RoadGeometry />
+      </group>
+      <group ref={tile3} position={[0, 0, -TILE_LENGTH * 2]}>
         <RoadGeometry />
       </group>
     </>
