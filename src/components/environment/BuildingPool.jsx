@@ -27,7 +27,7 @@ function CityTile({ tileRef, initZ }) {
     <group ref={tileRef} position={[0, 0, initZ]}>
       <primitive
         object={model}
-        scale={[5, 5, 5]}
+        scale={[10, 10, 10]}
         rotation={[0, Math.PI / 2, 0]}
         position={[0, 0, 0]}
       />
