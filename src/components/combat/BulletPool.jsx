@@ -25,14 +25,26 @@ export default function BulletPool() {
       id: i, active: false, x: 0, z: 0,
     }))
   )
-  const refs      = useRef(Array.from({ length: MAX_BULLETS }, () => null))
-  const fireTimer = useRef(0)
+  const refs        = useRef(Array.from({ length: MAX_BULLETS }, () => null))
+  const fireTimer   = useRef(0)
+  const muzzleRef   = useRef(null)
+  const muzzleTimer = useRef(0)
 
   useFrame((_, delta) => {
     const { phase, playerLane } = useGameStore.getState()
     if (phase !== 'playing') return
 
     fireTimer.current = Math.max(0, fireTimer.current - delta)
+
+    // Muzzle flash fade
+    muzzleTimer.current = Math.max(0, muzzleTimer.current - delta)
+    if (muzzleRef.current) {
+      const m = muzzleTimer.current / 0.08
+      muzzleRef.current.visible = muzzleTimer.current > 0
+      if (muzzleRef.current.material)
+        muzzleRef.current.material.opacity = m
+      muzzleRef.current.scale.setScalar(0.5 + (1 - m) * 0.8)
+    }
 
     // ── Fire ──────────────────────────────────────────────────────────────────
     if (inputState.shootPressed) {
@@ -48,6 +60,11 @@ export default function BulletPool() {
             slot.z = 1.5
             const ref = refs.current[slot.id]
             if (ref) ref.position.set(slot.x, 0.85, slot.z)
+            // Trigger muzzle flash
+            muzzleTimer.current = 0.08
+            if (muzzleRef.current) {
+              muzzleRef.current.position.set(LANES[playerLane], 0.85, 1.2)
+            }
             AudioManager.playSFX('shoot')
           }
         }
@@ -130,11 +147,25 @@ export default function BulletPool() {
 
   return (
     <>
+      {/* Muzzle flash — single shared mesh, shown briefly on fire */}
+      <mesh ref={muzzleRef} visible={false} position={[0, 0.85, 1.2]}>
+        <sphereGeometry args={[0.22, 8, 8]} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffaa00"
+          emissiveIntensity={10} transparent opacity={1}
+          toneMapped={false} depthWrite={false} />
+      </mesh>
+
       {Array.from({ length: MAX_BULLETS }).map((_, i) => (
         <group key={i} ref={el => { refs.current[i] = el }} position={[0, 0.85, PARK_Z]}>
+          {/* Tracer glow — warm orange halo */}
           <mesh>
-            <boxGeometry args={[0.1, 0.1, 0.55]} />
-            <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={3} toneMapped={false} />
+            <boxGeometry args={[0.1, 0.06, 1.0]} />
+            <meshStandardMaterial color="#ff4400" emissive="#ff2200" emissiveIntensity={2} toneMapped={false} transparent opacity={0.3} depthWrite={false} />
+          </mesh>
+          {/* Core — bright white-hot needle */}
+          <mesh>
+            <boxGeometry args={[0.03, 0.03, 1.2]} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffcc44" emissiveIntensity={10} toneMapped={false} />
           </mesh>
         </group>
       ))}
