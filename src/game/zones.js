@@ -1,13 +1,13 @@
-// Zone configuration for all 3 zones
+// Zone configuration for all 3 zones — unified night city theme
 export const ZONES = {
   1: {
     id: 1,
     name: 'Modern Wasteland',
-    fogColor: '#5c3d1e',
-    bgColor: '#1a0f05',
-    ambientColor: '#ff6a00',
+    fogColor: '#0a0c12',
+    bgColor: '#05060d',
+    ambientColor: '#1a2a4a',
     speedMultiplier: 1.0,
-    obstacleRate: 3.5,   // seconds between spawns
+    obstacleRate: 3.5,
     droneRate: 6.0,
     droneShoots: false,
     distanceThreshold: 1500,
@@ -15,9 +15,9 @@ export const ZONES = {
   2: {
     id: 2,
     name: 'Modern Industrial Complex',
-    fogColor: '#1a3320',
-    bgColor: '#050f08',
-    ambientColor: '#00ff88',
+    fogColor: '#0a0c12',
+    bgColor: '#05060d',
+    ambientColor: '#1a2a4a',
     speedMultiplier: 1.5,
     obstacleRate: 2.5,
     droneRate: 4.0,
@@ -27,14 +27,14 @@ export const ZONES = {
   3: {
     id: 3,
     name: 'Modern Core Stronghold',
-    fogColor: '#3d0a0a',
-    bgColor: '#0f0505',
-    ambientColor: '#ff2a2a',
+    fogColor: '#0a0c12',
+    bgColor: '#05060d',
+    ambientColor: '#1a2a4a',
     speedMultiplier: 2.0,
     obstacleRate: 1.8,
     droneRate: 2.5,
     droneShoots: true,
-    distanceThreshold: Infinity, // ends on completion
+    distanceThreshold: Infinity,
   },
 }
 

@@ -15,7 +15,7 @@ function LaneDivider({ x }) {
   const segLen = 3.0
   const gap    = 5.0
   const step   = segLen + gap
-  const count  = isMobile ? 5 : 9
+  const count  = isMobile ? 12 : 22
 
   return (
     <group position={[x, 0.121, -TILE_LENGTH / 2 + segLen / 2]}>
