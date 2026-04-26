@@ -1,13 +1,6 @@
 import { Howl, Howler } from 'howler'
 import useGameStore from '../store/gameStore'
-
-// ── Placeholder paths — drop real audio files in /public/audio/ ─────────────
-// BGM loops per zone (place .mp3 files in public/audio/)
-const BGM_PATHS = {
-  1: '/audio/bgm_zone1.mp3',
-  2: '/audio/bgm_zone2.mp3',
-  3: '/audio/bgm_zone3.mp3',
-}
+import ProceduralBGM from './ProceduralBGM'
 
 // SFX one-shots
 const SFX_PATHS = {
@@ -48,29 +41,12 @@ const AudioManager = {
   /** Start looping BGM for the given zone (1-3). No-op if already playing. */
   playBGM(zone) {
     this.sync()
-    if (currentBGMZone === zone && currentBGM && currentBGM.playing()) return
-
-    this.stopBGM()
-
-    currentBGM = new Howl({
-      src: [BGM_PATHS[zone]],
-      loop: true,
-      volume: 0.45,
-      // Silently ignore missing files in dev
-      onloaderror: () => {},
-    })
-    currentBGM.play()
-    currentBGMZone = zone
+    ProceduralBGM.play(zone)
   },
 
   /** Stop current BGM with a short fade */
   stopBGM() {
-    if (currentBGM) {
-      currentBGM.fade(currentBGM.volume(), 0, 400)
-      setTimeout(() => { currentBGM && currentBGM.stop() }, 450)
-      currentBGM = null
-      currentBGMZone = null
-    }
+    ProceduralBGM.stop()
   },
 
   /** Play a one-shot SFX by name */
