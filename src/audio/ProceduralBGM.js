@@ -1,4 +1,5 @@
 // Procedural cyberpunk BGM using Web Audio API — no audio files required
+import { getSharedCtx, resumeSharedCtx } from './sharedAudioContext'
 
 const ZONE_CFG = {
   // Zone 0 — ambient menu/UI music: no drums, soft pads, light arp
@@ -50,7 +51,7 @@ class ProceduralBGM {
 
   _init() {
     if (this.ctx) return
-    this.ctx    = new (window.AudioContext || window.webkitAudioContext)()
+    this.ctx    = getSharedCtx()
     this.master = this.ctx.createGain()
     this.master.gain.value = 0
     this.master.connect(this.ctx.destination)
@@ -234,7 +235,7 @@ class ProceduralBGM {
 
   play(zone) {
     this._init()
-    if (this.ctx.state === 'suspended') this.ctx.resume()
+    resumeSharedCtx()
     if (this.running && this.currentZone === zone) return
 
     this.stop(false)

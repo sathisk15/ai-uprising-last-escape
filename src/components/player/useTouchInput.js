@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import useGameStore from '../../store/gameStore'
 import { inputState } from '../../game/inputState'
+import AudioManager from '../../audio/AudioManager'
 
-const SWIPE_THRESHOLD = 40  // px for lane/jump/slide
+const SWIPE_THRESHOLD = 40  // px for lane/jump
 const TAP_THRESHOLD   = 10  // px — movement smaller than this = tap (shoot)
 
 export default function useTouchInput() {
@@ -29,7 +30,7 @@ export default function useTouchInput() {
       const absDx = Math.abs(dx)
       const absDy = Math.abs(dy)
 
-      const { phase, setPlayerLane, playerLane, startJump } = useGameStore.getState()
+      const { phase, setPlayerLane, playerLane, startJump, isJumping } = useGameStore.getState()
       if (phase !== 'playing') return
 
       // Tap — shoot
@@ -42,11 +43,19 @@ export default function useTouchInput() {
       if (absDx > absDy) {
         // Horizontal swipe — lane change
         if (absDx >= SWIPE_THRESHOLD) {
-          setPlayerLane(playerLane + (dx > 0 ? 1 : -1))
+          const dir = dx > 0 ? 1 : -1
+          const newLane = playerLane + dir
+          if (newLane >= 0 && newLane <= 2) {
+            setPlayerLane(newLane)
+            AudioManager.playSwipe()
+          }
         }
       } else {
-        // Vertical swipe
-        if (dy < -SWIPE_THRESHOLD) startJump()
+        // Vertical swipe up — jump
+        if (dy < -SWIPE_THRESHOLD && !isJumping) {
+          startJump()
+          AudioManager.playJump()
+        }
       }
     }
 
