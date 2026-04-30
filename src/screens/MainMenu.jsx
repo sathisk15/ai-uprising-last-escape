@@ -210,6 +210,13 @@ export default function MainMenu() {
   const beginWithName = async () => {
     const name = (nameInput || '').trim().slice(0, 14).toUpperCase()
     if (!name) { setNameMsg('ENTER A USERNAME'); return }
+
+    // Same name already confirmed this session — no need to re-check Firestore
+    if (name === playerName) {
+      startIntro()
+      return
+    }
+
     setPhase('checking')
     setNameMsg('')
     const result = await LeaderboardService.ensurePlayer(name)
@@ -223,6 +230,7 @@ export default function MainMenu() {
       setPhase('idle')
       return
     }
+    // Only prompt if the name already belongs to someone else (different from stored name)
     if (result.exists) {
       setFoundPlayer(result.player)
       setPhase('confirm')
@@ -352,6 +360,10 @@ export default function MainMenu() {
             <div className="mt-1.5 h-4">
             {nameMsg ? (
               <p className="font-mono text-xs font-bold tracking-widest text-[#ff4444]">{nameMsg}</p>
+            ) : isValidName && phase !== 'confirm' && nameInput.trim().toUpperCase() === playerName ? (
+              <p className="font-mono text-xs font-bold tracking-widest" style={{ color:'#00ff88' }}>
+                ✓ WELCOME BACK, {playerName}
+              </p>
             ) : isValidName && phase !== 'confirm' ? (
               <p className="font-mono text-xs font-semibold tracking-widest" style={{ color:'#00f5ff66' }}>
                 ✓ {nameInput.trim()}
