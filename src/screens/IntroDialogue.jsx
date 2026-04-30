@@ -150,10 +150,10 @@ export default function IntroDialogue() {
 
           {/* Text */}
           <div className="text-center">
-            <p className="font-mono text-sm tracking-[0.35em] mb-1" style={{ color: tip.color }}>
+            <p className="font-mono text-base font-bold tracking-[0.35em] mb-1" style={{ color: tip.color }}>
               {tip.label}
             </p>
-            <p className="font-mono text-base text-[#999] leading-snug">
+            <p className="font-mono text-base font-medium text-[#aaa] leading-snug">
               {tip.desc}
             </p>
           </div>
@@ -219,7 +219,7 @@ export default function IntroDialogue() {
             {!isLast && (
               <button
                 onClick={startGame}
-                className="font-mono text-sm tracking-[0.25em] px-4 py-2 border border-[#3a3a3a] text-[#777]
+                className="font-mono font-bold text-base tracking-[0.25em] px-4 py-2 border border-[#3a3a3a] text-[#777]
                            hover:border-[#777] hover:text-[#ccc] transition-all duration-150 active:scale-95"
               >
                 SKIP
@@ -229,7 +229,7 @@ export default function IntroDialogue() {
             {isLast ? (
               <button
                 onClick={handleNext}
-                className="font-mono text-sm tracking-[0.25em] px-7 py-2.5 relative overflow-hidden transition-all duration-200 active:scale-95"
+                className="font-mono font-bold text-base tracking-[0.25em] px-7 py-2.5 relative overflow-hidden transition-all duration-200 active:scale-95"
                 style={{
                   border: '2px solid #00f5ff',
                   color: '#00f5ff',
@@ -253,7 +253,7 @@ export default function IntroDialogue() {
             ) : (
               <button
                 onClick={handleNext}
-                className="font-mono text-sm tracking-[0.3em] px-5 py-2 border transition-all duration-150 active:scale-95"
+                className="font-mono font-bold text-base tracking-[0.3em] px-5 py-2 border transition-all duration-150 active:scale-95"
                 style={{ borderColor: currentLine?.color, color: currentLine?.color }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = currentLine?.color
@@ -297,7 +297,7 @@ function ChatBubble({ line, text, done }) {
     >
       {/* Name tag */}
       <span
-        className="font-mono text-xs tracking-[0.3em] px-1"
+        className="font-mono text-xs font-bold tracking-[0.3em] px-1"
         style={{ color: line.color + 'cc' }}
       >
         {line.character}

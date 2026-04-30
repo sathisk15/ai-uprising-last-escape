@@ -9,13 +9,9 @@ function HealthBar() {
   const barRef = useRef(null)
   const prevHealth = useRef(health)
 
-  // Flash red on damage
   useEffect(() => {
     if (health < prevHealth.current && barRef.current) {
-      gsap.fromTo(barRef.current,
-        { opacity: 0.3 },
-        { opacity: 1, duration: 0.25, ease: 'power2.out' }
-      )
+      gsap.fromTo(barRef.current, { opacity: 0.3 }, { opacity: 1, duration: 0.25, ease: 'power2.out' })
     }
     prevHealth.current = health
   }, [health])
@@ -26,12 +22,11 @@ function HealthBar() {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] tracking-[0.2em] text-white/50 font-mono">HULL</span>
-        <span className="text-[10px] tracking-widest font-mono" style={{ color }}>
+        <span className="text-xs tracking-[0.2em] text-white/60 font-mono font-bold">HULL</span>
+        <span className="text-xs tracking-widest font-mono font-bold" style={{ color }}>
           {Math.ceil(pct)}%
         </span>
       </div>
-      {/* Track */}
       <div className="w-48 h-2 bg-white/10 rounded-sm overflow-hidden">
         <div
           ref={barRef}
@@ -39,7 +34,6 @@ function HealthBar() {
           style={{ width: `${pct}%`, background: color, boxShadow: `0 0 6px ${color}` }}
         />
       </div>
-      {/* Segment ticks */}
       <div className="w-48 flex justify-between px-0 -mt-1 pointer-events-none">
         {[25, 50, 75].map(tick => (
           <div key={tick} className="w-px h-1 bg-white/20" style={{ marginLeft: `${tick}%` }} />
@@ -58,8 +52,8 @@ function EnergyBar() {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] tracking-[0.2em] text-white/50 font-mono">SIGNAL</span>
-        <span className="text-[10px] tracking-widest font-mono" style={{ color }}>
+        <span className="text-xs tracking-[0.2em] text-white/60 font-mono font-bold">SIGNAL</span>
+        <span className="text-xs tracking-widest font-mono font-bold" style={{ color }}>
           {Math.ceil(pct)}%
         </span>
       </div>
@@ -75,18 +69,17 @@ function EnergyBar() {
 
 // ── Ammo display ──────────────────────────────────────────────────────────────
 function AmmoDisplay() {
-  const ammo = useGameStore((s) => s.ammo)
+  const ammo  = useGameStore((s) => s.ammo)
   const color = ammo > 8 ? '#ffdd00' : ammo > 3 ? '#ff8800' : '#ff2222'
 
-  // Render up to 15 pip dots (cap visual at 15 even if ammo > 15)
   const MAX_PIPS = 15
   const pips = Math.min(ammo, MAX_PIPS)
 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <span className="text-[10px] tracking-[0.2em] text-white/50 font-mono">AMMO</span>
-        <span className="text-[10px] tracking-widest font-mono" style={{ color }}>
+        <span className="text-xs tracking-[0.2em] text-white/60 font-mono font-bold">AMMO</span>
+        <span className="text-xs tracking-widest font-mono font-bold" style={{ color }}>
           {ammo}{ammo > MAX_PIPS ? '+' : ''}
         </span>
       </div>
@@ -115,20 +108,16 @@ function BoostIndicator() {
   return (
     <div
       className="flex flex-col gap-1 px-3 py-1 border font-mono"
-      style={{
-        borderColor: '#ff8800',
-        boxShadow: '0 0 10px #ff660066',
-        background: 'rgba(255,100,0,0.08)',
-      }}
+      style={{ borderColor:'#ff8800', boxShadow:'0 0 10px #ff660066', background:'rgba(255,100,0,0.08)' }}
     >
       <div className="flex items-center justify-between">
-        <span className="text-[10px] tracking-[0.2em]" style={{ color: '#ff8800' }}>▶▶ BOOST</span>
-        <span className="text-[10px] tracking-widest" style={{ color: '#ffcc00' }}>{speedBoostTimer.toFixed(1)}s</span>
+        <span className="text-xs tracking-[0.2em] font-bold" style={{ color:'#ff8800' }}>▶▶ BOOST</span>
+        <span className="text-xs tracking-widest font-bold" style={{ color:'#ffcc00' }}>{speedBoostTimer.toFixed(1)}s</span>
       </div>
       <div className="w-full h-1.5 bg-white/10 rounded-sm overflow-hidden">
         <div
           className="h-full rounded-sm transition-all duration-100"
-          style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #ff4400, #ffcc00)', boxShadow: '0 0 6px #ff8800' }}
+          style={{ width:`${pct}%`, background:'linear-gradient(90deg,#ff4400,#ffcc00)', boxShadow:'0 0 6px #ff8800' }}
         />
       </div>
     </div>
@@ -142,15 +131,10 @@ function ShieldIndicator() {
   return (
     <div
       className="flex items-center gap-2 px-3 py-1 font-mono border animate-pulse"
-      style={{
-        borderColor: '#80d8ff',
-        color: '#c0eeff',
-        boxShadow: '0 0 10px rgba(128,216,255,0.5)',
-        background: 'rgba(100,210,255,0.07)',
-      }}
+      style={{ borderColor:'#80d8ff', color:'#c0eeff', boxShadow:'0 0 10px rgba(128,216,255,0.5)', background:'rgba(100,210,255,0.07)' }}
     >
-      <span style={{ fontSize: 12 }}>⬡</span>
-      <span className="text-[10px] tracking-[0.25em]">SHIELD ACTIVE</span>
+      <span style={{ fontSize:13 }}>⬡</span>
+      <span className="text-xs tracking-[0.25em] font-bold">SHIELD ACTIVE</span>
     </div>
   )
 }
@@ -163,21 +147,18 @@ function ZoneBadge() {
 
   useEffect(() => {
     if (!ref.current) return
-    gsap.fromTo(ref.current,
-      { scale: 1.3, opacity: 0 },
-      { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(2)' }
-    )
+    gsap.fromTo(ref.current, { scale:1.3, opacity:0 }, { scale:1, opacity:1, duration:0.4, ease:'back.out(2)' })
   }, [zone])
 
   return (
     <div
       ref={ref}
-      className="flex flex-col items-center px-4 py-1 border font-mono"
+      className="flex flex-col items-center px-4 py-1.5 border font-mono"
       style={{ borderColor: zoneData.ambientColor, color: zoneData.ambientColor }}
     >
-      <span className="text-[9px] tracking-[0.35em] opacity-70">ZONE</span>
-      <span className="text-lg font-bold leading-none">{zone}</span>
-      <span className="text-[8px] tracking-widest opacity-60 mt-0.5">{zoneData.name.toUpperCase()}</span>
+      <span className="text-[10px] tracking-[0.35em] opacity-70 font-bold">ZONE</span>
+      <span className="text-xl font-black leading-none">{zone}</span>
+      <span className="text-[9px] tracking-widest opacity-60 mt-0.5 font-semibold">{zoneData.name.toUpperCase()}</span>
     </div>
   )
 }
@@ -191,19 +172,19 @@ function Stats() {
   return (
     <div className="flex flex-col items-end gap-1 font-mono">
       <div className="text-right">
-        <p className="text-[9px] tracking-[0.25em] text-white/40">SCORE</p>
-        <p className="text-lg text-[#00f5ff] leading-none tracking-widest">
+        <p className="text-[10px] tracking-[0.25em] text-white/50 font-bold">SCORE</p>
+        <p className="text-xl text-[#00f5ff] leading-none tracking-widest font-black">
           {Math.floor(score).toLocaleString('en-US', { minimumIntegerDigits: 6, useGrouping: false })}
         </p>
       </div>
       <div className="flex gap-4">
         <div className="text-right">
-          <p className="text-[9px] tracking-widest text-white/40">DIST</p>
-          <p className="text-xs text-white/70">{Math.floor(distance)}m</p>
+          <p className="text-[10px] tracking-widest text-white/50 font-bold">DIST</p>
+          <p className="text-sm text-white/80 font-bold">{Math.floor(distance)}m</p>
         </div>
         <div className="text-right">
-          <p className="text-[9px] tracking-widest text-white/40">KILLS</p>
-          <p className="text-xs text-[#ff6a00]">{kills}</p>
+          <p className="text-[10px] tracking-widest text-white/50 font-bold">KILLS</p>
+          <p className="text-sm font-bold" style={{ color:'#ff6a00' }}>{kills}</p>
         </div>
       </div>
     </div>
@@ -238,21 +219,17 @@ function ProgressBar() {
   return (
     <div className="absolute bottom-0 left-0 right-0 px-6 pb-3 pointer-events-none">
       <div className="flex items-center gap-3">
-        <span className="text-[9px] tracking-widest text-white/30 font-mono whitespace-nowrap">
+        <span className="text-[11px] tracking-widest text-white/40 font-mono font-bold whitespace-nowrap">
           RELAY {zone}/3 UPLOAD
         </span>
         <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-300"
-            style={{
-              width: `${pct}%`,
-              background: zoneData.ambientColor,
-              boxShadow: `0 0 4px ${zoneData.ambientColor}`,
-            }}
+            style={{ width:`${pct}%`, background:zoneData.ambientColor, boxShadow:`0 0 4px ${zoneData.ambientColor}` }}
           />
         </div>
         {zone < 3 && (
-          <span className="text-[9px] tracking-widest text-white/30 font-mono whitespace-nowrap">
+          <span className="text-[11px] tracking-widest text-white/40 font-mono font-bold whitespace-nowrap">
             {Math.max(0, Math.ceil(end - distance))}m
           </span>
         )}
@@ -266,19 +243,11 @@ export default function HUD() {
   const containerRef = useRef(null)
 
   useEffect(() => {
-    gsap.fromTo(containerRef.current,
-      { opacity: 0 },
-      { opacity: 1, duration: 0.5, delay: 0.3 }
-    )
+    gsap.fromTo(containerRef.current, { opacity:0 }, { opacity:1, duration:0.5, delay:0.3 })
   }, [])
 
   return (
-    <div
-      ref={containerRef}
-      className="absolute inset-0 pointer-events-none z-10"
-      style={{ opacity: 0 }}
-    >
-      {/* Top-left — health + energy + ammo + shield stacked */}
+    <div ref={containerRef} className="absolute inset-0 pointer-events-none z-10" style={{ opacity:0 }}>
       <div className="absolute top-4 left-4 flex flex-col gap-2">
         <HealthBar />
         <EnergyBar />
@@ -286,24 +255,14 @@ export default function HUD() {
         <BoostIndicator />
         <ShieldIndicator />
       </div>
-
-      {/* Top-center — zone */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2">
         <ZoneBadge />
       </div>
-
-      {/* Top-right — score + stats */}
       <div className="absolute top-4 right-4">
         <Stats />
       </div>
-
-      {/* Crosshair */}
       <Crosshair />
-
-      {/* Bottom — zone progress */}
       <ProgressBar />
-
-      {/* Corner brackets */}
       <div className="absolute top-2 left-2 w-4 h-4 border-t border-l border-white/20" />
       <div className="absolute top-2 right-2 w-4 h-4 border-t border-r border-white/20" />
       <div className="absolute bottom-2 left-2 w-4 h-4 border-b border-l border-white/20" />

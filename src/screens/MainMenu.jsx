@@ -3,218 +3,246 @@ import { gsap } from 'gsap'
 import useGameStore from '../store/gameStore'
 import LeaderboardService from '../services/LeaderboardService'
 
-// Animated particle dots floating in background
+/* ─────────────────────── background particles ─────────────────────── */
 function Particles() {
-  const count = 28
+  const dots = useRef(
+    Array.from({ length: 28 }).map((_, i) => ({
+      size:  1 + Math.random() * 2.5,
+      left:  Math.random() * 100,
+      top:   5 + Math.random() * 90,
+      delay: Math.random() * 7,
+      dur:   5 + Math.random() * 9,
+      color: i % 6 === 0 ? '#ff6a00' : '#00f5ff',
+      op:    0.08 + Math.random() * 0.18,
+    }))
+  ).current
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {Array.from({ length: count }).map((_, i) => {
-        const size   = 1 + Math.random() * 2
-        const left   = Math.random() * 100
-        const delay  = Math.random() * 6
-        const dur    = 6 + Math.random() * 8
-        const color  = i % 5 === 0 ? '#ff6a00' : '#00f5ff'
-        const top    = 10 + Math.random() * 80
-        return (
-          <div
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              width: size, height: size,
-              left: `${left}%`, top: `${top}%`,
-              backgroundColor: color,
-              opacity: 0.15 + Math.random() * 0.25,
-              animation: `float-dot ${dur}s ${delay}s ease-in-out infinite alternate`,
-            }}
-          />
-        )
-      })}
-    </div>
-  )
-}
-
-// Animated grid lines — perspective road feel
-function GridBackground() {
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.07 }}>
-      {/* Vertical lines */}
-      {[10, 22, 34, 46, 54, 66, 78, 90].map((left) => (
-        <div
-          key={left}
-          className="absolute top-0 bottom-0 w-px"
-          style={{ left: `${left}%`, background: 'linear-gradient(180deg, transparent, #00f5ff 40%, transparent)' }}
-        />
-      ))}
-      {/* Horizontal lines */}
-      {[15, 30, 45, 60, 75, 88].map((top) => (
-        <div
-          key={top}
-          className="absolute left-0 right-0 h-px"
-          style={{ top: `${top}%`, background: 'linear-gradient(90deg, transparent, #00f5ff 40%, transparent)' }}
-        />
+      {dots.map((d, i) => (
+        <div key={i} className="absolute rounded-full" style={{
+          width: d.size, height: d.size,
+          left: `${d.left}%`, top: `${d.top}%`,
+          backgroundColor: d.color, opacity: d.op,
+          animation: `fdot ${d.dur}s ${d.delay}s ease-in-out infinite alternate`,
+        }} />
       ))}
     </div>
   )
 }
 
-function RankingsPanel() {
-  const [scores,  setScores]  = useState([])
+/* ─────────────────────── top-5 leaderboard panel ──────────────────── */
+const RANK_COLOR  = ['#ffd700', '#c0c0c0', '#cd7f32', '#00f5ff99', '#00f5ff55']
+const RANK_LABEL  = ['1ST', '2ND', '3RD', '4TH', '5TH']
+
+function LeaderboardPanel() {
+  const [rows,    setRows]    = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     LeaderboardService.getTopScores(5).then((data) => {
-      setScores(data)
+      setRows(data)
       setLoading(false)
     })
   }, [])
 
   return (
-    <div className="w-full border mb-3" style={{ borderColor:'#00f5ff15', background:'rgba(0,245,255,0.02)' }}>
-      <div className="flex items-center gap-2 px-3 py-2 border-b" style={{ borderColor:'#00f5ff15' }}>
-        <div className="h-px flex-1" style={{ background:'linear-gradient(90deg, transparent, #00f5ff44)' }} />
-        <span className="font-mono text-[10px] tracking-[0.5em] text-[#00f5ff88]">GLOBAL RANKINGS</span>
-        <div className="h-px flex-1" style={{ background:'linear-gradient(270deg, transparent, #00f5ff44)' }} />
+    <div className="flex flex-col h-full">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="font-mono text-xs font-bold tracking-[0.4em] text-[#555]">GLOBAL TOP 5</span>
+        <div className="flex-1 h-px" style={{ background: '#ffffff0a' }} />
       </div>
-      {loading ? (
-        <p className="font-mono text-[10px] tracking-widest text-[#444] text-center py-3">LOADING…</p>
-      ) : scores.length === 0 ? (
-        <p className="font-mono text-[10px] tracking-widest text-[#444] text-center py-3">— NO ENTRIES YET —</p>
-      ) : (
-        <div className="divide-y" style={{ borderColor:'#0a0a1a' }}>
-          {scores.map((s, i) => (
-            <div key={s.id} className="flex items-center justify-between px-3 py-1.5">
-              <span className="font-mono text-[10px] w-5" style={{ color: i === 0 ? '#ff6a00' : '#555' }}>
-                {i + 1}
+      <div className="flex-1 flex flex-col border" style={{ borderColor: '#00f5ff14', background: 'rgba(0,245,255,0.018)' }}>
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <span className="font-mono text-[10px] text-[#333] tracking-widest animate-pulse">LOADING…</span>
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
+            <span className="font-mono text-[10px] text-[#2a2a2a] tracking-widest">— EMPTY —</span>
+          </div>
+        ) : (
+          rows.map((r, i) => (
+            <div key={r.id}
+              className="flex items-center gap-2 px-2.5 py-1.5 border-b last:border-0"
+              style={{ borderColor: '#ffffff07', background: i === 0 ? 'rgba(255,215,0,0.03)' : 'transparent' }}
+            >
+              <span className="font-mono text-xs w-7 text-center font-black shrink-0"
+                style={{ color: RANK_COLOR[i] }}>{RANK_LABEL[i]}</span>
+              <span className="font-mono text-xs font-semibold tracking-widest flex-1 truncate"
+                style={{ color: i === 0 ? '#fff' : '#999' }}>
+                {r.name || '???'}
               </span>
-              <span className="font-mono text-[11px] tracking-widest flex-1 ml-2" style={{ color:'#aaa' }}>
-                {s.name || '???'}
+              <span className="font-mono text-xs font-black shrink-0"
+                style={{ color: RANK_COLOR[i] }}>
+                {(r.bestScore || 0).toLocaleString()}
               </span>
-              <span className="font-mono text-[11px]" style={{ color:'#00f5ff' }}>
-                {(s.score || 0).toLocaleString()}
-              </span>
-              <span className="font-mono text-[10px] ml-3" style={{ color:'#555' }}>Z{s.zone || 1}</span>
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   )
 }
 
-export default function MainMenu() {
-  const startIntro = useGameStore((s) => s.startIntro)
-  const highScore  = useGameStore((s) => s.highScore)
-  const [btnHover,       setBtnHover]       = useState(false)
-  const [showRankings,   setShowRankings]   = useState(false)
-
-  const containerRef  = useRef(null)
-  const badgeRef      = useRef(null)
-  const titleLineRef  = useRef(null)  // decorative line above title
-  const title1Ref     = useRef(null)
-  const title2Ref     = useRef(null)
-  const taglineRef    = useRef(null)
-  const dividerRef    = useRef(null)
-  const loreRef       = useRef(null)
-  const zonesRef      = useRef(null)
-  const btnRef        = useRef(null)
-  const scoreRef      = useRef(null)
-  const controlsRef   = useRef(null)
-  const glowRef       = useRef(null)
-
+/* ─────────────────────── inline confirm card ───────────────────────── */
+function ConfirmCard({ player, onConfirm, onCancel }) {
+  const ref = useRef(null)
   useEffect(() => {
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-
-    // Background glow pulses on loop
-    gsap.to(glowRef.current, {
-      opacity: 0.18,
-      scale: 1.15,
-      duration: 3,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-    })
-
-    tl.fromTo(containerRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 })
-
-      // Badge
-      .fromTo(badgeRef.current,
-        { opacity: 0, y: -12, letterSpacing: '0.2em' },
-        { opacity: 1, y: 0,  letterSpacing: '0.45em', duration: 0.6 }
-      )
-
-      // Top line
-      .fromTo(titleLineRef.current,
-        { scaleX: 0, opacity: 0, transformOrigin: 'left center' },
-        { scaleX: 1, opacity: 1, duration: 0.5 },
-        '-=0.3'
-      )
-
-      // Title 1 — letter split feel via skew + scale
-      .fromTo(title1Ref.current,
-        { opacity: 0, y: 40, skewX: -6 },
-        { opacity: 1, y: 0,  skewX: 0, duration: 0.55, ease: 'power4.out' },
-        '-=0.2'
-      )
-      .fromTo(title2Ref.current,
-        { opacity: 0, y: 30, skewX: -4 },
-        { opacity: 1, y: 0,  skewX: 0, duration: 0.45, ease: 'power3.out' },
-        '-=0.3'
-      )
-
-      // Tagline
-      .fromTo(taglineRef.current,
-        { opacity: 0, x: -20 },
-        { opacity: 1, x: 0, duration: 0.4 },
-        '-=0.1'
-      )
-
-      // Divider
-      .fromTo(dividerRef.current,
-        { scaleX: 0, transformOrigin: 'center' },
-        { scaleX: 1, duration: 0.5 },
-        '-=0.1'
-      )
-
-      // Lore
-      .fromTo(loreRef.current,
-        { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.5 },
-        '-=0.2'
-      )
-
-      // Zone strip
-      .fromTo(zonesRef.current,
-        { opacity: 0, y: 10 },
-        { opacity: 1, y: 0, duration: 0.4 },
-        '-=0.1'
-      )
-
-      // Button
-      .fromTo(btnRef.current,
-        { opacity: 0, scale: 0.88 },
-        { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.8)' },
-        '-=0.1'
-      )
-
-      // Bottom row
-      .fromTo([scoreRef.current, controlsRef.current],
-        { opacity: 0 },
-        { opacity: 1, duration: 0.4, stagger: 0.1 },
-        '-=0.2'
-      )
-
-    // Button idle pulse after entrance
-    gsap.to(btnRef.current, {
-      boxShadow: '0 0 28px rgba(0,245,255,0.45)',
-      duration: 1.6,
-      repeat: -1,
-      yoyo: true,
-      ease: 'sine.inOut',
-      delay: 2.5,
-    })
-
-    return () => gsap.killTweensOf([glowRef.current, btnRef.current])
+    gsap.fromTo(ref.current,
+      { opacity: 0, y: 14, scale: 0.96 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.38, ease: 'back.out(1.7)' }
+    )
   }, [])
+
+  return (
+    <div ref={ref} className="w-full mb-3 border" style={{ borderColor: '#ff6a0033', background: 'rgba(255,106,0,0.04)', opacity: 0 }}>
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-2 border-b" style={{ borderColor: '#ff6a0022' }}>
+        <span className="text-[#ff6a00] text-xs">⚡</span>
+        <span className="font-mono text-[10px] tracking-[0.4em] text-[#ff6a00]">RETURNING AGENT DETECTED</span>
+      </div>
+
+      {/* Stats */}
+      <div className="flex items-center justify-between px-4 py-3">
+        <div>
+          <p className="font-mono text-base font-black tracking-[0.25em] text-white">{player.name}</p>
+          <p className="font-mono text-[10px] tracking-widest text-[#555] mt-0.5">
+            {player.gamesPlayed ?? 0} MISSIONS LOGGED
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="font-mono text-2xl font-black" style={{ color: '#00f5ff', textShadow: '0 0 20px rgba(0,245,255,0.4)' }}>
+            {(player.bestScore ?? 0).toLocaleString()}
+          </p>
+          <p className="font-mono text-[10px] tracking-widest text-[#555]">BEST SCORE</p>
+        </div>
+      </div>
+
+      {/* Prompt */}
+      <div className="px-4 pb-3">
+        <p className="font-mono text-[11px] tracking-[0.3em] text-[#666] mb-3">CONTINUE AS THIS AGENT?</p>
+        <div className="flex gap-2">
+          <button onClick={onConfirm}
+            className="flex-1 font-mono text-xs font-bold tracking-[0.3em] py-2.5 transition-all duration-150 active:scale-95"
+            style={{ background: '#00f5ff', color: '#000' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#fff' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = '#00f5ff' }}
+          >
+            YES, CONTINUE ▶
+          </button>
+          <button onClick={onCancel}
+            className="flex-1 font-mono text-xs tracking-[0.3em] py-2.5 border transition-all duration-150 active:scale-95"
+            style={{ borderColor: '#ffffff22', color: '#666' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#ffffff55' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#666'; e.currentTarget.style.borderColor = '#ffffff22' }}
+          >
+            NEW CALLSIGN
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────── main component ───────────────────────────── */
+export default function MainMenu() {
+  const startIntro    = useGameStore((s) => s.startIntro)
+  const highScore     = useGameStore((s) => s.highScore)
+  const playerName    = useGameStore((s) => s.playerName)
+  const setPlayerName = useGameStore((s) => s.setPlayerName)
+
+  const [nameInput,   setNameInput]   = useState(playerName || '')
+  const [nameMsg,     setNameMsg]     = useState('')
+  const [phase,       setPhase]       = useState('idle') // 'idle' | 'checking' | 'confirm'
+  const [foundPlayer, setFoundPlayer] = useState(null)
+  const [btnHover,    setBtnHover]    = useState(false)
+
+  const isValidName = (nameInput || '').trim().length >= 3
+
+  const containerRef = useRef(null)
+  const glowRef      = useRef(null)
+  const titleRef     = useRef(null)
+  const subRef       = useRef(null)
+  const taglineRef   = useRef(null)
+  const dividerRef   = useRef(null)
+  const loreRef      = useRef(null)
+  const zonesRef     = useRef(null)
+  const middleRef    = useRef(null)
+  const actionRef    = useRef(null)
+  const btnRef       = useRef(null)
+  const bottomRef    = useRef(null)
+
+  /* entrance animation */
+  useEffect(() => {
+    gsap.to(glowRef.current, {
+      opacity: 0.2, scale: 1.15, duration: 3.5,
+      repeat: -1, yoyo: true, ease: 'sine.inOut',
+    })
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+    tl.fromTo(containerRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 })
+      .fromTo(titleRef.current,   { opacity:0, y:32, skewX:-6 }, { opacity:1, y:0, skewX:0, duration:0.6, ease:'power4.out' }, '-=0.05')
+      .fromTo(subRef.current,     { opacity:0, y:20, skewX:-3 }, { opacity:1, y:0, skewX:0, duration:0.45 }, '-=0.35')
+      .fromTo(taglineRef.current, { opacity:0, x:-18 },           { opacity:1, x:0, duration:0.4 }, '-=0.15')
+      .fromTo(dividerRef.current, { scaleX:0, transformOrigin:'center' }, { scaleX:1, duration:0.55 }, '-=0.1')
+      .fromTo(loreRef.current,    { opacity:0, y:12 }, { opacity:1, y:0, duration:0.45 }, '-=0.2')
+      .fromTo(zonesRef.current,   { opacity:0, y:8  }, { opacity:1, y:0, duration:0.4  }, '-=0.1')
+      .fromTo(middleRef.current,  { opacity:0, y:10 }, { opacity:1, y:0, duration:0.4  }, '-=0.1')
+      .fromTo(actionRef.current,  { opacity:0 },       { opacity:1, duration:0.35 },       '-=0.1')
+      .fromTo(bottomRef.current,  { opacity:0 },       { opacity:1, duration:0.35 },       '-=0.05')
+    return () => { gsap.killTweensOf(glowRef.current) }
+  }, [])
+
+  /* button pulse — fires whenever button mounts (isValidName flips true in idle phase) */
+  useEffect(() => {
+    if (!isValidName || phase !== 'idle' || !btnRef.current) return
+    gsap.killTweensOf(btnRef.current)
+    gsap.fromTo(btnRef.current,
+      { opacity:0, y:10, scale:0.92 },
+      { opacity:1, y:0,  scale:1,   duration:0.4, ease:'back.out(1.7)' }
+    )
+    gsap.to(btnRef.current, {
+      boxShadow: '0 0 32px rgba(0,245,255,0.55)',
+      duration: 1.5, repeat:-1, yoyo:true, ease:'sine.inOut', delay:0.55,
+    })
+    return () => { gsap.killTweensOf(btnRef.current) }
+  }, [isValidName, phase])
+
+  const beginWithName = async () => {
+    const name = (nameInput || '').trim().slice(0, 14).toUpperCase()
+    if (!name) { setNameMsg('ENTER A USERNAME'); return }
+    setPhase('checking')
+    setNameMsg('')
+    const result = await LeaderboardService.ensurePlayer(name)
+    if (!result.ok) {
+      const msgs = {
+        'permission-denied': 'FIRESTORE RULES BLOCKED',
+        'unavailable':       'NETWORK OFFLINE',
+        'not-configured':    'FIREBASE NOT CONFIGURED',
+      }
+      setNameMsg(msgs[result.reason] || 'ERROR — TRY AGAIN')
+      setPhase('idle')
+      return
+    }
+    if (result.exists) {
+      setFoundPlayer(result.player)
+      setPhase('confirm')
+    } else {
+      setPlayerName(name)
+      startIntro()
+    }
+  }
+
+  const confirmPlay = () => {
+    setPlayerName((nameInput || '').trim().slice(0, 14).toUpperCase())
+    startIntro()
+  }
+
+  const cancelPlay = () => {
+    setPhase('idle')
+    setFoundPlayer(null)
+    setNameInput('')
+    setNameMsg('')
+  }
 
   return (
     <div
@@ -222,173 +250,190 @@ export default function MainMenu() {
       className="w-full h-full flex flex-col items-center justify-center bg-[#07070f] relative overflow-hidden"
       style={{ opacity: 0 }}
     >
-      {/* ── Background layers ───────────────────────────────────────────── */}
-      <GridBackground />
+      {/* ── backgrounds ── */}
       <Particles />
-
-      {/* Scanlines */}
-      <div className="absolute inset-0 pointer-events-none z-10"
-        style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.09) 2px, rgba(0,0,0,0.09) 4px)' }}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.05]"
+        style={{ backgroundImage:'linear-gradient(#00f5ff 1px,transparent 1px),linear-gradient(90deg,#00f5ff 1px,transparent 1px)', backgroundSize:'90px 90px' }}
       />
-
-      {/* Central glow orb */}
-      <div
-        ref={glowRef}
-        className="absolute pointer-events-none rounded-full"
+      <div className="absolute inset-0 pointer-events-none z-10"
+        style={{ background:'repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px)' }}
+      />
+      <div ref={glowRef} className="absolute pointer-events-none rounded-full"
         style={{
-          width: '60vw', height: '60vw',
-          top: '50%', left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: 'radial-gradient(circle, rgba(0,180,200,0.12) 0%, rgba(255,106,0,0.04) 50%, transparent 70%)',
-          opacity: 0.12,
+          width:'70vw', height:'70vw', top:'50%', left:'50%',
+          transform:'translate(-50%,-50%)',
+          background:'radial-gradient(circle,rgba(0,180,210,0.09) 0%,rgba(255,106,0,0.035) 55%,transparent 72%)',
+          opacity:0.08,
         }}
       />
-
       {/* Corner brackets */}
-      <div className="absolute top-5 left-5 w-8 h-8 border-t-2 border-l-2 border-[#00f5ff22] z-20" />
-      <div className="absolute top-5 right-5 w-8 h-8 border-t-2 border-r-2 border-[#00f5ff22] z-20" />
-      <div className="absolute bottom-5 left-5 w-8 h-8 border-b-2 border-l-2 border-[#00f5ff22] z-20" />
-      <div className="absolute bottom-5 right-5 w-8 h-8 border-b-2 border-r-2 border-[#00f5ff22] z-20" />
+      {['top-3 left-3 border-t-2 border-l-2','top-3 right-3 border-t-2 border-r-2',
+        'bottom-3 left-3 border-b-2 border-l-2','bottom-3 right-3 border-b-2 border-r-2'].map((c) => (
+        <div key={c} className={`absolute w-6 h-6 ${c} z-20`} style={{ borderColor:'#00f5ff1a' }} />
+      ))}
 
-      {/* ── Main content ────────────────────────────────────────────────── */}
-      <div className="relative z-20 flex flex-col items-center px-6 text-center w-full max-w-xl">
-
-        {/* Year badge */}
-        <div ref={badgeRef} className="flex items-center gap-3 mb-4" style={{ opacity: 0 }}>
-          <div className="h-px w-8 bg-[#ff6a00]" />
-          <span className="text-[#ff6a00] tracking-[0.45em] text-xs font-mono uppercase">Earth · 2045</span>
-          <div className="h-px w-8 bg-[#ff6a00]" />
-        </div>
-
-        {/* Title accent line */}
-        <div ref={titleLineRef} className="h-px w-48 mb-3" style={{ background: 'linear-gradient(90deg, transparent, #00f5ff, transparent)', opacity: 0 }} />
+      {/* ── content ── */}
+      <div className="relative z-20 flex flex-col items-center px-5 w-full max-w-[580px]">
 
         {/* Title */}
-        <h1
-          ref={title1Ref}
-          className="font-mono font-black tracking-[0.22em] leading-none text-[#00f5ff] relative"
-          style={{
-            fontSize: 'clamp(2.4rem, 8vw, 4.2rem)',
-            opacity: 0,
-            textShadow: '0 0 40px rgba(0,245,255,0.5), 0 0 80px rgba(0,245,255,0.2)',
-          }}
-        >
-          AI UPRISING
-        </h1>
-        <h2
-          ref={title2Ref}
-          className="font-mono font-bold tracking-[0.45em] text-white mt-1 mb-3"
-          style={{
-            fontSize: 'clamp(0.85rem, 2.8vw, 1.35rem)',
-            opacity: 0,
-            textShadow: '0 0 20px rgba(255,255,255,0.2)',
-          }}
-        >
-          LAST ESCAPE
-        </h2>
+        <div ref={titleRef} className="text-center mb-0.5" style={{ opacity:0 }}>
+          <h1 className="font-mono font-black tracking-[0.2em] leading-none"
+            style={{
+              fontSize:'clamp(2rem,7vw,3.5rem)',
+              color:'#00f5ff',
+              textShadow:'0 0 40px rgba(0,245,255,0.5),0 0 80px rgba(0,245,255,0.15)',
+            }}>
+            AI UPRISING
+          </h1>
+        </div>
+        <div ref={subRef} className="text-center mb-2.5" style={{ opacity:0 }}>
+          <h2 className="font-mono font-bold tracking-[0.5em] text-white"
+            style={{ fontSize:'clamp(0.7rem,2.2vw,1.1rem)', textShadow:'0 0 20px rgba(255,255,255,0.12)' }}>
+            LAST ESCAPE
+          </h2>
+        </div>
 
-        {/* Tagline */}
-        <p
-          ref={taglineRef}
-          className="font-mono text-[#ff6a00] tracking-[0.25em] text-sm mb-5"
-          style={{ opacity: 0 }}
-        >
+        <p ref={taglineRef} className="font-mono font-bold tracking-[0.22em] text-xs mb-3.5"
+          style={{ color:'#ff6a00', opacity:0 }}>
           STAY CONNECTED · KEEP MOVING · END CORE
         </p>
 
-        {/* Divider */}
-        <div ref={dividerRef} className="h-px w-full mb-5" style={{ background: 'linear-gradient(90deg, transparent, #ffffff0d, transparent)', opacity: 0 }} />
+        <div ref={dividerRef} className="h-px w-full mb-3.5"
+          style={{ background:'linear-gradient(90deg,transparent,#00f5ff18,#ffffff12,#00f5ff18,transparent)', opacity:0 }} />
 
-        {/* Lore — condensed */}
-        <p
-          ref={loreRef}
-          className="text-[#999] text-base leading-relaxed mb-5 font-mono"
-          style={{ opacity: 0 }}
-        >
-          CORE went rogue. Every network, every grid — under its control.
-          We found the counter-code: <span className="text-[#00f5ff]">SIGNAL-0</span>.
-          One broadcast shuts it down forever. But from a fixed point?
-          CORE triangulates in seconds.
-          <br /><br />
-          The only way: <span className="text-white font-bold">upload it on the move.</span>
+        {/* Lore */}
+        <p ref={loreRef} className="font-mono text-sm text-center leading-relaxed mb-3.5 max-w-sm"
+          style={{ color:'#777', opacity:0 }}>
+          CORE went rogue — every grid locked down. Counter-code{' '}
+          <span style={{ color:'#00f5ff' }}>SIGNAL-0</span> can end it.
+          {' '}Upload from a fixed point and you're triangulated. <span className="text-white">Upload on the move.</span>
         </p>
 
-        {/* Zone strip */}
-        <div ref={zonesRef} className="flex gap-2 mb-7 w-full" style={{ opacity: 0 }}>
+        {/* Zone chips */}
+        <div ref={zonesRef} className="flex gap-1.5 mb-4 w-full" style={{ opacity:0 }}>
           {[
-            { num: '01', name: 'WASTELAND',   color: '#ff6a00' },
-            { num: '02', name: 'INDUSTRIAL',  color: '#00ff88' },
-            { num: '03', name: 'CORE',         color: '#ff2020' },
+            { n:'01', label:'WASTELAND', col:'#ff6a00' },
+            { n:'02', label:'INDUSTRIAL', col:'#00ff88' },
+            { n:'03', label:'AI CORE',   col:'#ff2020' },
           ].map((z) => (
-            <div
-              key={z.num}
-              className="flex-1 flex flex-col items-center py-2 border rounded-sm"
-              style={{ borderColor: z.color + '30', background: z.color + '08' }}
-            >
-              <span className="font-mono text-[11px] tracking-[0.3em] mb-0.5" style={{ color: z.color + 'cc' }}>ZONE</span>
-              <span className="font-mono text-lg font-bold" style={{ color: z.color }}>{z.num}</span>
-              <span className="font-mono text-[10px] tracking-widest mt-0.5" style={{ color: z.color + 'aa' }}>{z.name}</span>
+            <div key={z.n} className="flex-1 flex items-center justify-center gap-1.5 py-1.5 border rounded-sm"
+              style={{ borderColor: z.col + '30', background: z.col + '09' }}>
+              <span className="font-mono text-xs font-black" style={{ color: z.col }}>{z.n}</span>
+              <span className="font-mono text-[10px] font-bold tracking-widest" style={{ color: z.col + 'bb' }}>{z.label}</span>
             </div>
           ))}
         </div>
 
-        {/* Rankings toggle */}
-        <div className="w-full mb-4">
-          <button
-            onClick={() => setShowRankings((v) => !v)}
-            className="w-full font-mono text-[10px] tracking-[0.4em] py-1.5 border transition-all duration-200"
-            style={{
-              borderColor: showRankings ? '#00f5ff33' : '#ffffff0d',
-              color: showRankings ? '#00f5ff' : '#555',
-            }}>
-            {showRankings ? '▲ HIDE RANKINGS' : '▼ VIEW GLOBAL RANKINGS'}
-          </button>
-          {showRankings && <RankingsPanel />}
+        {/* ── Two-column section: callsign + leaderboard ── */}
+        <div ref={middleRef} className="flex gap-3 w-full mb-3" style={{ opacity:0 }}>
+
+          {/* Left: callsign input */}
+          <div className="flex-1 flex flex-col min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-mono text-xs font-bold tracking-[0.4em] text-[#555]">YOUR CALLSIGN</span>
+              <div className="flex-1 h-px" style={{ background:'#ffffff0a' }} />
+            </div>
+            <input
+              type="text"
+              maxLength={14}
+              value={nameInput}
+              disabled={phase === 'confirm'}
+              onChange={(e) => { setNameInput(e.target.value.toUpperCase()); setNameMsg('') }}
+              onKeyDown={(e) => { if (e.key === 'Enter' && isValidName && phase === 'idle') beginWithName() }}
+              placeholder="ENTER NAME"
+              className="w-full bg-transparent border px-3 py-2.5 font-mono text-sm tracking-widest outline-none transition-all duration-200 disabled:opacity-40"
+              style={{
+                borderColor: phase === 'confirm' ? '#ffffff18' : isValidName ? '#00f5ff44' : '#ffffff18',
+                color: '#00f5ff',
+                caretColor: '#00f5ff',
+              }}
+            />
+            {/* status line */}
+            <div className="mt-1.5 h-4">
+            {nameMsg ? (
+              <p className="font-mono text-xs font-bold tracking-widest text-[#ff4444]">{nameMsg}</p>
+            ) : isValidName && phase !== 'confirm' ? (
+              <p className="font-mono text-xs font-semibold tracking-widest" style={{ color:'#00f5ff66' }}>
+                ✓ {nameInput.trim()}
+              </p>
+            ) : !isValidName ? (
+              <p className="font-mono text-xs tracking-widest text-[#333]">MIN 3 CHARACTERS</p>
+            ) : null}
+            </div>
+          </div>
+
+          {/* Right: top 5 */}
+          <div className="w-[170px] shrink-0">
+            <LeaderboardPanel />
+          </div>
         </div>
 
-        {/* CTA button */}
-        <button
-          ref={btnRef}
-          onClick={startIntro}
-          onMouseEnter={() => setBtnHover(true)}
-          onMouseLeave={() => setBtnHover(false)}
-          className="font-mono font-bold tracking-[0.35em] text-base px-14 py-4 mb-5 relative overflow-hidden transition-all duration-200 active:scale-95"
-          style={{
-            opacity: 0,
-            border: '2px solid #00f5ff',
-            color: btnHover ? '#000' : '#00f5ff',
-            background: btnHover ? '#00f5ff' : 'rgba(0,245,255,0.06)',
-            boxShadow: btnHover
-              ? '0 0 40px rgba(0,245,255,0.7)'
-              : '0 0 18px rgba(0,245,255,0.25)',
-          }}
-        >
-          {/* Animated corner accents on hover */}
-          {btnHover && <>
-            <span className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-black" />
-            <span className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-black" />
-            <span className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-black" />
-            <span className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-black" />
-          </>}
-          ▶ BEGIN UPLOAD
-        </button>
-
-        {/* Controls hint */}
-        <div ref={controlsRef} className="flex gap-4 text-[#777] font-mono text-xs tracking-widest mb-3 flex-wrap justify-center" style={{ opacity: 0 }}>
-          {['← → LANE', '↑ JUMP', 'Z SHOOT', 'P PAUSE', 'F FULLSCREEN'].map((hint) => (
-            <span key={hint} className="border border-[#1a1a1a] px-2 py-0.5 rounded-sm">{hint}</span>
-          ))}
+        {/* ── Action area ── */}
+        <div ref={actionRef} className="w-full mb-3" style={{ opacity:0 }}>
+          {phase === 'confirm' && foundPlayer ? (
+            <ConfirmCard player={foundPlayer} onConfirm={confirmPlay} onCancel={cancelPlay} />
+          ) : phase === 'checking' ? (
+            <div className="w-full border py-3 flex items-center justify-center gap-3 mb-3"
+              style={{ borderColor:'#ffffff10', background:'rgba(255,255,255,0.02)' }}>
+              <span className="font-mono text-sm font-bold tracking-[0.4em] text-[#555] animate-pulse">… VERIFYING CALLSIGN</span>
+            </div>
+          ) : isValidName ? (
+            <button
+              ref={btnRef}
+              onClick={beginWithName}
+              onMouseEnter={() => setBtnHover(true)}
+              onMouseLeave={() => setBtnHover(false)}
+              className="w-full font-mono font-bold tracking-[0.4em] text-sm py-3.5 relative overflow-hidden transition-all duration-150 active:scale-[0.98] mb-3"
+              style={{
+                opacity: 0,
+                border: '2px solid #00f5ff',
+                color: btnHover ? '#000' : '#00f5ff',
+                background: btnHover ? '#00f5ff' : 'rgba(0,245,255,0.05)',
+              }}
+            >
+              {btnHover && (
+                <>
+                  <span className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-black" />
+                  <span className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2 border-black" />
+                  <span className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2 border-black" />
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-black" />
+                </>
+              )}
+              ▶ BEGIN UPLOAD
+            </button>
+          ) : (
+            <div className="w-full border py-3 flex items-center justify-center mb-3"
+              style={{ borderColor:'#ffffff08', background:'rgba(255,255,255,0.015)' }}>
+              <span className="font-mono text-sm font-semibold tracking-[0.4em] text-[#2a2a2a]">ENTER CALLSIGN TO START</span>
+            </div>
+          )}
         </div>
 
-        {/* High score */}
-        <p ref={scoreRef} className="font-mono text-sm tracking-widest" style={{ opacity: 0, color: highScore > 0 ? '#ff6a00' : '#555' }}>
-          {highScore > 0 ? `▲ BEST SIGNAL: ${highScore.toLocaleString()} pts` : '— NO SIGNAL RECORD —'}
-        </p>
+        {/* ── Bottom row ── */}
+        <div ref={bottomRef} className="flex items-center justify-between w-full" style={{ opacity:0 }}>
+          <div className="flex gap-1.5 flex-wrap">
+            {[['←→','LANE'],['↑','JUMP'],['Z','FIRE'],['P','PAUSE']].map(([k, v]) => (
+              <div key={k} className="flex items-center gap-1 border rounded-sm px-1.5 py-0.5"
+                style={{ borderColor:'#1e1e1e' }}>
+                <span className="font-mono text-[9px] text-[#444]">{k}</span>
+                <span className="font-mono text-[8px] text-[#2a2a2a]">{v}</span>
+              </div>
+            ))}
+          </div>
+          {highScore > 0 && (
+            <div className="flex items-center gap-1.5 ml-4 shrink-0">
+              <span className="font-mono text-[10px] font-bold tracking-widest text-[#444]">LOCAL BEST</span>
+              <span className="font-mono text-sm font-black" style={{ color:'#ff6a00' }}>
+                {highScore.toLocaleString()}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       <style>{`
-        @keyframes float-dot {
-          from { transform: translateY(0px) scale(1); }
+        @keyframes fdot {
+          from { transform: translateY(0) scale(1); }
           to   { transform: translateY(-18px) scale(1.3); }
         }
       `}</style>

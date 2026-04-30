@@ -36,6 +36,7 @@ export default function GameOver() {
   const zone      = useGameStore((s) => s.zone)
   const startGame = useGameStore((s) => s.startGame)
   const goToMenu  = useGameStore((s) => s.goToMenu)
+  const playerName = useGameStore((s) => s.playerName)
 
   const overlayRef  = useRef(null)
   const flashRef    = useRef(null)
@@ -54,14 +55,7 @@ export default function GameOver() {
 
   const isNewRecord = score > 0 && score >= highScore
 
-  const [callsign,    setCallsign]    = useState('')
-  const [submitState, setSubmitState] = useState('idle') // 'idle' | 'submitting' | 'done' | 'skipped'
-
-  const handleSubmit = async () => {
-    setSubmitState('submitting')
-    await LeaderboardService.submitScore({ name: callsign, score, zone, kills, distance })
-    setSubmitState('done')
-  }
+  const [submitState, setSubmitState] = useState('idle') // 'idle' | 'submitting' | 'done'
 
   useEffect(() => {
     const tl = gsap.timeline()
@@ -128,6 +122,17 @@ export default function GameOver() {
     return () => { tl.kill(); clearInterval(glitchTimer.current) }
   }, [])
 
+  useEffect(() => {
+    if (!playerName || submitState !== 'idle') return
+    let mounted = true
+    ;(async () => {
+      setSubmitState('submitting')
+      await LeaderboardService.updatePlayerResult({ name: playerName, score, kills, distance })
+      if (mounted) setSubmitState('done')
+    })()
+    return () => { mounted = false }
+  }, [playerName, score, kills, distance, submitState])
+
   const STAT = (label, valRef, accent) => (
     <div className="flex items-center justify-between py-2.5 px-4 border-b last:border-0"
       style={{ borderColor: '#1a0404' }}>
@@ -191,14 +196,14 @@ export default function GameOver() {
           </h1>
         </div>
 
-        <p ref={subRef} className="font-mono text-[#aa6666] tracking-[0.2em] text-sm mb-3 text-center" style={{ opacity:0 }}>
+        <p ref={subRef} className="font-mono text-[#aa6666] tracking-[0.2em] text-base font-semibold mb-3 text-center" style={{ opacity:0 }}>
           UPLOAD ABORTED — CORE TRIANGULATED YOUR POSITION
         </p>
 
         {/* Zone reached badge */}
         <div ref={zoneRef} className="flex items-center gap-2 mb-5" style={{ opacity:0 }}>
           <div className="h-px w-8" style={{ background: '#ff2020' }} />
-          <span className="font-mono text-sm tracking-[0.35em] px-3 py-1 border" style={{ color:'#ff6a00', borderColor:'#ff6a0060' }}>
+          <span className="font-mono text-base font-bold tracking-[0.35em] px-3 py-1 border" style={{ color:'#ff6a00', borderColor:'#ff6a0060' }}>
             FELL IN ZONE {zone}
           </span>
           <div className="h-px w-8" style={{ background: '#ff2020' }} />
@@ -206,64 +211,37 @@ export default function GameOver() {
 
         {/* Stats */}
         <div ref={statsRef} className="w-full border mb-5" style={{ opacity:0, borderColor:'#1a0404', background:'rgba(60,0,0,0.15)' }}>
-          <div className="flex items-center justify-between py-2.5 px-4 border-b" style={{ borderColor:'#1a0404' }}>
-            <span className="font-mono text-sm tracking-[0.3em] text-[#aa5555]">SCORE</span>
-            <span ref={scoreValRef} className="font-mono text-base text-white">0</span>
+          <div className="flex items-center justify-between py-3 px-4 border-b" style={{ borderColor:'#1a0404' }}>
+            <span className="font-mono text-base font-bold tracking-[0.3em] text-[#aa5555]">SCORE</span>
+            <span ref={scoreValRef} className="font-mono text-lg font-black text-white">0</span>
           </div>
-          <div className="flex items-center justify-between py-2.5 px-4 border-b" style={{ borderColor:'#1a0404' }}>
-            <span className="font-mono text-sm tracking-[0.3em] text-[#aa5555]">BEST</span>
-            <span className="font-mono text-sm" style={{ color: isNewRecord ? '#ff6a00' : '#ff6a00' }}>
+          <div className="flex items-center justify-between py-3 px-4 border-b" style={{ borderColor:'#1a0404' }}>
+            <span className="font-mono text-base font-bold tracking-[0.3em] text-[#aa5555]">BEST</span>
+            <span className="font-mono text-base font-bold" style={{ color:'#ff6a00' }}>
               {highScore.toLocaleString()}{isNewRecord && ' ★'}
             </span>
           </div>
-          <div className="flex items-center justify-between py-2.5 px-4 border-b" style={{ borderColor:'#1a0404' }}>
-            <span className="font-mono text-sm tracking-[0.3em] text-[#aa5555]">DISTANCE</span>
-            <span ref={distValRef} className="font-mono text-base text-white">0m</span>
+          <div className="flex items-center justify-between py-3 px-4 border-b" style={{ borderColor:'#1a0404' }}>
+            <span className="font-mono text-base font-bold tracking-[0.3em] text-[#aa5555]">DISTANCE</span>
+            <span ref={distValRef} className="font-mono text-lg font-bold text-white">0m</span>
           </div>
-          <div className="flex items-center justify-between py-2.5 px-4">
-            <span className="font-mono text-sm tracking-[0.3em] text-[#aa5555]">KILLS</span>
-            <span ref={killsValRef} className="font-mono text-base text-[#ff6a00]">0</span>
+          <div className="flex items-center justify-between py-3 px-4">
+            <span className="font-mono text-base font-bold tracking-[0.3em] text-[#aa5555]">KILLS</span>
+            <span ref={killsValRef} className="font-mono text-lg font-bold text-[#ff6a00]">0</span>
           </div>
         </div>
 
-        {/* Leaderboard submit */}
-        {submitState === 'idle' && (
-          <div className="w-full mb-4 border p-3" style={{ borderColor:'#2a0808', background:'rgba(40,0,0,0.2)' }}>
-            <p className="font-mono text-[10px] tracking-[0.35em] text-[#aa5555] mb-2 text-center">
-              SUBMIT TO GLOBAL RANKINGS
-            </p>
-            <input
-              type="text" maxLength={14} placeholder="ENTER CALLSIGN"
-              value={callsign}
-              onChange={(e) => setCallsign(e.target.value.toUpperCase())}
-              className="w-full bg-transparent border px-3 py-1.5 font-mono text-sm text-white tracking-widest outline-none mb-2"
-              style={{ borderColor:'#ff202040' }}
-            />
-            <div className="flex gap-2">
-              <button onClick={handleSubmit}
-                className="flex-1 font-mono text-xs tracking-[0.25em] py-1.5 border border-[#ff2020] text-[#ff2020]
-                           hover:bg-[#ff2020] hover:text-black transition-all duration-150 active:scale-95">
-                SUBMIT
-              </button>
-              <button onClick={() => setSubmitState('skipped')}
-                className="font-mono text-xs tracking-[0.25em] px-4 py-1.5 border border-[#333] text-[#666]
-                           hover:text-[#aaa] transition-all duration-150 active:scale-95">
-                SKIP
-              </button>
-            </div>
-          </div>
-        )}
         {submitState === 'submitting' && (
-          <p className="font-mono text-xs tracking-[0.4em] text-[#ff6a00] mb-4 text-center">TRANSMITTING…</p>
+          <p className="font-mono text-sm font-bold tracking-[0.4em] text-[#ff6a00] mb-4 text-center">UPDATING PLAYER…</p>
         )}
         {submitState === 'done' && (
-          <p className="font-mono text-xs tracking-[0.4em] text-[#00ff88] mb-4 text-center">✓ SCORE SUBMITTED</p>
+          <p className="font-mono text-sm font-bold tracking-[0.4em] text-[#00ff88] mb-4 text-center">✓ PLAYER STATS UPDATED</p>
         )}
 
         {/* Buttons */}
         <div ref={btnsRef} className="flex flex-col gap-3 w-full" style={{ opacity:0 }}>
           <button onClick={startGame}
-            className="font-mono tracking-[0.25em] text-base py-3.5 border-2 border-[#ff2020] text-[#ff2020] relative overflow-hidden
+            className="font-mono font-bold tracking-[0.25em] text-lg py-4 border-2 border-[#ff2020] text-[#ff2020] relative overflow-hidden
                        hover:bg-[#ff2020] hover:text-black transition-all duration-200 active:scale-95"
             style={{ boxShadow:'0 0 16px rgba(255,32,32,0.25)' }}
             onMouseEnter={e => e.currentTarget.style.boxShadow='0 0 28px rgba(255,32,32,0.6)'}
@@ -271,7 +249,7 @@ export default function GameOver() {
             ↺ RETRY UPLOAD
           </button>
           <button onClick={goToMenu}
-            className="font-mono tracking-[0.25em] text-base py-3.5 border border-[#444] text-[#888]
+            className="font-mono font-bold tracking-[0.25em] text-lg py-4 border border-[#444] text-[#888]
                        hover:border-[#888] hover:text-white transition-all duration-200 active:scale-95">
             MAIN MENU
           </button>

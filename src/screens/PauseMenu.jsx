@@ -106,8 +106,8 @@ export default function PauseMenu() {
 
         {/* Header */}
         <div ref={titleRef} className="border-b px-6 py-4 text-center" style={{ borderColor:'#0d0d2a', opacity:0 }}>
-          <p className="text-[#00f5ff]/50 tracking-[0.5em] text-xs mb-1">— SIGNAL PAUSED —</p>
-          <h1 className="text-[#00f5ff] tracking-[0.4em] text-xl font-bold">PAUSED</h1>
+          <p className="text-[#00f5ff]/50 tracking-[0.5em] text-xs mb-1 font-semibold">— SIGNAL PAUSED —</p>
+          <h1 className="text-[#00f5ff] tracking-[0.4em] text-2xl font-black">PAUSED</h1>
         </div>
 
         {/* Stats */}
@@ -115,7 +115,7 @@ export default function PauseMenu() {
 
           {/* Health bar */}
           <div>
-            <div className="flex justify-between text-sm tracking-widest mb-1">
+            <div className="flex justify-between text-base font-bold tracking-widest mb-1">
               <span className="text-[#888]">HULL</span>
               <span style={{ color: healthColor }}>{Math.round(health)}%</span>
             </div>
@@ -128,7 +128,7 @@ export default function PauseMenu() {
 
           {/* Energy bar */}
           <div>
-            <div className="flex justify-between text-sm tracking-widest mb-1">
+            <div className="flex justify-between text-base font-bold tracking-widest mb-1">
               <span className="text-[#888]">ENERGY</span>
               <span style={{ color: energyColor }}>{Math.round(energy)}%</span>
             </div>
@@ -148,8 +148,8 @@ export default function PauseMenu() {
               { label: 'SCORE', value: Math.floor(score / 1000) + 'K', color: '#aaa' },
             ].map(({ label, value, color }) => (
               <div key={label} className="flex-1 text-center py-2 border rounded-sm" style={{ borderColor:'#0d0d22', background:'rgba(255,255,255,0.02)' }}>
-                <p className="text-[11px] tracking-widest text-[#666] mb-0.5">{label}</p>
-                <p className="text-base font-bold" style={{ color }}>{value}</p>
+                <p className="text-xs font-bold tracking-widest text-[#666] mb-0.5">{label}</p>
+                <p className="text-lg font-black" style={{ color }}>{value}</p>
               </div>
             ))}
           </div>
@@ -158,7 +158,7 @@ export default function PauseMenu() {
         {/* Audio options */}
         <div ref={optsRef} className="px-6 py-4 border-b" style={{ borderColor:'#0d0d2a', opacity:0 }}>
           <div className="flex items-center justify-between mb-2.5">
-            <p className="font-mono text-[#555] text-[10px] tracking-[0.4em]">AUDIO SETTINGS</p>
+            <p className="font-mono text-[#555] text-xs font-bold tracking-[0.4em]">AUDIO SETTINGS</p>
             <button onClick={handleMuteToggle}
               className="font-mono text-[10px] tracking-widest px-2 py-0.5 border transition-all duration-150"
               style={{
@@ -172,7 +172,7 @@ export default function PauseMenu() {
 
           {/* BGM slider */}
           <div className="mb-2.5">
-            <div className="flex justify-between font-mono text-[11px] mb-1">
+            <div className="flex justify-between font-mono text-xs font-bold mb-1">
               <span className="text-[#888] tracking-widest">BGM</span>
               <span className="text-[#00f5ff]">{Math.round((masterVolume ?? 0.7) * 100)}%</span>
             </div>
@@ -186,7 +186,7 @@ export default function PauseMenu() {
 
           {/* SFX slider */}
           <div>
-            <div className="flex justify-between font-mono text-[11px] mb-1">
+            <div className="flex justify-between font-mono text-xs font-bold mb-1">
               <span className="text-[#888] tracking-widest">SFX</span>
               <span className="text-[#ff6a00]">{Math.round((sfxVolume ?? 0.7) * 100)}%</span>
             </div>
@@ -199,7 +199,7 @@ export default function PauseMenu() {
           </div>
 
           {/* Save indicator */}
-          <p className="font-mono text-[10px] tracking-[0.4em] text-center mt-2 transition-opacity duration-300"
+          <p className="font-mono text-xs font-bold tracking-[0.4em] text-center mt-2 transition-opacity duration-300"
             style={{ color:'#00f5ff', opacity: showSaved ? 1 : 0 }}>
             ✓ SETTINGS SAVED
           </p>
@@ -208,7 +208,7 @@ export default function PauseMenu() {
         {/* Buttons */}
         <div ref={btnsRef} className="px-6 py-4 flex flex-col gap-2.5">
           <button onClick={resumeGame}
-            className="tracking-[0.3em] text-base py-3 border-2 border-[#00f5ff] text-[#00f5ff]
+            className="tracking-[0.3em] text-lg font-bold py-3.5 border-2 border-[#00f5ff] text-[#00f5ff]
                        hover:bg-[#00f5ff] hover:text-black transition-all duration-150 active:scale-95 font-mono"
             style={{ boxShadow:'0 0 14px rgba(0,245,255,0.2)', opacity:0 }}
             onMouseEnter={e => e.currentTarget.style.boxShadow='0 0 24px rgba(0,245,255,0.5)'}
@@ -216,12 +216,12 @@ export default function PauseMenu() {
             ▶ RESUME
           </button>
           <button onClick={goToMenu}
-            className="tracking-[0.3em] text-base py-3 border border-[#333] text-[#777]
+            className="tracking-[0.3em] text-lg font-bold py-3.5 border border-[#333] text-[#777]
                        hover:border-[#777] hover:text-white transition-all duration-150 active:scale-95 font-mono"
             style={{ opacity:0 }}>
             MAIN MENU
           </button>
-          <p className="text-[#555] text-xs tracking-widest text-center mt-1">P / ESC TO RESUME · F TO TOGGLE FULLSCREEN</p>
+          <p className="text-[#555] text-xs font-semibold tracking-widest text-center mt-1">P / ESC TO RESUME · F TO TOGGLE FULLSCREEN</p>
         </div>
       </div>
     </div>

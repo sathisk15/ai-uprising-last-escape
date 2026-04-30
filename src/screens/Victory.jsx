@@ -36,6 +36,7 @@ export default function Victory() {
   const distance  = useGameStore((s) => s.distance)
   const startGame = useGameStore((s) => s.startGame)
   const goToMenu  = useGameStore((s) => s.goToMenu)
+  const playerName = useGameStore((s) => s.playerName)
 
   const containerRef = useRef(null)
   const flashRef     = useRef(null)
@@ -55,14 +56,7 @@ export default function Victory() {
 
   const isNewRecord = score >= highScore && score > 0
 
-  const [callsign,    setCallsign]    = useState('')
   const [submitState, setSubmitState] = useState('idle')
-
-  const handleSubmit = async () => {
-    setSubmitState('submitting')
-    await LeaderboardService.submitScore({ name: callsign, score, zone: 3, kills, distance })
-    setSubmitState('done')
-  }
 
   useEffect(() => {
     const tl = gsap.timeline()
@@ -128,6 +122,17 @@ export default function Victory() {
     return () => { tl.kill(); gsap.killTweensOf(titleRef.current) }
   }, [])
 
+  useEffect(() => {
+    if (!playerName || submitState !== 'idle') return
+    let mounted = true
+    ;(async () => {
+      setSubmitState('submitting')
+      await LeaderboardService.updatePlayerResult({ name: playerName, score, kills, distance })
+      if (mounted) setSubmitState('done')
+    })()
+    return () => { mounted = false }
+  }, [playerName, score, kills, distance, submitState])
+
   return (
     <div ref={containerRef} className="w-full h-full flex flex-col items-center justify-center bg-[#020d05] relative overflow-hidden"
       style={{ opacity: 0 }}>
@@ -169,7 +174,7 @@ export default function Victory() {
       <div className="relative z-10 flex flex-col items-center w-full max-w-sm px-4">
 
         {/* Upload complete label */}
-        <p ref={uploadRef} className="font-mono tracking-[0.5em] text-sm mb-4 uppercase"
+        <p ref={uploadRef} className="font-mono font-bold tracking-[0.5em] text-base mb-4 uppercase"
           style={{ color:'#00ff88', opacity:0 }}>
           ✓ UPLOAD COMPLETE
         </p>
@@ -187,8 +192,8 @@ export default function Victory() {
         </h2>
 
         <div ref={tagRef} className="text-center mb-5" style={{ opacity:0 }}>
-          <p className="font-mono text-[#00ff88] text-sm tracking-widest">CORE HAS BEEN NEUTRALIZED</p>
-          <p className="font-mono text-[#558855] text-xs tracking-widest mt-1">HUMANITY IS FREE</p>
+          <p className="font-mono text-[#00ff88] text-base font-bold tracking-widest">CORE HAS BEEN NEUTRALIZED</p>
+          <p className="font-mono text-[#558855] text-sm font-semibold tracking-widest mt-1">HUMANITY IS FREE</p>
         </div>
 
         {/* Zone completion badges */}
@@ -200,15 +205,15 @@ export default function Victory() {
           ].map((z) => (
             <div key={z.n} className="flex flex-col items-center px-3 py-2 border rounded-sm"
               style={{ borderColor: z.color + '40', background: z.color + '0a', opacity:0 }}>
-              <span className="font-mono text-xs tracking-widest mb-1" style={{ color: z.color + 'cc' }}>ZONE {z.n}</span>
-              <span className="font-mono font-bold text-base" style={{ color: z.color }}>✓</span>
-              <span className="font-mono text-[10px] tracking-wider mt-1" style={{ color: z.color + 'aa' }}>{z.label}</span>
+              <span className="font-mono text-sm font-bold tracking-widest mb-1" style={{ color: z.color + 'cc' }}>ZONE {z.n}</span>
+              <span className="font-mono font-black text-lg" style={{ color: z.color }}>✓</span>
+              <span className="font-mono text-xs font-semibold tracking-wider mt-1" style={{ color: z.color + 'aa' }}>{z.label}</span>
             </div>
           ))}
         </div>
 
         {isNewRecord && (
-          <div className="mb-4 px-4 py-1.5 border font-mono text-xs tracking-[0.4em] text-[#ff6a00]"
+          <div className="mb-4 px-4 py-2 border font-mono text-sm font-bold tracking-[0.4em] text-[#ff6a00]"
             style={{ borderColor:'#ff6a0040' }}>
             ★ NEW HIGH SCORE ★
           </div>
@@ -224,53 +229,26 @@ export default function Victory() {
           ].map(({ label, ref: vRef, staticVal, color }, i) => (
             <div key={i} className="flex items-center justify-between py-2.5 px-4 border-b last:border-0"
               style={{ borderColor:'#0a2014' }}>
-              <span className="font-mono text-sm tracking-[0.3em] text-[#5a9a6a]">{label}</span>
+              <span className="font-mono text-base font-bold tracking-[0.3em] text-[#5a9a6a]">{label}</span>
               {staticVal
-                ? <span className="font-mono text-base" style={{ color }}>{staticVal}</span>
-                : <span ref={vRef} className="font-mono text-base" style={{ color }}>0</span>
+                ? <span className="font-mono text-lg font-black" style={{ color }}>{staticVal}</span>
+                : <span ref={vRef} className="font-mono text-lg font-black" style={{ color }}>0</span>
               }
             </div>
           ))}
         </div>
 
-        {/* Leaderboard submit */}
-        {submitState === 'idle' && (
-          <div className="w-full mb-4 border p-3" style={{ borderColor:'#0a2a14', background:'rgba(0,40,20,0.25)' }}>
-            <p className="font-mono text-[10px] tracking-[0.35em] text-[#5a9a6a] mb-2 text-center">
-              SUBMIT TO GLOBAL RANKINGS
-            </p>
-            <input
-              type="text" maxLength={14} placeholder="ENTER CALLSIGN"
-              value={callsign}
-              onChange={(e) => setCallsign(e.target.value.toUpperCase())}
-              className="w-full bg-transparent border px-3 py-1.5 font-mono text-sm text-white tracking-widest outline-none mb-2"
-              style={{ borderColor:'#00ff8840' }}
-            />
-            <div className="flex gap-2">
-              <button onClick={handleSubmit}
-                className="flex-1 font-mono text-xs tracking-[0.25em] py-1.5 border border-[#00ff88] text-[#00ff88]
-                           hover:bg-[#00ff88] hover:text-black transition-all duration-150 active:scale-95">
-                SUBMIT
-              </button>
-              <button onClick={() => setSubmitState('skipped')}
-                className="font-mono text-xs tracking-[0.25em] px-4 py-1.5 border border-[#333] text-[#666]
-                           hover:text-[#aaa] transition-all duration-150 active:scale-95">
-                SKIP
-              </button>
-            </div>
-          </div>
-        )}
         {submitState === 'submitting' && (
-          <p className="font-mono text-xs tracking-[0.4em] text-[#00f5ff] mb-4 text-center">TRANSMITTING…</p>
+          <p className="font-mono text-sm font-bold tracking-[0.4em] text-[#00f5ff] mb-4 text-center">UPDATING PLAYER…</p>
         )}
         {submitState === 'done' && (
-          <p className="font-mono text-xs tracking-[0.4em] text-[#00ff88] mb-4 text-center">✓ SCORE SUBMITTED</p>
+          <p className="font-mono text-sm font-bold tracking-[0.4em] text-[#00ff88] mb-4 text-center">✓ PLAYER STATS UPDATED</p>
         )}
 
         {/* Buttons */}
         <div ref={btnsRef} className="flex flex-col gap-3 w-full" style={{ opacity:0 }}>
           <button onClick={startGame}
-            className="font-mono tracking-[0.25em] text-base py-3.5 border-2 border-[#00ff88] text-[#00ff88]
+            className="font-mono font-bold tracking-[0.25em] text-lg py-4 border-2 border-[#00ff88] text-[#00ff88]
                        hover:bg-[#00ff88] hover:text-black transition-all duration-200 active:scale-95"
             style={{ boxShadow:'0 0 18px rgba(0,255,136,0.3)' }}
             onMouseEnter={e => e.currentTarget.style.boxShadow='0 0 32px rgba(0,255,136,0.6)'}
@@ -278,7 +256,7 @@ export default function Victory() {
             ▶ PLAY AGAIN
           </button>
           <button onClick={goToMenu}
-            className="font-mono tracking-[0.25em] text-base py-3.5 border border-[#444] text-[#888]
+            className="font-mono font-bold tracking-[0.25em] text-lg py-4 border border-[#444] text-[#888]
                        hover:border-[#888] hover:text-white transition-all duration-200 active:scale-95">
             MAIN MENU
           </button>

@@ -6,11 +6,13 @@ import { shakeSignal, damageSignal } from '../game/shakeSignal'
 // Persistent slice — survives page reload
 const persistedSlice = (set) => ({
   highScore: 0,
+  playerName: '',
   audioEnabled: true,
   masterVolume: 0.7,
   sfxVolume: 0.7,
 
   setHighScore: (score) => set({ highScore: score }),
+  setPlayerName: (name) => set({ playerName: (name || '').trim().slice(0, 14).toUpperCase() }),
   setAudioEnabled: (val) => set({ audioEnabled: val }),
   setMasterVolume: (val) => set({ masterVolume: Math.max(0, Math.min(1, val)) }),
   setSfxVolume: (val) => set({ sfxVolume: Math.max(0, Math.min(1, val)) }),
@@ -214,6 +216,7 @@ const useGameStore = create(
       // Only persist these keys, not session state
       partialize: (state) => ({
         highScore: state.highScore,
+        playerName: state.playerName,
         audioEnabled: state.audioEnabled,
         masterVolume: state.masterVolume,
         sfxVolume: state.sfxVolume,
