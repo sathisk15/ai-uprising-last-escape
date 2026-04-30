@@ -49,6 +49,16 @@ const AudioManager = {
     ProceduralBGM.stop()
   },
 
+  /** Duck BGM volume down — call when game is paused */
+  duckBGM() {
+    ProceduralBGM.duck()
+  },
+
+  /** Restore BGM to full zone volume — call when resuming from pause */
+  unduckBGM() {
+    ProceduralBGM.unduck()
+  },
+
   /** Play a one-shot SFX by name */
   playSFX(name) {
     this.sync()

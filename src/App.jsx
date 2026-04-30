@@ -91,18 +91,25 @@ export default function App() {
     }
   }, [phase])
 
-  // BGM — start/stop based on phase + zone
+  // BGM — phase-aware routing
+  // menu/intro  → light ambient (zone 0): no drums, soft pads
+  // playing/zoneout/transition → full zone music with arp echo
+  // paused      → duck volume to 20%, keep music playing
+  // gameover/victory → stop + SFX
   useEffect(() => {
-    if (phase === 'playing' || phase === 'paused' || phase === 'transition' || phase === 'zoneout') {
+    if (phase === 'playing' || phase === 'zoneout' || phase === 'transition') {
+      AudioManager.unduckBGM()
       AudioManager.playBGM(zone)
+    } else if (phase === 'paused') {
+      AudioManager.duckBGM()
+    } else if (phase === 'menu' || phase === 'intro') {
+      AudioManager.playBGM(0)
     } else if (phase === 'gameover') {
       AudioManager.stopBGM()
       AudioManager.playSFX('game_over')
     } else if (phase === 'victory') {
       AudioManager.stopBGM()
       AudioManager.playSFX('victory')
-    } else {
-      AudioManager.stopBGM()
     }
   }, [phase, zone])
 
