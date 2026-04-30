@@ -1,4 +1,6 @@
 node_modules
+.env.local
+.env*.local
 AI_Uprising_GDD_v1_Milestone_1.docx
 dist
 

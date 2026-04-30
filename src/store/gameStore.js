@@ -8,10 +8,12 @@ const persistedSlice = (set) => ({
   highScore: 0,
   audioEnabled: true,
   masterVolume: 0.7,
+  sfxVolume: 0.7,
 
   setHighScore: (score) => set({ highScore: score }),
   setAudioEnabled: (val) => set({ audioEnabled: val }),
-  setMasterVolume: (val) => set({ masterVolume: val }),
+  setMasterVolume: (val) => set({ masterVolume: Math.max(0, Math.min(1, val)) }),
+  setSfxVolume: (val) => set({ sfxVolume: Math.max(0, Math.min(1, val)) }),
 })
 
 // Session slice — reset each game
@@ -214,6 +216,7 @@ const useGameStore = create(
         highScore: state.highScore,
         audioEnabled: state.audioEnabled,
         masterVolume: state.masterVolume,
+        sfxVolume: state.sfxVolume,
       }),
     }
   )

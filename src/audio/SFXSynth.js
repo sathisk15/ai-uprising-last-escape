@@ -8,8 +8,31 @@ function getCtx() {
 }
 
 function masterVol() {
-  const { audioEnabled, masterVolume } = useGameStore.getState()
-  return audioEnabled ? masterVolume : 0
+  const { audioEnabled, sfxVolume } = useGameStore.getState()
+  return audioEnabled ? (sfxVolume ?? 0.7) : 0
+}
+
+// ── Noise buffer cache ───────────────────────────────────────────────────────
+// AudioBuffer can be shared across BufferSourceNodes — allocate once, reuse forever.
+// This avoids creating + GC-ing large typed arrays on every SFX call (main-thread cost).
+let _noiseCache = null
+
+function noiseBuffer(key) {
+  const c = getCtx()
+  if (!_noiseCache) {
+    const make = (dur) => {
+      const buf  = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate)
+      const data = buf.getChannelData(0)
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
+      return buf
+    }
+    _noiseCache = {
+      explosion: make(0.65),
+      hit:       make(0.12),
+      swipe:     make(0.11),
+    }
+  }
+  return _noiseCache[key]
 }
 
 const SFXSynth = {
@@ -30,26 +53,20 @@ const SFXSynth = {
     osc.start(t); osc.stop(t + 0.13)
   },
 
-  /** Explosion — noise burst + low-frequency thump */
+  /** Explosion — noise burst (pre-allocated) + low-frequency thump */
   explosion() {
     const v = masterVol(); if (!v) return
     const c = getCtx(); const t = c.currentTime
-
-    // White noise burst through lowpass
-    const dur  = 0.65
-    const buf  = c.createBuffer(1, c.sampleRate * dur, c.sampleRate)
-    const data = buf.getChannelData(0)
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
+    // Reuse pre-allocated noise buffer — no allocation cost
     const src  = c.createBufferSource()
-    src.buffer = buf
+    src.buffer = noiseBuffer('explosion')
     const lp   = c.createBiquadFilter()
     lp.type = 'lowpass'; lp.frequency.value = 520
     const g1   = c.createGain()
     g1.gain.setValueAtTime(v * 2.2, t)
-    g1.gain.exponentialRampToValueAtTime(0.001, t + dur)
+    g1.gain.exponentialRampToValueAtTime(0.001, t + 0.65)
     src.connect(lp); lp.connect(g1); g1.connect(c.destination)
     src.start(t)
-
     // Low-frequency thump sweep
     const osc  = c.createOscillator()
     const g2   = c.createGain()
@@ -61,22 +78,17 @@ const SFXSynth = {
     osc.start(t); osc.stop(t + 0.6)
   },
 
-  /** Metallic hit / impact — bandpass noise + sharp tone */
+  /** Metallic hit / impact — bandpass noise (pre-allocated) + sharp tone */
   hit() {
     const v = masterVol(); if (!v) return
     const c = getCtx(); const t = c.currentTime
-    // Noise crack
-    const dur  = 0.12
-    const buf  = c.createBuffer(1, c.sampleRate * dur, c.sampleRate)
-    const data = buf.getChannelData(0)
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
     const src  = c.createBufferSource()
-    src.buffer = buf
+    src.buffer = noiseBuffer('hit')
     const bp   = c.createBiquadFilter()
     bp.type = 'bandpass'; bp.frequency.value = 2000; bp.Q.value = 3
     const gain = c.createGain()
     gain.gain.setValueAtTime(v * 1.4, t)
-    gain.gain.exponentialRampToValueAtTime(0.001, t + dur)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12)
     src.connect(bp); bp.connect(gain); gain.connect(c.destination)
     src.start(t)
     // Sharp metallic ping
@@ -89,23 +101,19 @@ const SFXSynth = {
     osc.start(t); osc.stop(t + 0.09)
   },
 
-  /** Lane swipe — highpass noise whoosh */
+  /** Lane swipe — highpass noise whoosh (pre-allocated) */
   swipe() {
     const v = masterVol(); if (!v) return
     const c = getCtx(); const t = c.currentTime
-    const dur  = 0.11
-    const buf  = c.createBuffer(1, c.sampleRate * dur, c.sampleRate)
-    const data = buf.getChannelData(0)
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
     const src  = c.createBufferSource()
-    src.buffer = buf
+    src.buffer = noiseBuffer('swipe')
     const hp   = c.createBiquadFilter()
     hp.type = 'highpass'
     hp.frequency.setValueAtTime(500, t)
-    hp.frequency.linearRampToValueAtTime(2600, t + dur)
+    hp.frequency.linearRampToValueAtTime(2600, t + 0.11)
     const gain = c.createGain()
     gain.gain.setValueAtTime(v * 0.22, t)
-    gain.gain.exponentialRampToValueAtTime(0.001, t + dur)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.11)
     src.connect(hp); hp.connect(gain); gain.connect(c.destination)
     src.start(t)
   },

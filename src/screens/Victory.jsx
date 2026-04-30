@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import useGameStore from '../store/gameStore'
+import LeaderboardService from '../services/LeaderboardService'
 
 function GreenParticles() {
   return (
@@ -53,6 +54,15 @@ export default function Victory() {
   const killsValRef  = useRef(null)
 
   const isNewRecord = score >= highScore && score > 0
+
+  const [callsign,    setCallsign]    = useState('')
+  const [submitState, setSubmitState] = useState('idle')
+
+  const handleSubmit = async () => {
+    setSubmitState('submitting')
+    await LeaderboardService.submitScore({ name: callsign, score, zone: 3, kills, distance })
+    setSubmitState('done')
+  }
 
   useEffect(() => {
     const tl = gsap.timeline()
@@ -222,6 +232,40 @@ export default function Victory() {
             </div>
           ))}
         </div>
+
+        {/* Leaderboard submit */}
+        {submitState === 'idle' && (
+          <div className="w-full mb-4 border p-3" style={{ borderColor:'#0a2a14', background:'rgba(0,40,20,0.25)' }}>
+            <p className="font-mono text-[10px] tracking-[0.35em] text-[#5a9a6a] mb-2 text-center">
+              SUBMIT TO GLOBAL RANKINGS
+            </p>
+            <input
+              type="text" maxLength={14} placeholder="ENTER CALLSIGN"
+              value={callsign}
+              onChange={(e) => setCallsign(e.target.value.toUpperCase())}
+              className="w-full bg-transparent border px-3 py-1.5 font-mono text-sm text-white tracking-widest outline-none mb-2"
+              style={{ borderColor:'#00ff8840' }}
+            />
+            <div className="flex gap-2">
+              <button onClick={handleSubmit}
+                className="flex-1 font-mono text-xs tracking-[0.25em] py-1.5 border border-[#00ff88] text-[#00ff88]
+                           hover:bg-[#00ff88] hover:text-black transition-all duration-150 active:scale-95">
+                SUBMIT
+              </button>
+              <button onClick={() => setSubmitState('skipped')}
+                className="font-mono text-xs tracking-[0.25em] px-4 py-1.5 border border-[#333] text-[#666]
+                           hover:text-[#aaa] transition-all duration-150 active:scale-95">
+                SKIP
+              </button>
+            </div>
+          </div>
+        )}
+        {submitState === 'submitting' && (
+          <p className="font-mono text-xs tracking-[0.4em] text-[#00f5ff] mb-4 text-center">TRANSMITTING…</p>
+        )}
+        {submitState === 'done' && (
+          <p className="font-mono text-xs tracking-[0.4em] text-[#00ff88] mb-4 text-center">✓ SCORE SUBMITTED</p>
+        )}
 
         {/* Buttons */}
         <div ref={btnsRef} className="flex flex-col gap-3 w-full" style={{ opacity:0 }}>

@@ -1,22 +1,55 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import useGameStore from '../store/gameStore'
+import ProceduralBGM from '../audio/ProceduralBGM'
 
 export default function PauseMenu() {
-  const resumeGame = useGameStore((s) => s.resumeGame)
-  const goToMenu   = useGameStore((s) => s.goToMenu)
-  const score      = useGameStore((s) => s.score)
-  const zone       = useGameStore((s) => s.zone)
-  const health     = useGameStore((s) => s.health)
-  const energy     = useGameStore((s) => s.energy)
-  const kills      = useGameStore((s) => s.kills)
-  const ammo       = useGameStore((s) => s.ammo)
+  const resumeGame      = useGameStore((s) => s.resumeGame)
+  const goToMenu        = useGameStore((s) => s.goToMenu)
+  const score           = useGameStore((s) => s.score)
+  const zone            = useGameStore((s) => s.zone)
+  const health          = useGameStore((s) => s.health)
+  const energy          = useGameStore((s) => s.energy)
+  const kills           = useGameStore((s) => s.kills)
+  const ammo            = useGameStore((s) => s.ammo)
+  const masterVolume    = useGameStore((s) => s.masterVolume)
+  const sfxVolume       = useGameStore((s) => s.sfxVolume)
+  const audioEnabled    = useGameStore((s) => s.audioEnabled)
+  const setMasterVolume = useGameStore((s) => s.setMasterVolume)
+  const setSfxVolume    = useGameStore((s) => s.setSfxVolume)
+  const setAudioEnabled = useGameStore((s) => s.setAudioEnabled)
+
+  const [showSaved, setShowSaved] = useState(false)
+  const savedTimerRef = useRef(null)
 
   const overlayRef = useRef(null)
   const panelRef   = useRef(null)
   const titleRef   = useRef(null)
   const statsRef   = useRef(null)
+  const optsRef    = useRef(null)
   const btnsRef    = useRef(null)
+
+  const triggerSaved = () => {
+    setShowSaved(true)
+    clearTimeout(savedTimerRef.current)
+    savedTimerRef.current = setTimeout(() => setShowSaved(false), 1600)
+  }
+
+  const handleBGMChange = (v) => {
+    setMasterVolume(v)
+    ProceduralBGM.setVolume(v)
+    triggerSaved()
+  }
+
+  const handleSFXChange = (v) => {
+    setSfxVolume(v)
+    triggerSaved()
+  }
+
+  const handleMuteToggle = () => {
+    setAudioEnabled(!audioEnabled)
+    triggerSaved()
+  }
 
   useEffect(() => {
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
@@ -34,12 +67,16 @@ export default function PauseMenu() {
         { opacity: 0, x: -10 },
         { opacity: 1, x: 0, duration: 0.25, stagger: 0.06 }, '-=0.1'
       )
+      .fromTo(optsRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.25 }, '-=0.1'
+      )
       .fromTo(btnsRef.current?.children ?? [],
         { opacity: 0, y: 8 },
         { opacity: 1, y: 0, duration: 0.22, stagger: 0.07 }, '-=0.1'
       )
 
-    return () => tl.kill()
+    return () => { tl.kill(); clearTimeout(savedTimerRef.current) }
   }, [])
 
   const healthColor = health > 60 ? '#00ff88' : health > 30 ? '#ffaa00' : '#ff2020'
@@ -116,6 +153,56 @@ export default function PauseMenu() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Audio options */}
+        <div ref={optsRef} className="px-6 py-4 border-b" style={{ borderColor:'#0d0d2a', opacity:0 }}>
+          <div className="flex items-center justify-between mb-2.5">
+            <p className="font-mono text-[#555] text-[10px] tracking-[0.4em]">AUDIO SETTINGS</p>
+            <button onClick={handleMuteToggle}
+              className="font-mono text-[10px] tracking-widest px-2 py-0.5 border transition-all duration-150"
+              style={{
+                borderColor: audioEnabled ? '#00f5ff40' : '#ff202040',
+                color: audioEnabled ? '#00f5ff' : '#ff4444',
+                background: audioEnabled ? 'rgba(0,245,255,0.05)' : 'rgba(255,32,32,0.05)',
+              }}>
+              {audioEnabled ? '◉ ON' : '○ OFF'}
+            </button>
+          </div>
+
+          {/* BGM slider */}
+          <div className="mb-2.5">
+            <div className="flex justify-between font-mono text-[11px] mb-1">
+              <span className="text-[#888] tracking-widest">BGM</span>
+              <span className="text-[#00f5ff]">{Math.round((masterVolume ?? 0.7) * 100)}%</span>
+            </div>
+            <input type="range" min="0" max="100"
+              value={Math.round((masterVolume ?? 0.7) * 100)}
+              onChange={(e) => handleBGMChange(Number(e.target.value) / 100)}
+              className="w-full h-1 rounded-none outline-none cursor-pointer"
+              style={{ accentColor: '#00f5ff' }}
+            />
+          </div>
+
+          {/* SFX slider */}
+          <div>
+            <div className="flex justify-between font-mono text-[11px] mb-1">
+              <span className="text-[#888] tracking-widest">SFX</span>
+              <span className="text-[#ff6a00]">{Math.round((sfxVolume ?? 0.7) * 100)}%</span>
+            </div>
+            <input type="range" min="0" max="100"
+              value={Math.round((sfxVolume ?? 0.7) * 100)}
+              onChange={(e) => handleSFXChange(Number(e.target.value) / 100)}
+              className="w-full h-1 rounded-none outline-none cursor-pointer"
+              style={{ accentColor: '#ff6a00' }}
+            />
+          </div>
+
+          {/* Save indicator */}
+          <p className="font-mono text-[10px] tracking-[0.4em] text-center mt-2 transition-opacity duration-300"
+            style={{ color:'#00f5ff', opacity: showSaved ? 1 : 0 }}>
+            ✓ SETTINGS SAVED
+          </p>
         </div>
 
         {/* Buttons */}

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import useGameStore from '../store/gameStore'
+import LeaderboardService from '../services/LeaderboardService'
 
 // Animated particle dots floating in background
 function Particles() {
@@ -56,10 +57,55 @@ function GridBackground() {
   )
 }
 
+function RankingsPanel() {
+  const [scores,  setScores]  = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    LeaderboardService.getTopScores(5).then((data) => {
+      setScores(data)
+      setLoading(false)
+    })
+  }, [])
+
+  return (
+    <div className="w-full border mb-3" style={{ borderColor:'#00f5ff15', background:'rgba(0,245,255,0.02)' }}>
+      <div className="flex items-center gap-2 px-3 py-2 border-b" style={{ borderColor:'#00f5ff15' }}>
+        <div className="h-px flex-1" style={{ background:'linear-gradient(90deg, transparent, #00f5ff44)' }} />
+        <span className="font-mono text-[10px] tracking-[0.5em] text-[#00f5ff88]">GLOBAL RANKINGS</span>
+        <div className="h-px flex-1" style={{ background:'linear-gradient(270deg, transparent, #00f5ff44)' }} />
+      </div>
+      {loading ? (
+        <p className="font-mono text-[10px] tracking-widest text-[#444] text-center py-3">LOADING…</p>
+      ) : scores.length === 0 ? (
+        <p className="font-mono text-[10px] tracking-widest text-[#444] text-center py-3">— NO ENTRIES YET —</p>
+      ) : (
+        <div className="divide-y" style={{ borderColor:'#0a0a1a' }}>
+          {scores.map((s, i) => (
+            <div key={s.id} className="flex items-center justify-between px-3 py-1.5">
+              <span className="font-mono text-[10px] w-5" style={{ color: i === 0 ? '#ff6a00' : '#555' }}>
+                {i + 1}
+              </span>
+              <span className="font-mono text-[11px] tracking-widest flex-1 ml-2" style={{ color:'#aaa' }}>
+                {s.name || '???'}
+              </span>
+              <span className="font-mono text-[11px]" style={{ color:'#00f5ff' }}>
+                {(s.score || 0).toLocaleString()}
+              </span>
+              <span className="font-mono text-[10px] ml-3" style={{ color:'#555' }}>Z{s.zone || 1}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function MainMenu() {
   const startIntro = useGameStore((s) => s.startIntro)
   const highScore  = useGameStore((s) => s.highScore)
-  const [btnHover, setBtnHover] = useState(false)
+  const [btnHover,       setBtnHover]       = useState(false)
+  const [showRankings,   setShowRankings]   = useState(false)
 
   const containerRef  = useRef(null)
   const badgeRef      = useRef(null)
@@ -284,6 +330,20 @@ export default function MainMenu() {
               <span className="font-mono text-[10px] tracking-widest mt-0.5" style={{ color: z.color + 'aa' }}>{z.name}</span>
             </div>
           ))}
+        </div>
+
+        {/* Rankings toggle */}
+        <div className="w-full mb-4">
+          <button
+            onClick={() => setShowRankings((v) => !v)}
+            className="w-full font-mono text-[10px] tracking-[0.4em] py-1.5 border transition-all duration-200"
+            style={{
+              borderColor: showRankings ? '#00f5ff33' : '#ffffff0d',
+              color: showRankings ? '#00f5ff' : '#555',
+            }}>
+            {showRankings ? '▲ HIDE RANKINGS' : '▼ VIEW GLOBAL RANKINGS'}
+          </button>
+          {showRankings && <RankingsPanel />}
         </div>
 
         {/* CTA button */}
