@@ -1,3 +1,26 @@
 node_modules
 AI_Uprising_GDD_v1_Milestone_1.docx
 dist
+
+# Firebase hosting cache
+.firebase/
+
+# Cursor AI
+.cursor/
+
+# Claude
+CLAUDE.md
+.claude/
+
+# Aider
+.aider*
+aider.chat.history.md
+
+# GitHub Copilot
+.github/copilot-instructions.md
+
+# General AI context/output files
+*.ai-context
+llm-context*
+.chatgpt/
+openai-*.json
