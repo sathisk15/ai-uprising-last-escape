@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /players/{playerId} {
+      // Anyone can read the leaderboard — no auth required
+      allow read: if true;
+      // Anyone can create or update their own player document
+      allow write: if true;
+    }
+  }
+}
