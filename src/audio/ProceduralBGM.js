@@ -47,6 +47,13 @@ class ProceduralBGM {
     this.currentZone = null
     this.timer       = null
     this.nextBar     = 0
+    // Mute state
+    this._muted       = false
+    // Boost overlay
+    this._boostRunning = false
+    this._boostGain    = null
+    this._boostTimer   = null
+    this._boostNextBar = 0
   }
 
   _init() {
@@ -251,11 +258,13 @@ class ProceduralBGM {
       this.delayBus.delayTime.value = beat * 0.25
     }
 
-    // Fade in — slower for ambient, snappier for gameplay
+    // Fade in — slower for ambient, snappier for gameplay (skip if muted)
     const now = this.ctx.currentTime
     this.master.gain.cancelScheduledValues(now)
     this.master.gain.setValueAtTime(0, now)
-    this.master.gain.linearRampToValueAtTime(cfg.masterVol, now + (cfg.ambient ? 2.5 : 1.5))
+    if (!this._muted) {
+      this.master.gain.linearRampToValueAtTime(cfg.masterVol, now + (cfg.ambient ? 2.5 : 1.5))
+    }
 
     this.nextBar = now + 0.05
 
@@ -292,6 +301,7 @@ class ProceduralBGM {
   /** Lower master volume to ratio × zone target — used when paused */
   duck(ratio = 0.20) {
     if (!this.master || !this.ctx || !this.running) return
+    if (this._muted) return   // already silent, nothing to duck
     const cfg = ZONE_CFG[this.currentZone] ?? ZONE_CFG[1]
     const now = this.ctx.currentTime
     this.master.gain.cancelScheduledValues(now)
@@ -302,6 +312,7 @@ class ProceduralBGM {
   /** Restore master volume back to zone target — used when resuming */
   unduck() {
     if (!this.master || !this.ctx || !this.running) return
+    if (this._muted) return   // stay silent if the user has audio off
     const cfg = ZONE_CFG[this.currentZone] ?? ZONE_CFG[1]
     const now = this.ctx.currentTime
     this.master.gain.cancelScheduledValues(now)
@@ -310,12 +321,145 @@ class ProceduralBGM {
   }
 
   setVolume(v) {
-    if (this.master && this.running) {
+    if (this.master && this.running && !this._muted) {
       const now = this.ctx.currentTime
       this.master.gain.cancelScheduledValues(now)
       this.master.gain.setValueAtTime(this.master.gain.value, now)
       this.master.gain.linearRampToValueAtTime(v * 0.42, now + 0.3)
     }
+  }
+
+  /** Silence or restore both BGM master and boost overlay immediately */
+  setMuted(muted) {
+    this._muted = muted
+    if (!this.master || !this.ctx) return
+    const cfg = ZONE_CFG[this.currentZone ?? 0]
+    const now = this.ctx.currentTime
+    const targetMaster = muted ? 0 : (cfg?.masterVol ?? 0.22)
+    this.master.gain.cancelScheduledValues(now)
+    this.master.gain.setValueAtTime(this.master.gain.value, now)
+    this.master.gain.linearRampToValueAtTime(targetMaster, now + 0.3)
+    // also silence boost layer
+    if (this._boostGain) {
+      this._boostGain.gain.cancelScheduledValues(now)
+      this._boostGain.gain.setValueAtTime(this._boostGain.gain.value, now)
+      this._boostGain.gain.linearRampToValueAtTime(muted ? 0 : 0.28, now + 0.3)
+    }
+  }
+
+  // ── Boost overlay layer ─────────────────────────────────────────────────────
+  // A fast, high-energy rhythmic stinger that plays on top of the zone BGM
+  // while Speed Boost is active. Uses its own gain node so it fades independently.
+
+  _boostKick(t, g) {
+    const { ctx } = this
+    const osc  = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.frequency.setValueAtTime(200, t)
+    osc.frequency.exponentialRampToValueAtTime(42, t + 0.08)
+    gain.gain.setValueAtTime(1.2, t)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22)
+    osc.connect(gain); gain.connect(g)
+    osc.start(t); osc.stop(t + 0.24)
+  }
+
+  _boostHihat(t, g) {
+    const { ctx } = this
+    const dur  = 0.03
+    const buf  = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate)
+    const data = buf.getChannelData(0)
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1
+    const src  = ctx.createBufferSource()
+    src.buffer = buf
+    const hp   = ctx.createBiquadFilter()
+    hp.type = 'highpass'; hp.frequency.value = 10000
+    const gain = ctx.createGain()
+    gain.gain.setValueAtTime(0.18, t)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.9)
+    src.connect(hp); hp.connect(gain); gain.connect(g)
+    src.start(t); src.stop(t + dur)
+  }
+
+  _boostArp(t, freq, dur, g) {
+    const { ctx } = this
+    const gain = ctx.createGain()
+    gain.gain.setValueAtTime(0.001, t)
+    gain.gain.linearRampToValueAtTime(0.12, t + 0.003)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.7)
+    const osc = ctx.createOscillator()
+    osc.type = 'square'
+    osc.frequency.value = freq
+    osc.detune.value = 5
+    osc.connect(gain); gain.connect(g)
+    osc.start(t); osc.stop(t + dur)
+  }
+
+  _scheduleBoostBar(barStart, bpm, g) {
+    const beat = 60 / bpm
+    const half = beat * 0.5
+    const cfg  = ZONE_CFG[this.currentZone ?? 1]
+
+    // Double-time kicks on every beat + off-beat
+    for (let i = 0; i < 8; i++) this._boostKick(barStart + i * half, g)
+    // 16th-note hi-hats
+    for (let i = 0; i < 16; i++) this._boostHihat(barStart + i * beat * 0.25, g)
+    // Fast ascending arp (2 octaves up)
+    if (cfg) {
+      for (let i = 0; i < 16; i++) {
+        const semi = cfg.scale[i % cfg.scale.length] + 24
+        const freq = cfg.root * Math.pow(2, semi / 12)
+        this._boostArp(barStart + i * (beat * 4 / 16), freq, beat * 0.18, g)
+      }
+    }
+  }
+
+  startBoost() {
+    if (this._boostRunning || !this.running) return
+    this._init()
+    this._boostRunning = true
+
+    const g = this.ctx.createGain()
+    g.gain.value = 0
+    g.connect(this.ctx.destination)
+    this._boostGain = g
+
+    const now = this.ctx.currentTime
+    if (!this._muted) {
+      g.gain.setValueAtTime(0, now)
+      g.gain.linearRampToValueAtTime(0.28, now + 0.35)
+    }
+
+    // BPM = current zone BPM + 45 (capped at 200) for a real urgency kick
+    const cfg     = ZONE_CFG[this.currentZone ?? 1]
+    const boostBPM = Math.min((cfg?.bpm ?? 120) + 45, 200)
+    const bar     = (60 / boostBPM) * 4
+
+    this._boostNextBar = now + 0.05
+
+    const tick = () => {
+      if (!this._boostRunning) return
+      const lookahead = this.ctx.currentTime + 1.2
+      while (this._boostNextBar < lookahead) {
+        this._scheduleBoostBar(this._boostNextBar, boostBPM, g)
+        this._boostNextBar += bar
+      }
+      this._boostTimer = setTimeout(tick, 200)
+    }
+    tick()
+  }
+
+  stopBoost() {
+    if (!this._boostRunning) return
+    this._boostRunning = false
+    clearTimeout(this._boostTimer)
+    this._boostTimer = null
+    if (this._boostGain && this.ctx) {
+      const now = this.ctx.currentTime
+      this._boostGain.gain.cancelScheduledValues(now)
+      this._boostGain.gain.setValueAtTime(this._boostGain.gain.value, now)
+      this._boostGain.gain.linearRampToValueAtTime(0, now + 0.45)
+    }
+    this._boostGain = null
   }
 }
 

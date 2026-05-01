@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import useGameStore from '../store/gameStore'
-import ProceduralBGM from '../audio/ProceduralBGM'
+import AudioManager from '../audio/AudioManager'
 
 export default function PauseMenu() {
   const resumeGame      = useGameStore((s) => s.resumeGame)
@@ -37,7 +37,7 @@ export default function PauseMenu() {
 
   const handleBGMChange = (v) => {
     setMasterVolume(v)
-    ProceduralBGM.setVolume(v)
+    if (audioEnabled) AudioManager.setBGMVolume(v)
     triggerSaved()
   }
 
@@ -47,7 +47,9 @@ export default function PauseMenu() {
   }
 
   const handleMuteToggle = () => {
-    setAudioEnabled(!audioEnabled)
+    const next = !audioEnabled
+    setAudioEnabled(next)
+    AudioManager.setMuted(!next)   // setMuted(true) = silence, setMuted(false) = restore
     triggerSaved()
   }
 

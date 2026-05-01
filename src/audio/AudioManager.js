@@ -1,19 +1,10 @@
-import { Howler } from 'howler'
-import useGameStore from '../store/gameStore'
 import ProceduralBGM from './ProceduralBGM'
 import SFXSynth from './SFXSynth'
 
 // ── Public API ───────────────────────────────────────────────────────────────
 const AudioManager = {
-  /** Sync Howler master volume from store (reserved for any future file-based SFX) */
-  sync() {
-    const { audioEnabled, masterVolume } = useGameStore.getState()
-    Howler.volume(audioEnabled ? masterVolume : 0)
-  },
-
   /** Start BGM for the given zone. Zone 0 = light ambient (menu/intro). */
   playBGM(zone) {
-    this.sync()
     ProceduralBGM.play(zone)
   },
 
@@ -30,6 +21,26 @@ const AudioManager = {
   /** Restore BGM to full zone volume — call when resuming from pause */
   unduckBGM() {
     ProceduralBGM.unduck()
+  },
+
+  /** Set BGM volume live (called from the slider in Pause menu) */
+  setBGMVolume(v) {
+    ProceduralBGM.setVolume(v)
+  },
+
+  /** Mute or unmute ALL audio (BGM + SFX). SFX reads audioEnabled from store directly. */
+  setMuted(muted) {
+    ProceduralBGM.setMuted(muted)
+  },
+
+  /** Start the fast boost overlay layer on top of the current zone BGM */
+  startBoostBGM() {
+    ProceduralBGM.startBoost()
+  },
+
+  /** Fade out and remove the boost overlay layer */
+  stopBoostBGM() {
+    ProceduralBGM.stopBoost()
   },
 
   /** Play a one-shot procedural SFX: 'shoot' | 'explosion' | 'hit' */
