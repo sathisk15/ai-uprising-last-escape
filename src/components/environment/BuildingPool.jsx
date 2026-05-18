@@ -6,21 +6,21 @@ import useGameStore from '../../store/gameStore';
 const TILE_LENGTH = 160;
 const RECYCLE_Z = 120;
 
-function setupCityTile(model, reducedGfx) {
+function setupCityTile(model) {
   model.traverse((child) => {
     if (child.isLight) {
-      child.intensity = Math.min(child.intensity, reducedGfx ? 1.35 : 2);
+      child.intensity = Math.min(child.intensity, 2);
     }
     if (child.isMesh) {
-      child.castShadow = !reducedGfx;
-      child.receiveShadow = !reducedGfx;
+      child.castShadow = true;
+      child.receiveShadow = true;
     }
   });
 }
 
 useGLTF.preload('/models/city_night.glb');
 
-export default function BuildingPool({ reducedGfx = false }) {
+export default function BuildingPool() {
   const tileA = useRef();
   const tileB = useRef();
   const tileC = useRef();
@@ -30,11 +30,11 @@ export default function BuildingPool({ reducedGfx = false }) {
     const a = scene.clone(true);
     const b = scene.clone(true);
     const c = scene.clone(true);
-    setupCityTile(a, reducedGfx);
-    setupCityTile(b, reducedGfx);
-    setupCityTile(c, reducedGfx);
+    setupCityTile(a);
+    setupCityTile(b);
+    setupCityTile(c);
     return [a, b, c];
-  }, [scene, reducedGfx]);
+  }, [scene]);
 
   useFrame((_, delta) => {
     const { phase, speed, tutorialFrozen } = useGameStore.getState();

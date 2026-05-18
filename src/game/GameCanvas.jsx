@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
@@ -14,7 +14,6 @@ import CollectiblePool from '../components/collectibles/CollectiblePool';
 import useGameStore from '../store/gameStore';
 import { ZONES } from './zones';
 import { shakeSignal } from './shakeSignal';
-import { isCheapGraphicsPipeline } from './graphicsQuality';
 
 function EnemySystems() {
   const hitCooldown = useRef(0);
@@ -118,27 +117,17 @@ function BoostCameraFX() {
   return null;
 }
 
-const STREAK_COUNT_FULL = 22;
-const STREAK_COUNT_REDUCED = 8;
+const STREAK_COUNT = 22;
+const streakData = Array.from({ length: STREAK_COUNT }, () => ({
+  ref: null,
+  x: (Math.random() - 0.5) * 7,
+  y: Math.random() * 2.4 - 0.4,
+  z: Math.random() * 16 - 14,
+  len: 2.2 + Math.random() * 2.4,
+  isOrange: Math.random() < 0.3,
+}));
 
-function makeStreakDatum() {
-  return {
-    ref: null,
-    x: (Math.random() - 0.5) * 7,
-    y: Math.random() * 2.4 - 0.4,
-    z: Math.random() * 16 - 14,
-    len: 2.2 + Math.random() * 2.4,
-    isOrange: Math.random() < 0.3,
-  };
-}
-
-function BoostStreaks({ reduced }) {
-  const streakCount = reduced ? STREAK_COUNT_REDUCED : STREAK_COUNT_FULL;
-  const streakData = useMemo(
-    () => Array.from({ length: streakCount }, () => makeStreakDatum()),
-    [streakCount],
-  );
-
+function BoostStreaks() {
   useFrame((_, delta) => {
     const { speedBoostActive } = useGameStore.getState();
     for (const s of streakData) {
@@ -208,35 +197,31 @@ function InvalidateOnViewportChange() {
   return null;
 }
 
-function ZoneFog({ reduced }) {
+function ZoneFog() {
   const { scene } = useThree();
   const zone = useGameStore((s) => s.zone);
   const zoneData = ZONES[zone] ?? ZONES[1];
-
-  const fogNear = reduced ? 55 : 80;
-  const fogFar = reduced ? 145 : 200;
 
   useEffect(() => {
     if (scene.fog) scene.fog.color.set(zoneData.fogColor);
     scene.background?.set?.(zoneData.bgColor);
   }, [zone, scene, zoneData]);
 
-  return <fog attach="fog" args={[zoneData.fogColor, fogNear, fogFar]} />;
+  return <fog attach="fog" args={[zoneData.fogColor, 80, 200]} />;
 }
 
 export default function GameCanvas() {
   const zone = useGameStore((s) => s.zone);
   const zoneData = ZONES[zone] ?? ZONES[1];
-  const cheapPipeline = useMemo(() => isCheapGraphicsPipeline(), []);
 
   const maxDpr = typeof window !== 'undefined'
-    ? Math.min(window.devicePixelRatio || 1, cheapPipeline ? 1 : 2)
-    : cheapPipeline ? 1 : 2;
+    ? Math.min(window.devicePixelRatio || 1, 2)
+    : 2;
 
   return (
     <Canvas
       frameloop="always"
-      shadows={!cheapPipeline}
+      shadows
       style={{
         width: '100%',
         height: '100%',
@@ -248,13 +233,13 @@ export default function GameCanvas() {
       resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
       dpr={[1, maxDpr]}
       gl={{
-        antialias: !cheapPipeline,
+        antialias: true,
         alpha: false,
         stencil: false,
-        toneMappingExposure: cheapPipeline ? 1.08 : 0.9,
-        powerPreference: cheapPipeline ? 'default' : 'high-performance',
+        toneMappingExposure: 0.9,
+        powerPreference: 'high-performance',
       }}
-      camera={{ position: [0, 3, 9], fov: 65, near: 0.1, far: cheapPipeline ? 230 : 280 }}
+      camera={{ position: [0, 3, 9], fov: 65, near: 0.1, far: 280 }}
       onCreated={(state) => {
         requestAnimationFrame(() => state.invalidate());
       }}
@@ -264,17 +249,17 @@ export default function GameCanvas() {
       <CameraShake />
       <CameraFlyPast />
       <BoostCameraFX />
-      <BoostStreaks reduced={cheapPipeline} />
-      <ZoneFog reduced={cheapPipeline} />
+      <BoostStreaks />
+      <ZoneFog />
 
-      <ambientLight intensity={cheapPipeline ? 1.42 : 1.2} color="#ffffff" />
+      <ambientLight intensity={1.2} color="#ffffff" />
 
       <directionalLight
-        castShadow={!cheapPipeline}
+        castShadow
         position={[5, 14, 8]}
-        intensity={cheapPipeline ? 2.85 : 2.2}
+        intensity={2.2}
         color="#ffffff"
-        shadow-mapSize={cheapPipeline ? [512, 512] : [1024, 1024]}
+        shadow-mapSize={[1024, 1024]}
         shadow-camera-near={0.5}
         shadow-camera-far={60}
         shadow-camera-left={-18}
@@ -296,29 +281,27 @@ export default function GameCanvas() {
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
         position={[0, -0.01, -20]}
-        receiveShadow={!cheapPipeline}
+        receiveShadow
       >
         <planeGeometry args={[80, 140]} />
         <meshStandardMaterial color="#0a0a0a" roughness={0.95} metalness={0.05} />
       </mesh>
 
       <GameLoop />
-      <Road reducedGfx={cheapPipeline} />
-      <BuildingPool reducedGfx={cheapPipeline} />
-      <PlayerVehicle reducedGfx={cheapPipeline} />
+      <Road />
+      <BuildingPool />
+      <PlayerVehicle />
       <EnemySystems />
       <CollectiblePool />
 
-      {!cheapPipeline && (
-        <EffectComposer multisampling={0}>
-          <Bloom
-            luminanceThreshold={0.75}
-            luminanceSmoothing={0.4}
-            intensity={0.6}
-            blendFunction={BlendFunction.ADD}
-          />
-        </EffectComposer>
-      )}
+      <EffectComposer multisampling={0}>
+        <Bloom
+          luminanceThreshold={0.75}
+          luminanceSmoothing={0.4}
+          intensity={0.6}
+          blendFunction={BlendFunction.ADD}
+        />
+      </EffectComposer>
     </Canvas>
   );
 }

@@ -6,11 +6,11 @@ const TILE_LENGTH = 160
 const ROAD_WIDTH  = 8
 const RECYCLE_Z   = 80
 
-function LaneDivider({ x, reducedGfx }) {
+function LaneDivider({ x }) {
   const segLen = 3.0
   const gap    = 5.0
   const step   = segLen + gap
-  const count  = reducedGfx ? 12 : 22
+  const count  = 22
 
   return (
     <group position={[x, 0.121, -TILE_LENGTH / 2 + segLen / 2]}>
@@ -59,29 +59,27 @@ function Kerb({ x }) {
   )
 }
 
-function RoadGeometry({ reducedGfx }) {
+function RoadGeometry() {
   return (
     <>
-      <mesh receiveShadow={!reducedGfx}>
+      <mesh receiveShadow>
         <boxGeometry args={[ROAD_WIDTH, 0.2, TILE_LENGTH + 2]} />
         <meshStandardMaterial color="#1c1c1c" roughness={0.75} metalness={0.15} />
       </mesh>
-      {!reducedGfx && (
-        <mesh position={[0, 0.102, 0]}>
-          <boxGeometry args={[ROAD_WIDTH - 0.2, 0.001, TILE_LENGTH + 2]} />
-          <meshStandardMaterial color="#1a2a3a" metalness={0.95} roughness={0.05} opacity={0.12} transparent />
-        </mesh>
-      )}
+      <mesh position={[0, 0.102, 0]}>
+        <boxGeometry args={[ROAD_WIDTH - 0.2, 0.001, TILE_LENGTH + 2]} />
+        <meshStandardMaterial color="#1a2a3a" metalness={0.95} roughness={0.05} opacity={0.12} transparent />
+      </mesh>
       <CenterLine />
-      <LaneDivider x={-2.5} reducedGfx={reducedGfx} />
-      <LaneDivider x={ 2.5} reducedGfx={reducedGfx} />
+      <LaneDivider x={-2.5} />
+      <LaneDivider x={ 2.5} />
       <Kerb x={-(ROAD_WIDTH / 2 + 0.2)} />
       <Kerb x={ ROAD_WIDTH / 2 + 0.2} />
     </>
   )
 }
 
-export default function Road({ reducedGfx = false }) {
+export default function Road() {
   const tile1 = useRef()
   const tile2 = useRef()
   const tile3 = useRef()
@@ -116,13 +114,13 @@ export default function Road({ reducedGfx = false }) {
   return (
     <>
       <group ref={tile1} position={[0, 0, 0]}>
-        <RoadGeometry reducedGfx={reducedGfx} />
+        <RoadGeometry />
       </group>
       <group ref={tile2} position={[0, 0, -TILE_LENGTH]}>
-        <RoadGeometry reducedGfx={reducedGfx} />
+        <RoadGeometry />
       </group>
       <group ref={tile3} position={[0, 0, -TILE_LENGTH * 2]}>
-        <RoadGeometry reducedGfx={reducedGfx} />
+        <RoadGeometry />
       </group>
     </>
   )

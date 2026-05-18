@@ -1,12 +1,12 @@
 /**
- * Lighter WebGL path on phones/tablets — Bloom + shadow maps stall or blank weaker GPUs.
- * Cached for the tab lifetime.
+ * Touch / phone heuristic — used for layout quirks (e.g. skip programmatic fullscreen).
+ * Does not change render quality; mobile uses the same graphics as desktop.
  */
-let _cheapPipelineCached
+let _mobileLikeCached
 
-export function isCheapGraphicsPipeline() {
+export function isMobileLikeDevice() {
   if (typeof window === 'undefined') return false
-  if (_cheapPipelineCached !== undefined) return _cheapPipelineCached
+  if (_mobileLikeCached !== undefined) return _mobileLikeCached
 
   const ua = /Mobi|Android|iPhone|iPod|BlackBerry|IEMobile|webOS/i.test(
     navigator.userAgent || ''
@@ -14,22 +14,22 @@ export function isCheapGraphicsPipeline() {
   const iPadMasquerade =
     navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1
 
-  let prefersCheap = !!(ua || iPadMasquerade)
+  let mobileLike = !!(ua || iPadMasquerade)
 
   try {
     const touchCapable = navigator.maxTouchPoints > 0
     const mq = typeof window.matchMedia === 'function' ? window.matchMedia.bind(window) : null
-    if (mq && touchCapable && !prefersCheap) {
+    if (mq && touchCapable && !mobileLike) {
       const fine = mq('(pointer: fine)').matches
       const hover = mq('(hover: hover)').matches
       const coarse = mq('(pointer: coarse)').matches
       const hoverNone = mq('(hover: none)').matches
-      if (coarse || hoverNone || !(fine && hover)) prefersCheap = true
+      if (coarse || hoverNone || !(fine && hover)) mobileLike = true
     }
   } catch {
     /* keep UA result */
   }
 
-  _cheapPipelineCached = prefersCheap
-  return _cheapPipelineCached
+  _mobileLikeCached = mobileLike
+  return _mobileLikeCached
 }

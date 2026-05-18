@@ -8,12 +8,12 @@ import Victory from './screens/Victory'
 import ZoneTransition from './screens/ZoneTransition'
 import AudioManager from './audio/AudioManager'
 import { preloadGameplayModels } from './game/preloadGameplayModels'
-import { isCheapGraphicsPipeline } from './game/graphicsQuality'
+import { isMobileLikeDevice } from './game/graphicsQuality'
 
 /** Real phones: programmatic fullscreen + % heights → 0×0 WebGL canvas on Safari/Android */
 function prefersSkipBrowserFullscreen() {
   if (typeof navigator === 'undefined') return false
-  if (isCheapGraphicsPipeline()) return true
+  if (isMobileLikeDevice()) return true
   const ua = navigator.userAgent || ''
   if (/iPhone|iPad|iPod/i.test(ua)) return true
   if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true
