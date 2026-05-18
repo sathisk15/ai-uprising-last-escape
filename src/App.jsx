@@ -113,14 +113,25 @@ export default function App() {
     }
   }, [phase, zone])
 
-  // Global keyboard: P to pause-resume | Escape to pause (not fullscreen exit) | F to toggle fullscreen
+  // Global keyboard: P pause/resume | Esc exits fullscreen if active else pause/resume | G toggles fullscreen
   useEffect(() => {
     const onKey = (e) => {
-      if (e.code === 'KeyF') {
+      if (e.code === 'KeyG') {
+        e.preventDefault()
         isFullscreen() ? exitFullscreen() : requestFullscreen()
         return
       }
-      if (e.code === 'KeyP' || e.code === 'Escape') {
+      if (e.code === 'Escape') {
+        if (isFullscreen()) {
+          e.preventDefault()
+          exitFullscreen()
+          return
+        }
+        if (phase === 'playing') pauseGame()
+        else if (phase === 'paused') resumeGame()
+        return
+      }
+      if (e.code === 'KeyP') {
         if (phase === 'playing') pauseGame()
         else if (phase === 'paused') resumeGame()
       }

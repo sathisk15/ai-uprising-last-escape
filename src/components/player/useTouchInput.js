@@ -23,6 +23,9 @@ export default function useTouchInput() {
     }
 
     function onTouchEnd(e) {
+      const tgt = e.target
+      if (tgt && typeof tgt.closest === 'function' && tgt.closest('[data-game-ui-touch]'))
+        return
       e.preventDefault()
       const t = e.changedTouches[0]
       const dx = t.clientX - startX

@@ -76,6 +76,7 @@ function SpeedVignette() {
 }
 import GameCanvas from '../game/GameCanvas'
 import HUD from '../components/hud/HUD'
+import MobilePauseButton from '../components/hud/MobilePauseButton'
 import PauseMenu from './PauseMenu'
 import TutorialOverlay from './TutorialOverlay'
 import useTouchInput from '../components/player/useTouchInput'
@@ -142,6 +143,7 @@ export default function GameScreen() {
       <TouchLayer />
       <GameCanvas />
       <HUD />
+      <MobilePauseButton />
       <DamageFlash />
       <SpeedVignette />
       <TutorialOverlay />

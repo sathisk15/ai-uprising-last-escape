@@ -208,6 +208,8 @@ export default function TutorialOverlay() {
 
       {/* SKIP */}
       <button
+        type="button"
+        data-game-ui-touch
         className="absolute top-4 right-4 font-mono text-sm font-bold tracking-[0.25em]
                    px-4 py-2 border border-[#444] text-[#888]
                    hover:border-[#aaa] hover:text-white
