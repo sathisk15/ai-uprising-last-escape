@@ -20,21 +20,21 @@ function HealthBar() {
   const color = pct > 50 ? '#00ff88' : pct > 25 ? '#ffaa00' : '#ff2222'
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 w-[min(12rem,calc(100vw-9.85rem))] md:w-auto">
       <div className="flex items-center justify-between">
         <span className="text-xs tracking-[0.2em] text-white/60 font-mono font-bold">HULL</span>
         <span className="text-xs tracking-widest font-mono font-bold" style={{ color }}>
           {Math.ceil(pct)}%
         </span>
       </div>
-      <div className="w-48 h-2 bg-white/10 rounded-sm overflow-hidden">
+      <div className="w-full md:w-48 h-2 bg-white/10 rounded-sm overflow-hidden">
         <div
           ref={barRef}
           className="h-full rounded-sm transition-all duration-200"
           style={{ width: `${pct}%`, background: color, boxShadow: `0 0 6px ${color}` }}
         />
       </div>
-      <div className="w-48 flex justify-between px-0 -mt-1 pointer-events-none">
+      <div className="w-full md:w-48 flex justify-between px-0 -mt-1 pointer-events-none">
         {[25, 50, 75].map(tick => (
           <div key={tick} className="w-px h-1 bg-white/20" style={{ marginLeft: `${tick}%` }} />
         ))}
@@ -50,14 +50,14 @@ function EnergyBar() {
   const color  = pct > 40 ? '#00aaff' : pct > 20 ? '#ffaa00' : '#ff4400'
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 w-[min(12rem,calc(100vw-9.85rem))] md:w-auto">
       <div className="flex items-center justify-between">
         <span className="text-xs tracking-[0.2em] text-white/60 font-mono font-bold">SIGNAL</span>
         <span className="text-xs tracking-widest font-mono font-bold" style={{ color }}>
           {Math.ceil(pct)}%
         </span>
       </div>
-      <div className="w-48 h-2 bg-white/10 rounded-sm overflow-hidden">
+      <div className="w-full md:w-48 h-2 bg-white/10 rounded-sm overflow-hidden">
         <div
           className="h-full rounded-sm transition-all duration-300"
           style={{ width: `${pct}%`, background: color, boxShadow: `0 0 6px ${color}` }}
@@ -76,14 +76,14 @@ function AmmoDisplay() {
   const pips = Math.min(ammo, MAX_PIPS)
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 w-[min(12rem,calc(100vw-9.85rem))] md:w-auto">
       <div className="flex items-center justify-between">
         <span className="text-xs tracking-[0.2em] text-white/60 font-mono font-bold">AMMO</span>
         <span className="text-xs tracking-widest font-mono font-bold" style={{ color }}>
           {ammo}{ammo > MAX_PIPS ? '+' : ''}
         </span>
       </div>
-      <div className="flex gap-[3px] w-48 flex-wrap">
+      <div className="flex w-full max-w-full flex-wrap gap-[3px] md:w-48">
         {Array.from({ length: MAX_PIPS }).map((_, i) => (
           <div
             key={i}
@@ -153,7 +153,7 @@ function ZoneBadge() {
   return (
     <div
       ref={ref}
-      className="flex flex-col items-center px-4 py-1.5 border font-mono"
+      className="flex flex-col items-center px-3 py-1 border font-mono md:px-4 md:py-1.5"
       style={{ borderColor: zoneData.ambientColor, color: zoneData.ambientColor }}
     >
       <span className="text-[10px] tracking-[0.35em] opacity-70 font-bold">ZONE</span>
@@ -173,7 +173,7 @@ function Stats() {
     <div className="flex flex-col items-end gap-1 font-mono">
       <div className="text-right">
         <p className="text-[10px] tracking-[0.25em] text-white/50 font-bold">SCORE</p>
-        <p className="text-xl text-[#00f5ff] leading-none tracking-widest font-black">
+        <p className="text-lg md:text-xl text-[#00f5ff] leading-none tracking-wider md:tracking-widest font-black tabular-nums">
           {Math.floor(score).toLocaleString('en-US', { minimumIntegerDigits: 6, useGrouping: false })}
         </p>
       </div>
@@ -207,6 +207,26 @@ function Crosshair() {
 }
 
 // ── Distance progress bar (bottom) ───────────────────────────────────────────
+/** Slim zone ribbon for portrait — replaces centered badge below md */
+function CompactZoneRibbon() {
+  const zone     = useGameStore((s) => s.zone)
+  const zoneData = ZONES[zone]
+
+  return (
+    <div
+      className="mb-1 w-full max-w-[min(14rem,calc(100vw-9.85rem))] px-2 py-1 border md:hidden font-mono"
+      style={{ borderColor: `${zoneData.ambientColor}55`, color: zoneData.ambientColor }}
+    >
+      <span className="block text-[8px] tracking-[0.42em] font-bold opacity-80 leading-none select-none">
+        ZONE&nbsp;{zone}
+      </span>
+      <span className="mt-0.5 block truncate text-[9px] font-semibold uppercase tracking-[0.12em] opacity-95 leading-snug select-none">
+        {zoneData.name}
+      </span>
+    </div>
+  )
+}
+
 function ProgressBar() {
   const distance = useGameStore((s) => s.distance)
   const zone     = useGameStore((s) => s.zone)
@@ -217,7 +237,7 @@ function ProgressBar() {
   const pct   = Math.min(100, ((distance - start) / (end - start)) * 100)
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 px-6 pb-3 pointer-events-none">
+    <div className="absolute bottom-0 left-0 right-0 px-6 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] md:pb-3 pointer-events-none max-md:pr-14">
       <div className="flex items-center gap-3">
         <span className="text-[11px] tracking-widest text-white/40 font-mono font-bold whitespace-nowrap">
           RELAY {zone}/3 UPLOAD
@@ -240,7 +260,8 @@ function ProgressBar() {
 
 // ── Main HUD ──────────────────────────────────────────────────────────────────
 export default function HUD() {
-  const containerRef = useRef(null)
+  const containerRef   = useRef(null)
+  const tutorialActive = useGameStore((s) => s.tutorialStep >= 0)
 
   useEffect(() => {
     gsap.fromTo(containerRef.current, { opacity:0 }, { opacity:1, duration:0.5, delay:0.3 })
@@ -248,25 +269,46 @@ export default function HUD() {
 
   return (
     <div ref={containerRef} className="absolute inset-0 pointer-events-none z-10" style={{ opacity:0 }}>
-      <div className="absolute top-4 left-4 flex flex-col gap-2">
+      {/* Left stack — narrower on mobile; reserve right gutter for Pause / SKIP */}
+      <div
+        className={[
+          'absolute left-4 top-4 flex flex-col gap-2 pr-2 md:right-auto',
+          'max-md:left-3 max-md:right-[9.125rem] max-md:max-w-[min(14rem,calc(100vw-9.35rem))]',
+          tutorialActive
+            ? 'max-md:top-[calc(env(safe-area-inset-top,0px)+2.25rem)]'
+            : 'max-md:top-[max(0.5rem,env(safe-area-inset-top,0px))]',
+        ].join(' ')}
+      >
+        <CompactZoneRibbon />
         <HealthBar />
         <EnergyBar />
         <AmmoDisplay />
         <BoostIndicator />
         <ShieldIndicator />
       </div>
-      <div className="absolute top-4 left-1/2 -translate-x-1/2">
+      {/* Center badge — avoids collision with Tutorial label + mobile chrome */}
+      <div className="absolute left-1/2 top-4 hidden -translate-x-1/2 md:block">
         <ZoneBadge />
       </div>
-      <div className="absolute top-4 right-4">
+      {/* Stats sit below Pause + SKIP stack on narrow screens */}
+      <div
+        className={[
+          'absolute top-4 right-4 flex flex-col items-end',
+          'max-md:right-3 md:top-4',
+          tutorialActive
+            ? 'max-md:top-[calc(env(safe-area-inset-top,0px)+7.375rem)]'
+            : 'max-md:top-[calc(env(safe-area-inset-top,0px)+6rem)]',
+        ].join(' ')}
+      >
         <Stats />
       </div>
       <Crosshair />
       <ProgressBar />
-      <div className="absolute top-2 left-2 w-4 h-4 border-t border-l border-white/20" />
-      <div className="absolute top-2 right-2 w-4 h-4 border-t border-r border-white/20" />
-      <div className="absolute bottom-2 left-2 w-4 h-4 border-b border-l border-white/20" />
-      <div className="absolute bottom-2 right-2 w-4 h-4 border-b border-r border-white/20" />
+      {/* Corner trims — tuck on mobile where top chrome is congested */}
+      <div className="absolute left-2 top-2 hidden h-4 w-4 border-l border-t border-white/15 md:block" />
+      <div className="absolute right-2 top-2 hidden h-4 w-4 border-r border-t border-white/15 md:block" />
+      <div className="absolute bottom-2 left-2 h-4 w-4 border-b border-l border-white/20" />
+      <div className="absolute bottom-2 right-2 h-4 w-4 border-b border-r border-white/20" />
     </div>
   )
 }

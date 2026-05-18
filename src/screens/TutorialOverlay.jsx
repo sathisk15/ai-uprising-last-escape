@@ -210,10 +210,13 @@ export default function TutorialOverlay() {
       <button
         type="button"
         data-game-ui-touch
-        className="absolute top-4 right-4 font-mono text-sm font-bold tracking-[0.25em]
-                   px-4 py-2 border border-[#444] text-[#888]
+        className="absolute right-[max(0.35rem,env(safe-area-inset-right))]
+                   top-[calc(env(safe-area-inset-top,0px)+3.05rem)]
+                   z-[32] px-3 py-1.5 font-mono text-[10px] font-bold tracking-[0.2em] border border-[#444] text-[#888]
+                   transition-all duration-150 active:scale-95
                    hover:border-[#aaa] hover:text-white
-                   transition-all duration-150 active:scale-95"
+                   md:top-[max(0.85rem,env(safe-area-inset-top))]
+                   md:px-4 md:py-2 md:text-sm md:tracking-[0.25em]"
         style={{ pointerEvents: 'auto', background: 'rgba(0,0,0,0.7)', touchAction: 'manipulation' }}
         onClick={() => {
           aliveRef.current = false
@@ -228,7 +231,13 @@ export default function TutorialOverlay() {
 
       {/* Step counter */}
       {(uiState === 'running' || uiState === 'frozen') && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 font-mono text-xs tracking-[0.35em] text-[#555]">
+        <div
+          className="absolute left-[max(0.6rem,env(safe-area-inset-left))]
+                     top-[max(0.45rem,env(safe-area-inset-top))]
+                     z-[31] max-w-[min(calc(100vw-9.25rem),12.5rem)] truncate rounded-sm border border-[#444]/40 bg-black/50 px-2 py-0.5 font-mono text-[9px] tracking-[0.42em] text-[#9a9a9a]
+                     backdrop-blur-sm
+                     md:top-[max(0.95rem,env(safe-area-inset-top))] md:left-1/2 md:-translate-x-1/2 md:max-w-fit md:bg-transparent md:px-0 md:py-0 md:text-xs md:tracking-[0.35em] md:border-none md:text-[#555] md:backdrop-blur-none md:text-center md:overflow-visible md:whitespace-normal md:rounded-none"
+        >
           TRAINING &nbsp;{tutorialStep + 1} / 3
         </div>
       )}
@@ -304,27 +313,27 @@ function PromptCard({ stepData, lanePrompt }) {
     : (IS_MOBILE ? stepData.mobileHint : stepData.desktopHint)
   return (
     <div
-      className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 px-8 py-6 border rounded-sm"
+      className="pointer-events-none absolute left-1/2 flex max-w-[min(92vw,21rem)] -translate-x-1/2 flex-col items-center gap-2 px-6 py-4
+                 border rounded-sm md:gap-3 md:px-8 md:py-6"
       style={{
-        bottom: '7rem',
+        bottom: 'max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.25rem))',
         background: 'rgba(3,3,12,0.94)',
         borderColor: stepData.color + '55',
         boxShadow: `0 0 32px ${stepData.color}25`,
-        minWidth: '260px',
-        maxWidth: '90vw',
+        minWidth: 'min(260px, 92vw)',
         animation: 'tut-fadein 0.3s ease-out',
       }}
     >
       <div
-        className="text-3xl font-bold select-none"
+        className="select-none text-2xl font-bold md:text-3xl"
         style={{ color: stepData.color, animation: 'tut-pulse 1s ease-in-out infinite' }}
       >
         {icon}
       </div>
-      <p className="font-mono text-lg font-bold tracking-[0.3em] text-center" style={{ color: stepData.color }}>
+      <p className="font-mono text-base font-bold tracking-[0.3em] text-center md:text-lg" style={{ color: stepData.color }}>
         {title}
       </p>
-      <p className="font-mono text-sm text-[#999] tracking-wider text-center">
+      <p className="font-mono text-[13px] text-[#999] tracking-wider text-center md:text-sm">
         {hint}
       </p>
       <div className="flex gap-2 mt-1">
