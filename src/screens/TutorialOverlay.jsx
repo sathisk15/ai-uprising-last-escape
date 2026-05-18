@@ -261,24 +261,28 @@ export default function TutorialOverlay() {
       {/* All training done */}
       {uiState === 'allDone' && (
         <div
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ background: 'rgba(0,0,0,0.55)' }}
+          className="absolute inset-0 flex md:items-center md:justify-center items-end justify-center pb-0 md:bg-[rgba(0,0,0,0.55)] bg-transparent"
         >
           <div
-            className="flex flex-col items-center gap-3 px-12 py-10 border rounded-sm"
+            className="flex w-[calc(100%-1rem)] max-w-[17rem] flex-col items-center gap-1 px-4 py-2.5 mx-4 mb-[max(calc(env(safe-area-inset-bottom,0px)+3.75rem),0.65rem)] border rounded-md
+                       md:w-auto md:max-w-none md:gap-3 md:px-12 md:py-10 md:mx-0 md:mb-0 md:rounded-sm"
             style={{
-              background: 'rgba(0,6,0,0.95)',
+              background: 'rgba(0,6,0,0.96)',
               borderColor: '#00ff8855',
               boxShadow: '0 0 48px #00ff8828',
+              animation: 'tut-fadein 0.3s ease-out',
             }}
           >
-            <div className="text-4xl font-bold text-[#00ff88]" style={{ animation: 'tut-pulse 0.8s ease-in-out infinite' }}>
+            <div
+              className="text-xl font-bold text-[#00ff88] md:text-4xl"
+              style={{ animation: 'tut-pulse 0.8s ease-in-out infinite' }}
+            >
               ✓
             </div>
-            <p className="font-mono text-2xl font-bold tracking-[0.4em] text-[#00ff88]">
+            <p className="font-mono text-[11px] font-bold leading-snug tracking-[0.2em] text-[#00ff88] text-center md:text-2xl md:tracking-[0.4em]">
               TRAINING COMPLETE
             </p>
-            <p className="font-mono text-sm text-[#666] tracking-[0.25em]">
+            <p className="font-mono text-[9px] text-[#666] tracking-[0.2em] md:text-sm md:tracking-[0.25em]">
               DEPLOYING TO MISSION…
             </p>
           </div>
@@ -311,34 +315,47 @@ function PromptCard({ stepData, lanePrompt }) {
   const hint  = lanePrompt
     ? (IS_MOBILE ? lanePrompt.mobileHint : lanePrompt.desktopHint)
     : (IS_MOBILE ? stepData.mobileHint : stepData.desktopHint)
+  /** Mobile: compact ribbon above HUD progress; desktop: taller card above HUD */
+  const bottomOffset = IS_MOBILE
+    ? 'max(calc(env(safe-area-inset-bottom, 0px) + 3.65rem), 0.6rem)'
+    : 'max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.25rem))'
   return (
     <div
-      className="pointer-events-none absolute left-1/2 flex max-w-[min(92vw,21rem)] -translate-x-1/2 flex-col items-center gap-2 px-6 py-4
-                 border rounded-sm md:gap-3 md:px-8 md:py-6"
+      className="pointer-events-none absolute left-1/2 flex min-w-0 max-w-[min(92vw,22rem)] -translate-x-1/2 flex-col items-center
+                 gap-1 border px-3 py-2 shadow-lg
+                 w-[calc(100%-1rem)] rounded-md md:w-auto md:max-w-[min(92vw,21rem)] md:gap-3 md:rounded-sm md:px-8 md:py-6"
       style={{
-        bottom: 'max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.25rem))',
+        bottom: bottomOffset,
         background: 'rgba(3,3,12,0.94)',
         borderColor: stepData.color + '55',
         boxShadow: `0 0 32px ${stepData.color}25`,
-        minWidth: 'min(260px, 92vw)',
+        minWidth: IS_MOBILE ? undefined : 'min(260px, 92vw)',
         animation: 'tut-fadein 0.3s ease-out',
       }}
     >
-      <div
-        className="select-none text-2xl font-bold md:text-3xl"
-        style={{ color: stepData.color, animation: 'tut-pulse 1s ease-in-out infinite' }}
-      >
-        {icon}
+      {/* Mobile: tight row • Desktop: stacked */}
+      <div className="flex w-full min-w-0 flex-row items-center justify-center gap-2 md:flex-col md:gap-3">
+        <div
+          className="select-none shrink-0 text-lg font-bold leading-none md:text-2xl lg:text-3xl"
+          style={{ color: stepData.color, animation: 'tut-pulse 1s ease-in-out infinite' }}
+        >
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1 text-center md:w-full md:flex-none">
+          <p
+            className="font-mono text-[10px] font-bold leading-tight tracking-[0.12em] text-center md:text-base md:tracking-[0.3em] lg:text-lg"
+            style={{ color: stepData.color }}
+          >
+            {title}
+          </p>
+        </div>
       </div>
-      <p className="font-mono text-base font-bold tracking-[0.3em] text-center md:text-lg" style={{ color: stepData.color }}>
-        {title}
-      </p>
-      <p className="font-mono text-[13px] text-[#999] tracking-wider text-center md:text-sm">
+      <p className="font-mono text-[9px] leading-snug tracking-wide text-[#aaa] text-center px-0.5 md:text-sm md:text-[#999]">
         {hint}
       </p>
-      <div className="flex gap-2 mt-1">
+      <div className="flex gap-1 mt-0.5 md:gap-2 md:mt-1">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="w-1.5 h-1.5 rounded-full"
+          <div key={i} className="h-1 w-1 rounded-full md:h-1.5 md:w-1.5"
             style={{
               backgroundColor: stepData.color,
               animation: `tut-blink 0.6s ease-in-out ${i * 0.2}s infinite alternate`,
@@ -353,11 +370,11 @@ function PromptCard({ stepData, lanePrompt }) {
 function CompletionCard({ label, color }) {
   return (
     <div
-      className="absolute inset-0 flex items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.45)' }}
+      className="absolute inset-0 flex md:items-center md:justify-center items-end justify-center md:bg-[rgba(0,0,0,0.45)] bg-transparent"
     >
       <div
-        className="flex flex-col items-center gap-3 px-10 py-8 border rounded-sm"
+        className="flex w-[calc(100%-1rem)] max-w-[16.5rem] flex-col items-center gap-1.5 border px-3 py-2.5 mx-4 rounded-md mb-[max(calc(env(safe-area-inset-bottom,0px)+3.65rem),0.6rem)]
+                   md:w-auto md:max-w-none md:gap-3 md:px-10 md:py-8 md:mx-0 md:mb-0 md:rounded-sm"
         style={{
           background: 'rgba(0,0,0,0.92)',
           borderColor: color + '55',
@@ -365,10 +382,16 @@ function CompletionCard({ label, color }) {
           animation: 'tut-fadein 0.25s ease-out',
         }}
       >
-        <div className="text-4xl font-bold" style={{ color, animation: 'tut-pulse 0.7s ease-in-out infinite' }}>
+        <div
+          className="text-xl font-bold md:text-4xl"
+          style={{ color, animation: 'tut-pulse 0.7s ease-in-out infinite' }}
+        >
           ✓
         </div>
-        <p className="font-mono text-xl font-bold tracking-[0.35em] text-center" style={{ color }}>
+        <p
+          className="font-mono text-[10px] font-bold leading-tight tracking-[0.12em] text-center md:text-xl md:tracking-[0.35em]"
+          style={{ color }}
+        >
           {label}
         </p>
       </div>
