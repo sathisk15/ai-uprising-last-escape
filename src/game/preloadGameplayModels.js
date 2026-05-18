@@ -2,20 +2,27 @@ import { useGLTF } from '@react-three/drei'
 
 /** @typedef {'loading' | 'vehicle' | 'city' | 'systems'} GameLoadStage */
 
-let started = false
-/** @type {GameLoadStage} */
-let stage = 'loading'
+let stage = /** @type {GameLoadStage} */ ('loading')
 /** @type {Set<(s: GameLoadStage) => void>} */
 const listeners = new Set()
 /** @type {Promise<void> | null} */
 let preloadPromise = null
 
-export const GAME_LOAD_STEPS = [
-  { id: 'loading', label: 'Loading...' },
-  { id: 'vehicle', label: 'Preparing vehicle...' },
-  { id: 'city', label: 'Building cityscape...' },
-  { id: 'systems', label: 'Initializing systems...' },
+/** Shown continuously after GLBs decode — until WebGL/React finish mounting (often feels like ~99%). */
+export const GAME_LOAD_FINAL_LABEL = 'Initializing systems…'
+
+/** Themed lines rotated while assets/network are still fetching (every {@link GAME_LOAD_FLAVOR_ROTATE_MS}). */
+export const GAME_LOAD_FLAVOR_LINES = [
+  'Preparing systems for deployment…',
+  'Calibrating vehicle chassis…',
+  'Finalizing egress route…',
+  'Syncing skyline telemetry…',
+  'Indexing sector geometry…',
+  'Priming combat subsystems…',
 ]
+
+/** Rotate flavor text interval (milliseconds). */
+export const GAME_LOAD_FLAVOR_ROTATE_MS = 30000
 
 /** @returns {GameLoadStage} */
 export function getGameLoadStage() {
@@ -35,12 +42,11 @@ function setStage(next) {
   listeners.forEach((fn) => fn(next))
 }
 
-/** Prime GLTF cache at boot — drives loader step labels on real devices. */
+/** Prime GLTF cache at boot — signals when final-phase message should lock on. */
 export function preloadGameplayModels() {
   if (typeof window === 'undefined') return Promise.resolve()
   if (preloadPromise) return preloadPromise
 
-  started = true
   preloadPromise = (async () => {
     setStage('loading')
     setStage('vehicle')
