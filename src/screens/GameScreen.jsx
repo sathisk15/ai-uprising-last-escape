@@ -83,7 +83,8 @@ import useTouchInput from '../components/player/useTouchInput'
 import { damageSignal } from '../game/shakeSignal'
 
 function TouchLayer() {
-  useTouchInput()
+  const swipeActive = useGameStore((s) => s.phase === 'playing')
+  useTouchInput(swipeActive)
   return null
 }
 

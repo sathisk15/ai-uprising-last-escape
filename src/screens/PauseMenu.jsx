@@ -87,8 +87,15 @@ export default function PauseMenu() {
   return (
     <div
       ref={overlayRef}
+      data-game-ui-touch
       className="absolute inset-0 flex items-center justify-center z-50"
-      style={{ opacity: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+      style={{
+        opacity: 0,
+        background: 'rgba(0,0,0,0.75)',
+        backdropFilter: 'blur(4px)',
+        pointerEvents: 'auto',
+        touchAction: 'manipulation',
+      }}
     >
       {/* Scanlines over the blur */}
       <div className="absolute inset-0 pointer-events-none"
@@ -161,7 +168,9 @@ export default function PauseMenu() {
         <div ref={optsRef} className="px-6 py-4 border-b" style={{ borderColor:'#0d0d2a', opacity:0 }}>
           <div className="flex items-center justify-between mb-2.5">
             <p className="font-mono text-[#555] text-xs font-bold tracking-[0.4em]">AUDIO SETTINGS</p>
-            <button onClick={handleMuteToggle}
+            <button
+              type="button"
+              onClick={handleMuteToggle}
               className="font-mono text-[10px] tracking-widest px-2 py-0.5 border transition-all duration-150"
               style={{
                 borderColor: audioEnabled ? '#00f5ff40' : '#ff202040',
@@ -178,11 +187,15 @@ export default function PauseMenu() {
               <span className="text-[#888] tracking-widest">BGM</span>
               <span className="text-[#00f5ff]">{Math.round((masterVolume ?? 0.7) * 100)}%</span>
             </div>
-            <input type="range" min="0" max="100"
+            <input
+              type="range"
+              min="0"
+              max="100"
+              data-game-ui-touch
               value={Math.round((masterVolume ?? 0.7) * 100)}
               onChange={(e) => handleBGMChange(Number(e.target.value) / 100)}
-              className="w-full h-1 rounded-none outline-none cursor-pointer"
-              style={{ accentColor: '#00f5ff' }}
+              className="w-full h-1 rounded-none outline-none cursor-pointer touch-pan-x"
+              style={{ accentColor: '#00f5ff', touchAction: 'pan-x' }}
             />
           </div>
 
@@ -192,11 +205,15 @@ export default function PauseMenu() {
               <span className="text-[#888] tracking-widest">SFX</span>
               <span className="text-[#ff6a00]">{Math.round((sfxVolume ?? 0.7) * 100)}%</span>
             </div>
-            <input type="range" min="0" max="100"
+            <input
+              type="range"
+              min="0"
+              max="100"
+              data-game-ui-touch
               value={Math.round((sfxVolume ?? 0.7) * 100)}
               onChange={(e) => handleSFXChange(Number(e.target.value) / 100)}
-              className="w-full h-1 rounded-none outline-none cursor-pointer"
-              style={{ accentColor: '#ff6a00' }}
+              className="w-full h-1 rounded-none outline-none cursor-pointer touch-pan-x"
+              style={{ accentColor: '#ff6a00', touchAction: 'pan-x' }}
             />
           </div>
 
@@ -209,7 +226,9 @@ export default function PauseMenu() {
 
         {/* Buttons */}
         <div ref={btnsRef} className="px-6 py-4 flex flex-col gap-2.5">
-          <button onClick={resumeGame}
+          <button
+            type="button"
+            onClick={resumeGame}
             className="tracking-[0.3em] text-lg font-bold py-3.5 border-2 border-[#00f5ff] text-[#00f5ff]
                        hover:bg-[#00f5ff] hover:text-black transition-all duration-150 active:scale-95 font-mono"
             style={{ boxShadow:'0 0 14px rgba(0,245,255,0.2)', opacity:0 }}
@@ -217,7 +236,7 @@ export default function PauseMenu() {
             onMouseLeave={e => e.currentTarget.style.boxShadow='0 0 14px rgba(0,245,255,0.2)'}>
             ▶ RESUME
           </button>
-          <button onClick={goToMenu}
+          <button type="button" onClick={goToMenu}
             className="tracking-[0.3em] text-lg font-bold py-3.5 border border-[#333] text-[#777]
                        hover:border-[#777] hover:text-white transition-all duration-150 active:scale-95 font-mono"
             style={{ opacity:0 }}>
