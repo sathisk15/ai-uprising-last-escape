@@ -24,39 +24,18 @@
   to   { transform: rotate(360deg); }
 }
 
-@keyframes game-load-spin-reverse {
-  from { transform: rotate(360deg); }
-  to   { transform: rotate(0deg); }
+@keyframes game-load-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes game-load-pulse {
-  0%, 100% { opacity: 0.45; transform: scale(0.94); }
-  50%       { opacity: 1; transform: scale(1); }
+.game-load-spinner {
+  animation: game-load-spin 0.75s linear infinite;
+  box-shadow: 0 0 10px #00f5ff44;
 }
 
-@keyframes game-load-scan {
-  0%   { top: 12%; opacity: 0; }
-  8%   { opacity: 0.85; }
-  92%  { opacity: 0.85; }
-  100% { top: 88%; opacity: 0; }
-}
-
-.game-load-ring {
-  animation: game-load-spin 2.2s linear infinite;
-}
-
-.game-load-ring-reverse {
-  animation: game-load-spin-reverse 1.6s linear infinite;
-}
-
-.game-load-pulse {
-  animation: game-load-pulse 1.4s ease-in-out infinite;
-}
-
-.game-load-scan-line {
-  background: linear-gradient(90deg, transparent, #00f5ff, transparent);
-  box-shadow: 0 0 12px #00f5ff88;
-  animation: game-load-scan 2s ease-in-out infinite;
+.game-load-msg {
+  animation: game-load-fade-in 0.35s ease-out;
 }
 
 html,
