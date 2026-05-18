@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import useGameStore from '../store/gameStore'
 import AudioManager from '../audio/AudioManager'
 
@@ -81,6 +81,7 @@ import PauseMenu from './PauseMenu'
 import TutorialOverlay from './TutorialOverlay'
 import useTouchInput from '../components/player/useTouchInput'
 import { damageSignal } from '../game/shakeSignal'
+import GameLoadingOverlay from '../components/ui/GameLoadingOverlay'
 
 function TouchLayer() {
   const swipeActive = useGameStore((s) => s.phase === 'playing')
@@ -136,13 +137,15 @@ function DamageFlash() {
 }
 
 
-export default function GameScreen() {
+function GameScreenContent() {
   const phase = useGameStore((s) => s.phase)
 
   return (
-    <div className="w-full h-full relative">
+    <div className="relative flex min-h-0 w-full flex-1 flex-col overflow-hidden">
       <TouchLayer />
-      <GameCanvas />
+      <div className="relative isolate min-h-0 w-full flex-1 shrink-0">
+        <GameCanvas />
+      </div>
       <HUD />
       <MobilePauseButton />
       <DamageFlash />
@@ -150,5 +153,13 @@ export default function GameScreen() {
       <TutorialOverlay />
       {phase === 'paused' && <PauseMenu />}
     </div>
+  )
+}
+
+export default function GameScreen() {
+  return (
+    <Suspense fallback={<GameLoadingOverlay />}>
+      <GameScreenContent />
+    </Suspense>
   )
 }

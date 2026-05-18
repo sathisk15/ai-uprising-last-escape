@@ -19,11 +19,67 @@
   to   { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
+@keyframes game-load-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes game-load-spin-reverse {
+  from { transform: rotate(360deg); }
+  to   { transform: rotate(0deg); }
+}
+
+@keyframes game-load-pulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.94); }
+  50%       { opacity: 1; transform: scale(1); }
+}
+
+@keyframes game-load-scan {
+  0%   { top: 12%; opacity: 0; }
+  8%   { opacity: 0.85; }
+  92%  { opacity: 0.85; }
+  100% { top: 88%; opacity: 0; }
+}
+
+.game-load-ring {
+  animation: game-load-spin 2.2s linear infinite;
+}
+
+.game-load-ring-reverse {
+  animation: game-load-spin-reverse 1.6s linear infinite;
+}
+
+.game-load-pulse {
+  animation: game-load-pulse 1.4s ease-in-out infinite;
+}
+
+.game-load-scan-line {
+  background: linear-gradient(90deg, transparent, #00f5ff, transparent);
+  box-shadow: 0 0 12px #00f5ff88;
+  animation: game-load-scan 2s ease-in-out infinite;
+}
+
 html,
-body,
-#root {
+body {
   width: 100%;
   height: 100%;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  overflow: hidden;
+  background: #0a0a0f;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#root {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   background: #0a0a0f;
   font-family: 'Share Tech Mono', monospace;

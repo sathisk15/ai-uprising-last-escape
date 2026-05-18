@@ -6,16 +6,11 @@ const TILE_LENGTH = 160
 const ROAD_WIDTH  = 8
 const RECYCLE_Z   = 80
 
-const isMobile = typeof window !== 'undefined' &&
-  (/Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768)
-
-// Dashed lane divider — solid stripe on mobile (1 draw call), dashes on desktop (7 draw calls)
-// White dashed lane divider — standard highway style
-function LaneDivider({ x }) {
+function LaneDivider({ x, reducedGfx }) {
   const segLen = 3.0
   const gap    = 5.0
   const step   = segLen + gap
-  const count  = isMobile ? 12 : 22
+  const count  = reducedGfx ? 12 : 22
 
   return (
     <group position={[x, 0.121, -TILE_LENGTH / 2 + segLen / 2]}>
@@ -64,31 +59,29 @@ function Kerb({ x }) {
   )
 }
 
-function RoadGeometry() {
+function RoadGeometry({ reducedGfx }) {
   return (
     <>
-      {/* Surface — dark asphalt matching screenshot */}
-      <mesh receiveShadow>
+      <mesh receiveShadow={!reducedGfx}>
         <boxGeometry args={[ROAD_WIDTH, 0.2, TILE_LENGTH + 2]} />
         <meshStandardMaterial color="#1c1c1c" roughness={0.75} metalness={0.15} />
       </mesh>
-      {/* Subtle wet sheen overlay */}
-      {!isMobile && (
+      {!reducedGfx && (
         <mesh position={[0, 0.102, 0]}>
           <boxGeometry args={[ROAD_WIDTH - 0.2, 0.001, TILE_LENGTH + 2]} />
           <meshStandardMaterial color="#1a2a3a" metalness={0.95} roughness={0.05} opacity={0.12} transparent />
         </mesh>
       )}
       <CenterLine />
-      <LaneDivider x={-2.5} />
-      <LaneDivider x={ 2.5} />
+      <LaneDivider x={-2.5} reducedGfx={reducedGfx} />
+      <LaneDivider x={ 2.5} reducedGfx={reducedGfx} />
       <Kerb x={-(ROAD_WIDTH / 2 + 0.2)} />
       <Kerb x={ ROAD_WIDTH / 2 + 0.2} />
     </>
   )
 }
 
-export default function Road() {
+export default function Road({ reducedGfx = false }) {
   const tile1 = useRef()
   const tile2 = useRef()
   const tile3 = useRef()
@@ -123,13 +116,13 @@ export default function Road() {
   return (
     <>
       <group ref={tile1} position={[0, 0, 0]}>
-        <RoadGeometry />
+        <RoadGeometry reducedGfx={reducedGfx} />
       </group>
       <group ref={tile2} position={[0, 0, -TILE_LENGTH]}>
-        <RoadGeometry />
+        <RoadGeometry reducedGfx={reducedGfx} />
       </group>
       <group ref={tile3} position={[0, 0, -TILE_LENGTH * 2]}>
-        <RoadGeometry />
+        <RoadGeometry reducedGfx={reducedGfx} />
       </group>
     </>
   )

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import useGameStore from '../../store/gameStore';
@@ -15,15 +15,16 @@ const START_Z_TO = 2; // final play position z
 
 const DAMAGE_FLASH_DUR = 0.35; // seconds the red damage overlay stays lit
 
-export default function PlayerVehicle() {
-  const { scene: carScene } = useGLTF('/models/car.glb');
+export default function PlayerVehicle({ reducedGfx = false }) {
+  const { scene: carTpl } = useGLTF('/models/car.glb');
+  const carScene = useMemo(() => carTpl.clone(true), [carTpl]);
 
   useEffect(() => {
     carScene.traverse((child) => {
       if (child.isLight) { child.visible = false; child.intensity = 0; }
-      if (child.isMesh)  { child.castShadow = true; child.receiveShadow = false; }
+      if (child.isMesh)  { child.castShadow = !reducedGfx; child.receiveShadow = false; }
     });
-  }, [carScene]);
+  }, [carScene, reducedGfx]);
 
   const groupRef = useRef();
   const jumpT = useRef(0);

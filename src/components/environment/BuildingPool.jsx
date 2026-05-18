@@ -1,46 +1,40 @@
-import { useRef, useMemo, useEffect } from 'react';
+import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import useGameStore from '../../store/gameStore';
 
-const TILE_LENGTH = 160; // match road tile length so buildings cover the full road
-const RECYCLE_Z = 120; // wait until entire tile is fully behind the camera
+const TILE_LENGTH = 160;
+const RECYCLE_Z = 120;
 
-function CityTile({ tileRef, initZ }) {
-  const { scene } = useGLTF('/models/city_night.glb');
-  const model = useMemo(() => scene.clone(true), [scene]);
-
-  useEffect(() => {
-    model.traverse((child) => {
-      // Keep the model's own lights — night city needs them for window/street glow
-      if (child.isLight) {
-        child.intensity = Math.min(child.intensity, 2);
-      }
-      if (child.isMesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-      }
-    });
-  }, [model]);
-
-  return (
-    <group ref={tileRef} position={[0, 0, initZ]}>
-      <primitive
-        object={model}
-        scale={[10, 10, 10]}
-        rotation={[0, Math.PI / 2, 0]}
-        position={[0, 0, 0]}
-      />
-    </group>
-  );
+function setupCityTile(model, reducedGfx) {
+  model.traverse((child) => {
+    if (child.isLight) {
+      child.intensity = Math.min(child.intensity, reducedGfx ? 1.35 : 2);
+    }
+    if (child.isMesh) {
+      child.castShadow = !reducedGfx;
+      child.receiveShadow = !reducedGfx;
+    }
+  });
 }
 
 useGLTF.preload('/models/city_night.glb');
 
-export default function BuildingPool() {
+export default function BuildingPool({ reducedGfx = false }) {
   const tileA = useRef();
   const tileB = useRef();
   const tileC = useRef();
+
+  const { scene } = useGLTF('/models/city_night.glb');
+  const models = useMemo(() => {
+    const a = scene.clone(true);
+    const b = scene.clone(true);
+    const c = scene.clone(true);
+    setupCityTile(a, reducedGfx);
+    setupCityTile(b, reducedGfx);
+    setupCityTile(c, reducedGfx);
+    return [a, b, c];
+  }, [scene, reducedGfx]);
 
   useFrame((_, delta) => {
     const { phase, speed, tutorialFrozen } = useGameStore.getState();
@@ -53,7 +47,6 @@ export default function BuildingPool() {
     if (tileB.current) tileB.current.position.z += move;
     if (tileC.current) tileC.current.position.z += move;
 
-    // Recycle: snapshot z, find baseZ (rearmost), place each recycler sequentially behind it
     const tiles = [tileA.current, tileB.current, tileC.current];
     const zs = tiles.map((t) => t?.position.z ?? 0);
     const baseZ = Math.min(...zs);
@@ -66,11 +59,20 @@ export default function BuildingPool() {
     });
   });
 
+  const scale = [10, 10, 10];
+  const rotation = [0, Math.PI / 2, 0];
+
   return (
     <>
-      <CityTile tileRef={tileA} initZ={0} />
-      <CityTile tileRef={tileB} initZ={-TILE_LENGTH} />
-      <CityTile tileRef={tileC} initZ={-TILE_LENGTH * 2} />
+      <group ref={tileA} position={[0, 0, 0]}>
+        <primitive object={models[0]} scale={scale} rotation={rotation} position={[0, 0, 0]} />
+      </group>
+      <group ref={tileB} position={[0, 0, -TILE_LENGTH]}>
+        <primitive object={models[1]} scale={scale} rotation={rotation} position={[0, 0, 0]} />
+      </group>
+      <group ref={tileC} position={[0, 0, -TILE_LENGTH * 2]}>
+        <primitive object={models[2]} scale={scale} rotation={rotation} position={[0, 0, 0]} />
+      </group>
     </>
   );
 }

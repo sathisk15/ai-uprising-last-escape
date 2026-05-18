@@ -7,6 +7,18 @@ import GameOver from './screens/GameOver'
 import Victory from './screens/Victory'
 import ZoneTransition from './screens/ZoneTransition'
 import AudioManager from './audio/AudioManager'
+import { preloadGameplayModels } from './game/preloadGameplayModels'
+import { isCheapGraphicsPipeline } from './game/graphicsQuality'
+
+/** Real phones: programmatic fullscreen + % heights → 0×0 WebGL canvas on Safari/Android */
+function prefersSkipBrowserFullscreen() {
+  if (typeof navigator === 'undefined') return false
+  if (isCheapGraphicsPipeline()) return true
+  const ua = navigator.userAgent || ''
+  if (/iPhone|iPad|iPod/i.test(ua)) return true
+  if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) return true
+  return false
+}
 
 function CustomCursor() {
   const pos = useRef({ x: -200, y: -200 })
@@ -82,10 +94,14 @@ export default function App() {
   const pauseGame = useGameStore((s) => s.pauseGame)
   const resumeGame = useGameStore((s) => s.resumeGame)
 
+  useEffect(() => {
+    preloadGameplayModels()
+  }, [])
+
   // Fullscreen: enter on intro/game start, exit when back at menu
   useEffect(() => {
     if (phase === 'intro') {
-      requestFullscreen()
+      if (!prefersSkipBrowserFullscreen()) requestFullscreen()
     } else if (phase === 'menu') {
       if (isFullscreen()) exitFullscreen()
     }
@@ -141,7 +157,7 @@ export default function App() {
   }, [phase, pauseGame, resumeGame])
 
   return (
-    <div className="w-full h-full relative">
+    <div className="relative flex min-h-0 w-full flex-1 flex-col md:h-full md:min-h-0">
       <CustomCursor />
       {/* Game stays mounted during zoneout/transition/dying so the 3D world keeps rendering */}
       {(phase === 'playing' || phase === 'paused' || phase === 'transition' || phase === 'dying' || phase === 'zoneout') && <GameScreen />}
