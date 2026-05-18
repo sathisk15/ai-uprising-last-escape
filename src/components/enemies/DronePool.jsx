@@ -50,12 +50,30 @@ export default function DronePool({ hitCooldown }) {
   }, []);
 
   useFrame((_, delta) => {
-    const { phase, speed, zone, distance, playerLane } =
+    const { phase, speed, zone, distance, playerLane, tutorialFrozen, tutorialSpawn } =
       useGameStore.getState();
     // Drones keep moving during zoneout (dynamic feel), just no new spawns or collisions
     if (phase !== 'playing' && phase !== 'zoneout') return;
 
-    const zoneData = ZONES[zone];
+    // Handle on-demand tutorial drone spawn — always center lane
+    if (tutorialSpawn === 'drone') {
+      useGameStore.getState().setTutorialSpawn(null);
+      const slot = data.current.find((s) => !s.active);
+      if (slot) {
+        slot.active = true;
+        slot.lane = 1;        // always center during tutorial
+        slot.x = LANES[1];
+        slot.targetX = LANES[1];
+        slot.z = SPAWN_Z;
+        slot.phase = Math.random() * Math.PI * 2;
+        slot.sweepTimer = 0.5;
+        slot.diving = false;
+        const ref = refs.current[slot.id];
+        if (ref) ref.position.set(LANES[1], 1.6, SPAWN_Z);
+      }
+    }
+
+    const zoneData = ZONES[zone] ?? ZONES[1];
     const playerX = LANES[playerLane];
     const t = performance.now() / 1000;
 
@@ -64,37 +82,48 @@ export default function DronePool({ hitCooldown }) {
       const ref = refs.current[slot.id];
       if (!ref) return;
 
+      // World is frozen during tutorial prompt — pause all drone movement
+      if (tutorialFrozen) return;
+
       // Advance forward (same direction as road)
       slot.z += speed * delta;
       ref.position.z = slot.z;
 
-      // Trigger dive when drone gets close enough — threshold tightens each zone
-      if (!slot.diving && slot.z > DIVE_Z[zone]) {
-        slot.diving = true;
-        slot.targetX = playerX; // lock onto car's current lane
-      }
-
-      if (slot.diving) {
-        // Kamikaze: steer hard toward player X, dip nose slightly
-        slot.targetX = playerX; // keep tracking in case player switches lanes
-        slot.x += (slot.targetX - slot.x) * Math.min(delta * DIVE_STEER, 1);
-        ref.position.y =
-          1.6 + Math.sin(t * HOVER_FREQ + slot.phase) * HOVER_AMP * 0.4;
+      // Tutorial zone: lock drone to center — no sweep, no dive
+      if (zone === 0) {
+        slot.x = LANES[1];
+        slot.targetX = LANES[1];
+        slot.diving = false;
+        ref.position.x = LANES[1];
+        ref.position.y = 1.6 + Math.sin(t * HOVER_FREQ + slot.phase) * HOVER_AMP;
       } else {
-        // Normal hover + lateral sweep
-        ref.position.y =
-          1.6 + Math.sin(t * HOVER_FREQ + slot.phase) * HOVER_AMP;
-        slot.sweepTimer -= delta;
-        if (slot.sweepTimer <= 0) {
-          slot.sweepTimer = 1.0 + Math.random() * 1.2;
-          const laneX = LANES[slot.lane];
-          slot.targetX = laneX + (Math.random() * 2 - 1) * SWEEP_AMP;
-          slot.targetX = Math.max(-3.5, Math.min(3.5, slot.targetX));
+        // Trigger dive when drone gets close enough — threshold tightens each zone
+        const diveZ = DIVE_Z[zone] ?? DIVE_Z[1];
+        if (!slot.diving && slot.z > diveZ) {
+          slot.diving = true;
+          slot.targetX = playerX;
         }
-        slot.x +=
-          (slot.targetX - slot.x) * Math.min(delta * SWEEP_SPEED * 2, 1);
+
+        if (slot.diving) {
+          slot.targetX = playerX;
+          slot.x += (slot.targetX - slot.x) * Math.min(delta * DIVE_STEER, 1);
+          ref.position.y =
+            1.6 + Math.sin(t * HOVER_FREQ + slot.phase) * HOVER_AMP * 0.4;
+        } else {
+          ref.position.y =
+            1.6 + Math.sin(t * HOVER_FREQ + slot.phase) * HOVER_AMP;
+          slot.sweepTimer -= delta;
+          if (slot.sweepTimer <= 0) {
+            slot.sweepTimer = 1.0 + Math.random() * 1.2;
+            const laneX = LANES[slot.lane];
+            slot.targetX = laneX + (Math.random() * 2 - 1) * SWEEP_AMP;
+            slot.targetX = Math.max(-3.5, Math.min(3.5, slot.targetX));
+          }
+          slot.x +=
+            (slot.targetX - slot.x) * Math.min(delta * SWEEP_SPEED * 2, 1);
+        }
+        ref.position.x = slot.x;
       }
-      ref.position.x = slot.x;
 
       // Despawn
       if (slot.z > DESPAWN_Z) {
@@ -128,7 +157,9 @@ export default function DronePool({ hitCooldown }) {
 
     // No new spawns during zoneout or near zone end
     if (phase === 'zoneout') return;
-    const nearEnd = ZONES[zone].distanceThreshold - distance < 120;
+    // No random spawns in zone 0 — tutorial spawns drones manually
+    if (zone === 0) return;
+    const nearEnd = (ZONES[zone]?.distanceThreshold ?? 99999) - distance < 120;
     spawnTimer.current -= delta;
     if (spawnTimer.current <= 0 && !nearEnd) {
       spawnTimer.current = zoneData.droneRate + (Math.random() - 0.5) * 1.0;

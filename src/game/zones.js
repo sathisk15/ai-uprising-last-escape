@@ -1,5 +1,17 @@
 // Zone configuration for all 3 zones — unified night city theme
 export const ZONES = {
+  0: {
+    id: 0,
+    name: 'TRAINING GROUND',
+    fogColor: '#0a0c12',
+    bgColor: '#05060d',
+    ambientColor: '#1a2a4a',
+    speedMultiplier: 1.0,
+    obstacleRate: 9999,
+    droneRate: 9999,
+    droneShoots: false,
+    distanceThreshold: 99999,
+  },
   1: {
     id: 1,
     name: 'Modern Wasteland',

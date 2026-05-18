@@ -43,8 +43,9 @@ export default function BuildingPool() {
   const tileC = useRef();
 
   useFrame((_, delta) => {
-    const { phase, speed } = useGameStore.getState();
+    const { phase, speed, tutorialFrozen } = useGameStore.getState();
     if (phase !== 'playing' && phase !== 'dying' && phase !== 'zoneout') return;
+    if (tutorialFrozen) return;
 
     const move = speed * delta;
 

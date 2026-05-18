@@ -8,8 +8,33 @@ import AudioManager from '../../audio/AudioManager'
 export default function usePlayerInput() {
   useEffect(() => {
     const onKeyDown = (e) => {
-      const { phase, playerLane, setPlayerLane, isJumping } = useGameStore.getState()
+      const { phase, playerLane, setPlayerLane, isJumping, zone, tutorialFrozen, tutorialStep } = useGameStore.getState()
       if (phase !== 'playing') return
+
+      // In zone 0 (tutorial): block ALL input unless frozen and it matches the current step
+      if (zone === 0) {
+        if (!tutorialFrozen) return   // free-run period — no player control
+        if (tutorialStep === 2) {
+          const isShoot = e.code === 'KeyZ' || e.code === 'KeyF'
+          if (!isShoot) return
+        } else if (tutorialStep === 1) {
+          const isJump = e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space'
+          if (!isJump) return
+        } else if (tutorialStep === 0) {
+          const isRight = e.code === 'ArrowRight' || e.code === 'KeyD'
+          const isLeft  = e.code === 'ArrowLeft'  || e.code === 'KeyA'
+          const isLaneHoriz = isRight || isLeft
+          if (!isLaneHoriz) return
+          // From center: either direction OK. From left lane (0): only right. From right (2): only left.
+          if (playerLane === 1) {
+            // OK
+          } else if (playerLane === 0) {
+            if (!isRight) return
+          } else if (playerLane === 2) {
+            if (!isLeft) return
+          }
+        }
+      }
 
       switch (e.code) {
         case 'ArrowLeft':

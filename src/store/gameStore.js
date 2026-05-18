@@ -10,6 +10,7 @@ const persistedSlice = (set) => ({
   audioEnabled: true,
   masterVolume: 0.7,
   sfxVolume: 0.7,
+  tutorialSeen: false,
 
   setHighScore: (score) => set({ highScore: score }),
   setPlayerName: (name) => set({ playerName: (name || '').trim().slice(0, 14).toUpperCase() }),
@@ -34,6 +35,10 @@ const sessionDefaults = {
   playerLane: 1,   // 0=left, 1=center, 2=right
   speed: BASE_SPEED,
   isJumping: false,
+  // Tutorial session state
+  tutorialStep: -1,      // -1 = not in tutorial; 0=lane, 1=jump, 2=shoot
+  tutorialFrozen: false, // when true, obstacles/drones freeze in place
+  tutorialSpawn: null,   // 'barricade' | 'drone' | null — one-shot spawn signal
 }
 
 const useGameStore = create(
@@ -51,9 +56,12 @@ const useGameStore = create(
       },
 
       startGame: () => {
+        const { tutorialSeen } = get()
         set({
           ...sessionDefaults,
           phase: 'playing',
+          zone: tutorialSeen ? 1 : 0,
+          tutorialStep: tutorialSeen ? -1 : 0,
         })
       },
 
@@ -64,6 +72,16 @@ const useGameStore = create(
 
       resumeGame: () => {
         if (get().phase === 'paused') set({ phase: 'playing' })
+      },
+
+      // ── Tutorial actions ──────────────────────────────────────────────────────
+      freezeGame: () => set({ tutorialFrozen: true }),
+      unfreezeGame: () => set({ tutorialFrozen: false }),
+      advanceTutorialStep: () => set((s) => ({ tutorialStep: s.tutorialStep + 1 })),
+      setTutorialSpawn: (val) => set({ tutorialSpawn: val }),
+      completeTutorial: () => {
+        set({ tutorialSeen: true, tutorialStep: -1, tutorialFrozen: false, tutorialSpawn: null })
+        get().nextZone()
       },
 
       takeDamage: (type = 'obstacle', amount) => {
@@ -136,8 +154,9 @@ const useGameStore = create(
       advanceDistance: (delta) => {
         const state = get()
         if (state.phase !== 'playing') return
+        if (state.tutorialFrozen) return  // world is paused for tutorial prompt
 
-        const zone = ZONES[state.zone]
+        const zone = ZONES[state.zone] ?? ZONES[1]
         const boostMult = state.speedBoostActive ? 1.6 : 1.0
         const speed = BASE_SPEED * zone.speedMultiplier * boostMult
 
@@ -152,17 +171,20 @@ const useGameStore = create(
         const newDistance = state.distance + speed * delta
         const scoreFromDistance = Math.floor(newDistance)
 
-        // Energy drains at 1.2 pts/s in zone 1, slightly faster in higher zones
-        const drainRate = 1.2 + (state.zone - 1) * 0.35
+        // No energy drain in zone 0 (tutorial) — drain scales with zone otherwise
+        const drainRate = state.zone === 0 ? 0 : 1.2 + (state.zone - 1) * 0.35
         const newEnergy = Math.max(0, state.energy - drainRate * delta)
 
         set({ distance: newDistance, speed, score: scoreFromDistance + state.kills * 100, energy: newEnergy, speedBoostActive, speedBoostTimer })
 
-        // Energy depletion = game over
+        // Energy depletion = game over (skipped in zone 0)
         if (newEnergy <= 0) {
           get().endGame()
           return
         }
+
+        // Zone 0 never auto-transitions — completeTutorial() handles that explicitly
+        if (state.zone === 0) return
 
         // Check zone transition
         if (state.zone < 3 && newDistance >= zone.distanceThreshold) {
@@ -220,6 +242,7 @@ const useGameStore = create(
         audioEnabled: state.audioEnabled,
         masterVolume: state.masterVolume,
         sfxVolume: state.sfxVolume,
+        tutorialSeen: state.tutorialSeen,
       }),
     }
   )

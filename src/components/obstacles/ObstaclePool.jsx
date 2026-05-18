@@ -7,6 +7,7 @@ import Barricade from './Barricade'
 import EnergyWall from './EnergyWall'
 import AudioManager from '../../audio/AudioManager'
 import { obstacleSharedData } from './obstacleData'
+import { tutorialSignal } from '../../game/tutorialSignal'
 
 const MAX_BARRICADES  = 7
 const MAX_ENERGYWALLS = 4
@@ -26,7 +27,8 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
   obstacleSharedData.barricadeSlots = data.current
 
   useFrame((_, delta) => {
-    const { phase, speed, zone, distance, playerLane } = useGameStore.getState()
+    const { phase, speed, zone, distance, playerLane, tutorialFrozen, tutorialSpawn } = useGameStore.getState()
+
     if (phase !== 'playing') {
       // Clear all barricades when zoneout starts
       if (phase === 'zoneout') {
@@ -41,6 +43,35 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
       return
     }
 
+    // Handle clear-all signal from TutorialOverlay (after jump step completes)
+    if (tutorialSignal.clearObstacles) {
+      tutorialSignal.clearObstacles = false
+      data.current.forEach((slot) => {
+        if (slot.active) {
+          slot.active = false
+          if (slot.ref) slot.ref.position.z = PARK_Z
+          slot.z = PARK_Z
+        }
+      })
+    }
+
+    // Handle on-demand tutorial barricade spawn — always center lane
+    if (tutorialSpawn === 'barricade') {
+      useGameStore.getState().setTutorialSpawn(null)
+      const slot = data.current.find(s => !s.active)
+      if (slot) {
+        slot.active = true
+        slot.lane   = 1       // always center during tutorial
+        slot.z      = SPAWN_Z
+        slot.hp     = 2
+        if (slot.ref) {
+          slot.ref.position.x = LANES[1]
+          slot.ref.position.z = SPAWN_Z
+          slot.ref.scale.set(1, 1, 1)
+        }
+      }
+    }
+
     const playerX = LANES[playerLane]
 
     data.current.forEach((slot) => {
@@ -48,8 +79,11 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
       const ref = slot.ref
       if (!ref) return
 
-      slot.z += speed * delta
-      ref.position.z = slot.z
+      // World is frozen during tutorial prompt — don't move obstacles
+      if (!tutorialFrozen) {
+        slot.z += speed * delta
+        ref.position.z = slot.z
+      }
 
       if (slot.z > DESPAWN_Z) {
         slot.active = false
@@ -57,7 +91,8 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
         return
       }
 
-      // Collision — jump clears barricades
+      // Collision — jump clears barricades; skip during freeze
+      if (tutorialFrozen) return
       if (hitCooldown.current > 0) return
       if (!useGameStore.getState().isJumping && aabbXZ(
         LANES[slot.lane], slot.z, HALF.barricade.x, HALF.barricade.z,
@@ -70,6 +105,9 @@ function BarricadePool({ spawnTimer, hitCooldown }) {
         hitCooldown.current = 1.5
       }
     })
+
+    // No random spawns in zone 0 (tutorial handles spawning manually)
+    if (zone === 0) return
 
     // Spawn — stop 120 units before zone end so the road clears before zoneout
     spawnTimer.barricade -= delta

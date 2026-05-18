@@ -77,6 +77,7 @@ function SpeedVignette() {
 import GameCanvas from '../game/GameCanvas'
 import HUD from '../components/hud/HUD'
 import PauseMenu from './PauseMenu'
+import TutorialOverlay from './TutorialOverlay'
 import useTouchInput from '../components/player/useTouchInput'
 import { damageSignal } from '../game/shakeSignal'
 
@@ -143,6 +144,7 @@ export default function GameScreen() {
       <HUD />
       <DamageFlash />
       <SpeedVignette />
+      <TutorialOverlay />
       {phase === 'paused' && <PauseMenu />}
     </div>
   )

@@ -30,29 +30,47 @@ export default function useTouchInput() {
       const absDx = Math.abs(dx)
       const absDy = Math.abs(dy)
 
-      const { phase, setPlayerLane, playerLane, startJump, isJumping } = useGameStore.getState()
+      const { phase, setPlayerLane, playerLane, startJump, isJumping, zone, tutorialFrozen, tutorialStep } = useGameStore.getState()
       if (phase !== 'playing') return
 
+      const isTap        = absDx < TAP_THRESHOLD && absDy < TAP_THRESHOLD
+      const isHorizSwipe = !isTap && absDx > absDy && absDx >= SWIPE_THRESHOLD
+      const isUpSwipe    = !isTap && absDy >= absDx && dy < -SWIPE_THRESHOLD
+
+      // In zone 0 (tutorial): block ALL touch unless frozen and it matches the current step
+      if (zone === 0) {
+        if (!tutorialFrozen) return   // free-run period — no player control
+        if (tutorialStep === 2 && !isTap) return
+        if (tutorialStep === 1 && !isUpSwipe) return
+        if (tutorialStep === 0) {
+          if (!isHorizSwipe) return
+          const dir = dx > 0 ? 1 : -1
+          if (playerLane === 1) {
+            // either direction OK
+          } else if (playerLane === 0) {
+            if (dir !== 1) return
+          } else if (playerLane === 2) {
+            if (dir !== -1) return
+          }
+        }
+      }
+
       // Tap — shoot
-      if (absDx < TAP_THRESHOLD && absDy < TAP_THRESHOLD) {
+      if (isTap) {
         inputState.shootPressed = true
         return
       }
 
       // Dominant axis
-      if (absDx > absDy) {
-        // Horizontal swipe — lane change
-        if (absDx >= SWIPE_THRESHOLD) {
-          const dir = dx > 0 ? 1 : -1
-          const newLane = playerLane + dir
-          if (newLane >= 0 && newLane <= 2) {
-            setPlayerLane(newLane)
-            AudioManager.playSwipe()
-          }
+      if (isHorizSwipe) {
+        const dir = dx > 0 ? 1 : -1
+        const newLane = playerLane + dir
+        if (newLane >= 0 && newLane <= 2) {
+          setPlayerLane(newLane)
+          AudioManager.playSwipe()
         }
-      } else {
-        // Vertical swipe up — jump
-        if (dy < -SWIPE_THRESHOLD && !isJumping) {
+      } else if (isUpSwipe) {
+        if (!isJumping) {
           startJump()
           AudioManager.playJump()
         }

@@ -201,8 +201,10 @@ export default function CollectiblePool() {
   const spawnTimer = useRef(1.5)
 
   useFrame((_, delta) => {
-    const { phase, speed, zone, distance, playerLane } = useGameStore.getState()
+    const { phase, speed, zone, distance, playerLane, tutorialFrozen } = useGameStore.getState()
     if (phase !== 'playing') return
+    if (zone === 0) return           // no collectibles during tutorial
+    if (tutorialFrozen) return
 
     const playerX = LANES[playerLane]
     const t       = performance.now() / 1000

@@ -94,8 +94,9 @@ export default function Road() {
   const tile3 = useRef()
 
   useFrame((_, delta) => {
-    const { phase, speed } = useGameStore.getState()
+    const { phase, speed, tutorialFrozen } = useGameStore.getState()
     if (phase !== 'playing' && phase !== 'dying' && phase !== 'zoneout') return
+    if (tutorialFrozen) return
     const t1 = tile1.current
     const t2 = tile2.current
     const t3 = tile3.current
