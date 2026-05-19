@@ -6,7 +6,14 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  cursor: none !important;
+}
+
+/* System cursor stays visible on coarse / no-hover (phones, most tablets).
+   Hidden only where a mouse/trackpad implies in-game aiming (menus still use clickable UI). */
+@media (hover: hover) and (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
 }
 
 @keyframes reticle-pulse {

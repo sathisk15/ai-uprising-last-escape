@@ -7,8 +7,17 @@ import { droneSharedData } from '../components/enemies/droneData'
 const IS_MOBILE = typeof window !== 'undefined' &&
   ('ontouchstart' in window || navigator.maxTouchPoints > 0)
 
-// Z threshold: freeze when an obstacle crosses this value (negative = ahead of car)
-const FREEZE_Z = -18
+/**
+ * Barricade Z increases toward player (spawn ~−68 → car ~2). Freeze for jump prompt only
+ * when the barrier is close — old −18 paused ~20 units too early (~1 s drive at base speed).
+ */
+const BARRICADE_FREEZE_MIN_Z = -2
+
+/** Drone cue keeps the original farther threshold so aiming has more lead time */
+const DRONE_TUTORIAL_FREEZE_MIN_Z = -16
+
+/** After first lateral swipe during lane training — short drive before prompting return to center. */
+const LANE_RUN_AFTER_FIRST_SWIPE_MS = 2600
 
 // Step 0: leave center first, then only the opposite swipe returns — car ends centered
 const LANE_PROMPTS = {
@@ -70,16 +79,30 @@ export default function TutorialOverlay() {
   const [lane0PromptKey, setLane0PromptKey] = useState('first')
 
   const timerRef           = useRef(null)
+  const laneRunTimerRef    = useRef(null)    // free-run between lane swipes (step 0)
+  const jumpCompleteTimerRef = useRef(null)  // defer jump step completion until bar clears
   const pollRef            = useRef(null)    // setInterval for proximity polling
   const unsubRef           = useRef(null)    // Zustand unsub
   const aliveRef           = useRef(false)   // guard for async callbacks
-  const lane0AwaitReturnRef = useRef(false)  // true after leaving center lane
+  /** 'boot' → 'firstFreeze' → 'runningGap' → 'returnFreeze' → done */
+  const lane0PhaseRef       = useRef('boot')
+  const lanePollPrevLaneRef = useRef(1)
+  /** Prevents duplicate jump-complete handler */
+  const barrierJumpHandledRef = useRef(false)
+
+  const clearTimersOnly = useCallback(() => {
+    clearTimeout(timerRef.current)
+    clearTimeout(laneRunTimerRef.current)
+    clearTimeout(jumpCompleteTimerRef.current)
+    laneRunTimerRef.current = null
+    jumpCompleteTimerRef.current = null
+    clearInterval(pollRef.current)
+  }, [])
 
   const clearAll = useCallback(() => {
-    clearTimeout(timerRef.current)
-    clearInterval(pollRef.current)
+    clearTimersOnly()
     if (unsubRef.current) { unsubRef.current(); unsubRef.current = null }
-  }, [])
+  }, [clearTimersOnly])
 
   // ── Step entry: schedule spawn + proximity-based freeze ───────────────────
   useEffect(() => {
@@ -89,13 +112,21 @@ export default function TutorialOverlay() {
 
     const step = tutorialStep
 
+    if (step === 0) {
+      lane0PhaseRef.current = 'boot'
+      setLane0PromptKey('first')
+      lanePollPrevLaneRef.current = 1
+    }
+    barrierJumpHandledRef.current = false
+
     // After a free-run period, spawn the obstacle (steps 1 & 2) then poll for proximity
     timerRef.current = setTimeout(() => {
       if (!aliveRef.current) return
 
       if (step === 0) {
-        // Auto-center the car, then freeze for the lane-switch prompt
         useGameStore.getState().setPlayerLane(1)
+        lane0PhaseRef.current = 'firstFreeze'
+        lanePollPrevLaneRef.current = 1
         useGameStore.getState().freezeGame()
         return
       }
@@ -112,7 +143,8 @@ export default function TutorialOverlay() {
           : droneSharedData.slots
 
         if (!slots) return
-        const nearSlot = slots.find((s) => s.active && s.z > FREEZE_Z)
+        const freezeNearZ = step === 1 ? BARRICADE_FREEZE_MIN_Z : DRONE_TUTORIAL_FREEZE_MIN_Z
+        const nearSlot = slots.find((s) => s.active && s.z > freezeNearZ)
         if (nearSlot) {
           clearInterval(pollRef.current)
           useGameStore.getState().freezeGame()
@@ -122,76 +154,140 @@ export default function TutorialOverlay() {
 
     return () => {
       aliveRef.current = false
-      clearTimeout(timerRef.current)
-      clearInterval(pollRef.current)
+      clearTimersOnly()
+      timerRef.current = null
+    }
+  }, [tutorialStep, clearTimersOnly])
+
+  // ── Lane step 0: first swipe → brief drive → freeze → return center ─────────
+  useEffect(() => {
+    if (tutorialStep !== 0) return undefined
+
+    const tick = window.setInterval(() => {
+      const gs = useGameStore.getState()
+      if (gs.phase !== 'playing' || gs.tutorialStep !== 0 || !aliveRef.current) return
+
+      const phaseLane = lane0PhaseRef.current
+      const pl = gs.playerLane
+      const frozen = gs.tutorialFrozen
+
+      // First swipe from center → unfreeze so the world rolls a few seconds
+      if (
+        phaseLane === 'firstFreeze'
+        && frozen
+        && pl !== 1
+        && lanePollPrevLaneRef.current === 1
+      ) {
+        if (pl === 0) setLane0PromptKey('return_right')
+        else if (pl === 2) setLane0PromptKey('return_left')
+        lane0PhaseRef.current = 'runningGap'
+        lanePollPrevLaneRef.current = pl
+        clearTimeout(laneRunTimerRef.current)
+        gs.unfreezeGame()
+        setUiState('running')
+        laneRunTimerRef.current = window.setTimeout(() => {
+          if (useGameStore.getState().tutorialStep !== 0) return
+          lane0PhaseRef.current = 'returnFreeze'
+          lanePollPrevLaneRef.current = useGameStore.getState().playerLane
+          useGameStore.getState().freezeGame()
+        }, LANE_RUN_AFTER_FIRST_SWIPE_MS)
+        return
+      }
+
+      // After return-freeze prompt: swipe back to center completes step
+      if (
+        phaseLane === 'returnFreeze'
+        && frozen
+        && pl === 1
+        && lanePollPrevLaneRef.current !== 1
+      ) {
+        clearTimeout(laneRunTimerRef.current)
+        laneRunTimerRef.current = null
+        lane0PhaseRef.current = 'boot'
+        clearAll()
+        useGameStore.getState().unfreezeGame()
+        setUiState('stepDone')
+        timerRef.current = window.setTimeout(() => {
+          useGameStore.getState().advanceTutorialStep()
+        }, 1600)
+        return
+      }
+
+      lanePollPrevLaneRef.current = pl
+    }, 42)
+
+    return () => window.clearInterval(tick)
+  }, [tutorialStep, clearAll])
+
+  // ── Jump barrier (step 1): detect jump during freeze → unfreeze so car clears ─
+  useEffect(() => {
+    if (tutorialStep !== 1) {
+      barrierJumpHandledRef.current = false
+      return undefined
+    }
+    barrierJumpHandledRef.current = false
+    /** @type {{ isJumping: boolean }} */
+    const prevSnap = { isJumping: useGameStore.getState().isJumping }
+
+    const unsub = useGameStore.subscribe((state) => {
+      if (state.phase !== 'playing' || state.tutorialStep !== 1) return
+      if (barrierJumpHandledRef.current) return
+
+      const jumpStarted = Boolean(state.isJumping && !prevSnap.isJumping)
+      prevSnap.isJumping = state.isJumping
+      if (!jumpStarted) return
+      if (!state.tutorialFrozen) return
+
+      barrierJumpHandledRef.current = true
+      clearTimeout(jumpCompleteTimerRef.current)
+      useGameStore.getState().unfreezeGame()
+      setUiState('running')
+
+      jumpCompleteTimerRef.current = window.setTimeout(() => {
+        barrierJumpHandledRef.current = false
+        tutorialSignal.clearObstacles = true
+        clearAll()
+        useGameStore.getState().unfreezeGame()
+        setUiState('stepDone')
+        timerRef.current = window.setTimeout(() => {
+          useGameStore.getState().advanceTutorialStep()
+        }, 1600)
+      }, 1050)
+    })
+
+    return () => {
+      unsub()
+      prevSnap.isJumping = false
+      clearTimeout(jumpCompleteTimerRef.current)
+      jumpCompleteTimerRef.current = null
     }
   }, [tutorialStep, clearAll])
 
-  // ── Detect player action while frozen ─────────────────────────────────────
+  // ── Detect drone kill while frozen (step 2) ─────────────────────────────────
   useEffect(() => {
-    if (!tutorialFrozen) return
+    if (!tutorialFrozen) return undefined
     setUiState('frozen')
     const step = useGameStore.getState().tutorialStep
 
-    if (step === 0) {
-      lane0AwaitReturnRef.current = false
-      setLane0PromptKey('first')
-    }
-
-    const onStepDone = () => {
+    const onShootStepDone = () => {
       clearAll()
-      if (step === 1) tutorialSignal.clearObstacles = true  // remove barricade
       useGameStore.getState().unfreezeGame()
       setUiState('stepDone')
-      // Brief completion flash, then advance (or finish)
-      timerRef.current = setTimeout(() => {
-        if (step < 2) {
-          useGameStore.getState().advanceTutorialStep()
-        } else {
-          // All done — trigger zone transition
-          setUiState('allDone')
-          timerRef.current = setTimeout(() => {
-            useGameStore.getState().completeTutorial()
-          }, 2000)
-        }
+      timerRef.current = window.setTimeout(() => {
+        setUiState('allDone')
+        timerRef.current = window.setTimeout(() => {
+          useGameStore.getState().completeTutorial()
+        }, 2000)
       }, 1600)
     }
 
-    if (step === 0) {
-      unsubRef.current = useGameStore.subscribe((state, prev) => {
-        if (!state.tutorialFrozen || state.tutorialStep !== 0) return
-        if (state.playerLane === prev.playerLane) return
+    if (step !== 2) return undefined
 
-        const pl = state.playerLane
-
-        // Phase A: waiting first move FROM center lane
-        if (!lane0AwaitReturnRef.current) {
-          if (prev.playerLane !== 1) return
-          if (pl === 0) {
-            lane0AwaitReturnRef.current = true
-            setLane0PromptKey('return_right')
-          } else if (pl === 2) {
-            lane0AwaitReturnRef.current = true
-            setLane0PromptKey('return_left')
-          }
-          return
-        }
-
-        // Phase B: waiting return TO center lane
-        if (pl === 1 && prev.playerLane !== 1) {
-          onStepDone()
-        }
-      })
-    } else if (step === 1) {
-      unsubRef.current = useGameStore.subscribe((state, prev) => {
-        if (state.isJumping && !prev.isJumping) onStepDone()
-      })
-    } else if (step === 2) {
-      const initKills = useGameStore.getState().kills
-      unsubRef.current = useGameStore.subscribe((state) => {
-        if (state.kills > initKills) onStepDone()
-      })
-    }
+    const initKills = useGameStore.getState().kills
+    unsubRef.current = useGameStore.subscribe((state) => {
+      if (!state.tutorialFrozen || state.tutorialStep !== 2) return
+      if (state.kills > initKills) onShootStepDone()
+    })
 
     return () => {
       if (unsubRef.current) { unsubRef.current(); unsubRef.current = null }

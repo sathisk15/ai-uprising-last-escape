@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import useGameStore from './store/gameStore'
 import MainMenu from './screens/MainMenu'
 import IntroDialogue from './screens/IntroDialogue'
@@ -21,18 +21,39 @@ function prefersSkipBrowserFullscreen() {
 }
 
 function CustomCursor() {
-  const pos = useRef({ x: -200, y: -200 })
   const dotRef   = useRef(null)
   const ringRef  = useRef(null)
 
+  /** @param {number} cx @param {number} cy */
+  const applyPos = (cx, cy) => {
+    if (dotRef.current)  dotRef.current.style.transform  = `translate(${cx}px, ${cy}px)`
+    if (ringRef.current) ringRef.current.style.transform = `translate(${cx}px, ${cy}px)`
+  }
+
   useEffect(() => {
-    const move = (e) => {
-      pos.current = { x: e.clientX, y: e.clientY }
-      if (dotRef.current)  dotRef.current.style.transform  = `translate(${e.clientX}px, ${e.clientY}px)`
-      if (ringRef.current) ringRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`
+    const touchFirst =
+      typeof window !== 'undefined'
+      && typeof window.matchMedia === 'function'
+      && window.matchMedia('(pointer: coarse), (hover: none)').matches
+
+    /** @param {PointerEvent} e */
+    const onPointer = (e) => {
+      applyPos(e.clientX, e.clientY)
     }
-    window.addEventListener('mousemove', move)
-    return () => window.removeEventListener('mousemove', move)
+
+    window.addEventListener('pointermove', onPointer)
+    window.addEventListener('pointerdown', onPointer)
+
+    if (touchFirst) {
+      const cx = window.innerWidth / 2
+      const cy = window.innerHeight / 2
+      applyPos(cx, cy)
+    }
+
+    return () => {
+      window.removeEventListener('pointermove', onPointer)
+      window.removeEventListener('pointerdown', onPointer)
+    }
   }, [])
 
   const C = '#00f5ff'   // cyan — matches game UI
