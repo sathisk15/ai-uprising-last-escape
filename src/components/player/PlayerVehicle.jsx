@@ -4,6 +4,7 @@ import { useGLTF } from '@react-three/drei';
 import useGameStore from '../../store/gameStore';
 import usePlayerInput from './usePlayerInput';
 import { LANES } from '../../game/zones';
+import { MODEL_CAR_GLB } from '../../game/publicModelUrls';
 import { damageSignal } from '../../game/shakeSignal';
 
 const BASE_Y = 0.5;
@@ -16,7 +17,7 @@ const START_Z_TO = 2; // final play position z
 const DAMAGE_FLASH_DUR = 0.35; // seconds the red damage overlay stays lit
 
 export default function PlayerVehicle() {
-  const { scene: carTpl } = useGLTF('/models/car.glb');
+  const { scene: carTpl } = useGLTF(MODEL_CAR_GLB);
   const carScene = useMemo(() => carTpl.clone(true), [carTpl]);
 
   useEffect(() => {
@@ -489,4 +490,4 @@ export default function PlayerVehicle() {
   );
 }
 
-useGLTF.preload('/models/car.glb');
+useGLTF.preload(MODEL_CAR_GLB);

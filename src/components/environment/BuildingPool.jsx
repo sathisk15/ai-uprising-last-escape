@@ -2,6 +2,7 @@ import { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import useGameStore from '../../store/gameStore';
+import { MODEL_CITY_NIGHT_GLB } from '../../game/publicModelUrls';
 
 const TILE_LENGTH = 160;
 const RECYCLE_Z = 120;
@@ -18,14 +19,14 @@ function setupCityTile(model) {
   });
 }
 
-useGLTF.preload('/models/city_night.glb');
+useGLTF.preload(MODEL_CITY_NIGHT_GLB);
 
 export default function BuildingPool() {
   const tileA = useRef();
   const tileB = useRef();
   const tileC = useRef();
 
-  const { scene } = useGLTF('/models/city_night.glb');
+  const { scene } = useGLTF(MODEL_CITY_NIGHT_GLB);
   const models = useMemo(() => {
     const a = scene.clone(true);
     const b = scene.clone(true);

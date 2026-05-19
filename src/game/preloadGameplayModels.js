@@ -1,4 +1,5 @@
 import { useGLTF } from '@react-three/drei'
+import { MODEL_CAR_GLB, MODEL_CITY_NIGHT_GLB } from './publicModelUrls'
 
 /** @typedef {'loading' | 'vehicle' | 'city' | 'systems'} GameLoadStage */
 
@@ -50,9 +51,9 @@ export function preloadGameplayModels() {
   preloadPromise = (async () => {
     setStage('loading')
     setStage('vehicle')
-    await useGLTF.preload('/models/car.glb')
+    await useGLTF.preload(MODEL_CAR_GLB)
     setStage('city')
-    await useGLTF.preload('/models/city_night.glb')
+    await useGLTF.preload(MODEL_CITY_NIGHT_GLB)
     setStage('systems')
   })()
 
