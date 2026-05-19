@@ -35,7 +35,8 @@ export default function Victory() {
   const kills     = useGameStore((s) => s.kills)
   const distance  = useGameStore((s) => s.distance)
   const startGame = useGameStore((s) => s.startGame)
-  const goToMenu  = useGameStore((s) => s.goToMenu)
+  const goToMenu   = useGameStore((s) => s.goToMenu)
+  const goToCredits = useGameStore((s) => s.goToCredits)
   const playerName = useGameStore((s) => s.playerName)
 
   const containerRef = useRef(null)
@@ -254,6 +255,12 @@ export default function Victory() {
             onMouseEnter={e => e.currentTarget.style.boxShadow='0 0 32px rgba(0,255,136,0.6)'}
             onMouseLeave={e => e.currentTarget.style.boxShadow='0 0 18px rgba(0,255,136,0.3)'}>
             ▶ PLAY AGAIN
+          </button>
+          <button onClick={goToCredits}
+            type="button"
+            className="font-mono font-bold tracking-[0.25em] text-base py-3.5 border border-[#00f5ff55] text-[#00f5ff]
+                       hover:border-[#00f5ff] hover:bg-[#00f5ff]/10 transition-all duration-200 active:scale-95">
+            ★ CREDITS
           </button>
           <button onClick={goToMenu}
             className="font-mono font-bold tracking-[0.25em] text-lg py-4 border border-[#444] text-[#888]

@@ -5,6 +5,7 @@ import IntroDialogue from './screens/IntroDialogue'
 import GameScreen from './screens/GameScreen'
 import GameOver from './screens/GameOver'
 import Victory from './screens/Victory'
+import EndCredits from './screens/EndCredits'
 import ZoneTransition from './screens/ZoneTransition'
 import AudioManager from './audio/AudioManager'
 import { preloadGameplayModels } from './game/preloadGameplayModels'
@@ -135,7 +136,7 @@ export default function App() {
       AudioManager.playBGM(zone)
     } else if (phase === 'paused') {
       AudioManager.duckBGM()
-    } else if (phase === 'menu' || phase === 'intro') {
+    } else if (phase === 'menu' || phase === 'intro' || phase === 'credits') {
       AudioManager.playBGM(0)
     } else if (phase === 'gameover') {
       AudioManager.stopBGM()
@@ -187,6 +188,7 @@ export default function App() {
       {phase === 'intro'    && <IntroDialogue />}
       {phase === 'gameover' && <GameOver />}
       {phase === 'victory'  && <Victory />}
+      {phase === 'credits'  && <EndCredits />}
     </div>
   )
 }

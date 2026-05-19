@@ -21,7 +21,7 @@ const persistedSlice = (set) => ({
 
 // Session slice — reset each game
 const sessionDefaults = {
-  phase: 'menu',   // 'menu' | 'intro' | 'playing' | 'paused' | 'transition' | 'zoneout' | 'dying' | 'gameover' | 'victory'
+  phase: 'menu',   // 'menu' | 'intro' | 'playing' | 'paused' | 'transition' | 'zoneout' | 'dying' | 'gameover' | 'victory' | 'credits'
   zone: 1,
   score: 0,
   distance: 0,
@@ -228,6 +228,9 @@ const useGameStore = create(
         if (score > highScore) setHighScore(score)
         set({ phase: 'victory' })
       },
+
+      /** Post-victory scroll — from Victory «CREDITS» */
+      goToCredits: () => set({ phase: 'credits' }),
 
       goToMenu: () => {
         set({ ...sessionDefaults, phase: 'menu' })

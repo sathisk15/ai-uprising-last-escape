@@ -3,6 +3,16 @@
 A browser-based 3D endless runner built with React, Three.js, and @react-three/fiber.
 You are the last operative driving through a dystopian 2045 city to deliver the **BLACKOUT Protocol** — a kill-switch that shuts down the AI uprising. Survive three escalating zones, shoot drones, dodge obstacles, and make it to the end.
 
+Developed as part of **M.Sc. Applied Computer Science** coursework in **Video Game Design**.
+
+**Author:** Sathiskumar Ravichandran · **Student ID:** 288860  
+**LinkedIn:** [linkedin.com/in/sathiskumar-ravichandran](https://www.linkedin.com/in/sathiskumar-ravichandran/) · **Repository:** [github.com/sathisk15/ai-uprising-last-escape](https://github.com/sathisk15/ai-uprising-last-escape)
+
+**Course cohort:** Ritik Gandhi — class attendance and milestone presentation alongside the submission (no development or authoring on this repository).
+
+**Instructor (WED 13:15 section):** [Marek Kopel — course hub, schedule & office hours](https://kis.pwr.edu.pl/kopel) · Wrocław University of Science & Technology, Video Game Design (M.Sc. Applied Computer Science).  
+Other parallel sections same course: Barbara Wędrychowicz (WED 07:30, WED 09:15).
+
 ---
 
 ## Premise
