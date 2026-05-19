@@ -21,6 +21,9 @@ function prefersSkipBrowserFullscreen() {
 }
 
 function CustomCursor() {
+  /** Reticle only for mouse / desktop — touch phones show their own taps; UI shows crosshair clash (see screenshot). */
+  const enabled = typeof window !== 'undefined' && !isMobileLikeDevice()
+
   const dotRef   = useRef(null)
   const ringRef  = useRef(null)
 
@@ -31,10 +34,7 @@ function CustomCursor() {
   }
 
   useEffect(() => {
-    const touchFirst =
-      typeof window !== 'undefined'
-      && typeof window.matchMedia === 'function'
-      && window.matchMedia('(pointer: coarse), (hover: none)').matches
+    if (!enabled) return undefined
 
     /** @param {PointerEvent} e */
     const onPointer = (e) => {
@@ -44,17 +44,13 @@ function CustomCursor() {
     window.addEventListener('pointermove', onPointer)
     window.addEventListener('pointerdown', onPointer)
 
-    if (touchFirst) {
-      const cx = window.innerWidth / 2
-      const cy = window.innerHeight / 2
-      applyPos(cx, cy)
-    }
-
     return () => {
       window.removeEventListener('pointermove', onPointer)
       window.removeEventListener('pointerdown', onPointer)
     }
-  }, [])
+  }, [enabled])
+
+  if (!enabled) return null
 
   const C = '#00f5ff'   // cyan — matches game UI
   const b = `1.5px solid ${C}`

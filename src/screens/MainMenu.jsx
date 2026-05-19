@@ -349,7 +349,7 @@ export default function MainMenu() {
               onChange={(e) => { setNameInput(e.target.value.toUpperCase()); setNameMsg('') }}
               onKeyDown={(e) => { if (e.key === 'Enter' && isValidName && phase === 'idle') beginWithName() }}
               placeholder="ENTER NAME"
-              className="w-full bg-transparent border px-3 py-2.5 font-mono text-sm tracking-widest outline-none transition-all duration-200 disabled:opacity-40"
+              className="w-full bg-transparent border px-3 py-2.5 font-mono text-base md:text-sm tracking-widest outline-none transition-all duration-200 disabled:opacity-40"
               style={{
                 borderColor: phase === 'confirm' ? '#ffffff18' : isValidName ? '#00f5ff44' : '#ffffff18',
                 color: '#00f5ff',
